@@ -47,6 +47,21 @@ You sat the Intro course as an analyst. Now you own the platform. This lab sets 
     ```
     <!-- source: facts_extracted.md §1 -->
 
+    > **Common Pitfall:** On some accounts the first statement fails with
+    > **`Metastore storage root URL does not exist`**, often mentioning that Default Storage is
+    > enabled. The metastore has no default managed location, so Unity Catalog does not know where
+    > to put the catalog's data. Your syntax and your permissions are both fine. Name the location
+    > explicitly instead:
+    >
+    > ```sql
+    > CREATE CATALOG IF NOT EXISTS eng_<id>
+    > MANAGED LOCATION 's3://<bucket>/<prefix>/eng_<id>';
+    > ```
+    >
+    > The path must sit inside an external location you are allowed to use. Your instructor will
+    > tell you which form this workspace needs — worth settling before the whole room hits it at once.
+    <!-- source: facts_extracted.md §1 -->
+
 2. **Create a managed table from the training data**
 
     ```sql

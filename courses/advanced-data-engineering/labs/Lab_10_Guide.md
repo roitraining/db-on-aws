@@ -213,12 +213,31 @@ In Intro Lab 4 you answered a business question with one notebook: read, filter,
 
 18. **Note the SQL form and both legacy names**
 
+    The streaming CDC form in SQL needs two things the Python snapshot call above does not: a
+    target declared up front, and a named **flow** that writes into it.
+
     ```sql
+    CREATE OR REFRESH STREAMING TABLE institutions_scd;
+
+    CREATE FLOW institutions_scd_flow AS
     AUTO CDC INTO institutions_scd
     FROM STREAM(source_table)
     KEYS (`#ID_RSSD`)
+    SEQUENCE BY D_DT_START
     STORED AS SCD TYPE 2;
     ```
+    <!-- source: facts_extracted.md §6 -->
+
+    > **Common Pitfall:** `AUTO CDC INTO` is not a statement you can write on its own. Without the
+    > `CREATE FLOW <name> AS` wrapper the pipeline fails with **`Missing clause CREATE FLOW for
+    > operation AUTO CDC`**, and `SEQUENCE BY` is required rather than optional — it tells the
+    > engine which column orders the change events. Omit either and the failure is a syntax error,
+    > not a data error, so do not go looking at your source table.
+    <!-- source: facts_extracted.md §6 -->
+
+    > **Note:** `SEQUENCE BY` appears here but not in the Python snapshot call in step 17. That is
+    > not an inconsistency. Snapshot comparison derives ordering from the snapshots themselves;
+    > a stream of change events has no inherent order, so you must name the column that supplies it.
     <!-- source: facts_extracted.md §6 -->
 
     > **Key Insight:** The AUTO CDC APIs replace the APPLY CHANGES APIs and have identical syntax. You will meet `APPLY CHANGES INTO`, `apply_changes()` and `apply_changes_from_snapshot()` in existing pipelines; they still work. Lead with the new names, recognise the old.

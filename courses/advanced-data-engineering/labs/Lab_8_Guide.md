@@ -153,7 +153,7 @@ You have a multi-join T-SQL stored procedure that runs on-premises. This lab con
     ```
     <!-- source: facts_extracted.md §2 -->
 
-    > **Expected Result:** Noticeably slower than the same query will run in step 16. On the reference cluster this measured **17.4 seconds**.
+    > **Expected Result:** Noticeably slower than the same query will run in step 16. Measured across repeated runs on the reference cluster: **17–28 seconds**. Absolute times move with cluster size, warm caches, and what else is running, so record *your* number — the step 16 comparison is the point, not matching this figure.
 
 13. **Measure how unevenly the rows are distributed**
 
@@ -208,7 +208,7 @@ You have a multi-join T-SQL stored procedure that runs on-premises. This lab con
     ```
     <!-- source: facts_extracted.md §2 -->
 
-    > **Expected Result:** Substantially faster than step 12 — about **6.2 seconds** against 17.4 on the reference cluster, close to a **3×** improvement, with no change to your code.
+    > **Expected Result:** Substantially faster than step 12 — around **6 seconds**, a **3× to 4×** improvement with no change to your code. The partition ratio in step 13 reproduced at exactly **9.0×** on every run; that structural number is stable even when the timings are not.
 
 17. **Write down what actually fixed it**
 
