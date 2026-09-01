@@ -227,3 +227,82 @@ eng_test.work.*                                         (Lab 7/9 outputs)
 
 Removed: both CDC test schemas, both test pipelines, the test job and its notebooks, the
 deployed bundle and its resources, and a stray probe table. The classic cluster is terminated.
+
+---
+
+# Re-test from the repository
+
+After publishing to `roitraining/db-on-aws`, every lab was executed again — this time by cloning
+the repository fresh and extracting the code blocks from the **committed** guides, not from the
+working copies. The point was to test the artifact attendees will actually receive.
+
+**Clone:** `https://github.com/roitraining/db-on-aws.git` @ `f63e80c`
+**Raw result:** PASS 57 · FAIL 31 · SKIP 33
+
+The 31 failures are not 31 defects. Broken down honestly:
+
+| Category | Count | What it is |
+|---|---:|---|
+| Harness artifact — session state | ~14 | The Statement Execution API runs each statement in its own session, so a `USE CATALOG` in one block does not persist to the next. Every `SCHEMA_NOT_FOUND: learn2training.migrated` and bare `TABLE_OR_VIEW_NOT_FOUND: institutions` is this. In a SQL editor session, where attendees work, the `USE` persists and the statements are correct. |
+| Harness artifact — unresolved placeholders | ~9 | `<start>`, `<end>`, `VERSION AS OF <n>`, `<service-principal>` and similar are values attendees supply. My substitution table covered `<id>` and its variants, not these. |
+| Pipeline-only fragments | 3 | Lab 10's `CONSTRAINT … EXPECT` clause and its Bronze/Silver references are only valid inside a pipeline definition. Running them standalone is meaningless, not failing. |
+| Taught deliberately | 2 | Lab 2's `CAST_INVALID_INPUT` on `'not-a-number'` and its unbound `:end_date` parameter are the lesson, not bugs. |
+| `%sql` magic in a Python cell | 1 | Lab 4 L194. The harness posted the magic line to the SQL API. |
+| **Genuine defects** | **3** | Below. |
+
+## The three real defects
+
+### Lab 10 step 18 — the AUTO CDC SQL was not executable
+
+The committed form was:
+
+```sql
+AUTO CDC INTO institutions_scd
+FROM STREAM(source_table)
+KEYS (`#ID_RSSD`)
+STORED AS SCD TYPE 2;
+```
+
+The pipeline rejected it: **`Missing clause CREATE FLOW for operation AUTO CDC`**. The
+documentation confirms two omissions — `AUTO CDC INTO` must be wrapped in `CREATE FLOW <name> AS`,
+and `SEQUENCE BY` is **required**, not optional.
+
+This one matters because Lab 10's Python path was verified working earlier, which made the SQL
+form look verified by association. It was not. Only running it caught it.
+
+Corrected and re-verified on a real serverless pipeline: **COMPLETED**, `source_table` and
+`institutions_scd` both 5,000 rows, `__START_AT` / `__END_AT` present.
+
+The guide now also explains why `SEQUENCE BY` appears in the SQL form but not in the Python
+snapshot call in step 17 — snapshot comparison derives its ordering from the snapshots, whereas a
+stream of change events has none. Without that note the asymmetry reads as an error in the guide.
+
+### Lab 7 step 1 — `CREATE CATALOG` fails on this account
+
+```
+Metastore storage root URL does not exist. Default Storage is enabled in your account.
+```
+
+The metastore has no default managed location, so Unity Catalog cannot place the catalog's data.
+It is neither a syntax nor a permissions problem, and the error does not say so. Added the
+`MANAGED LOCATION` form and a note naming the failure. Worth the instructor settling which form
+this workspace needs before twenty attendees hit it at once.
+
+### Lab 8 step 12 — a single quoted timing was not reproducible
+
+The guide quoted the AQE-off baseline as **17.4 seconds**. The re-run measured **28.1 seconds** on
+the same cluster and same data. Both are true; the absolute number moves with cache state and
+contention. Now quoted as a **17–28 second** range, with the lesson moved to the comparison against
+step 16 rather than to matching a figure.
+
+The structural measurement did **not** drift: the partition ratio reproduced at exactly **9.0×**
+(max 1,200,000 / median 133,333) on every run. That is the number the lab should lean on, and it
+now does.
+
+## What this exercise was worth
+
+Two of the three defects were invisible to review and to the first round of testing. Lab 10's SQL
+form had been read several times and looked right; it was wrong in two ways at once. Lab 8's
+timing had been *measured* — just once, which is how a real number becomes a misleading one.
+
+Testing the committed artifact rather than the working copy is what surfaced both.
