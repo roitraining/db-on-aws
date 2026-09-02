@@ -1,0 +1,126 @@
+# Lab 12 reference — GitLab CI for a Declarative Automation Bundle.
+#
+# ANSWER KEY for Lab 12 step 21. Attendees sketch these three stages themselves; this is
+# what they are sketching toward.
+#
+# The three stages the approved outline calls for:
+#
+#   validate  on every merge request      cheap, touches nothing, catches manifest errors
+#   deploy    on merge to the main branch dev target
+#   promote   on a release tag            prod target, manual approval
+#
+# Copy this to the ROOT of your GitLab repository, alongside databricks.yml.
+
+# The CLI must be v1.0 or later. Bundle commands on the 0.x line shell out to Terraform and
+# fail with "error downloading Terraform: unable to verify checksums signature: openpgp: key
+# expired" — an expired signing key inside an old binary, not a network fault. Pinning the
+# image tag rather than tracking :latest keeps CI reproducible.
+image: databricksruntime/databricks-cli:latest
+
+stages:
+  - validate
+  - deploy
+  - promote
+
+# ---------------------------------------------------------------------------------------
+# Authentication
+#
+# Set these in GitLab under Settings > CI/CD > Variables. Mark CLIENT_SECRET as **Masked**
+# and **Protected** so it never prints in a job log and is only available to protected
+# branches and tags.
+#
+#   DATABRICKS_HOST            https://<workspace>.cloud.databricks.com
+#   DATABRICKS_CLIENT_ID       the service principal's application ID
+#   DATABRICKS_CLIENT_SECRET   an OAuth secret generated for that service principal
+#
+# These three variable names are read by the CLI automatically — there is no `databricks
+# configure` step and no profile to manage.
+#
+# This is OAuth machine-to-machine, not a personal access token. The distinction matters:
+# a PAT belongs to a person and dies when they leave, take holiday, or rotate it. The
+# service principal is the same identity that runs the job in Lab 11, and your personal
+# credentials appear nowhere in CI. That is what makes the pipeline survive your holiday
+# and satisfy an auditor.
+# ---------------------------------------------------------------------------------------
+
+.databricks_auth: &databricks_auth
+  before_script:
+    - databricks --version
+    # Fail loudly and early if CI variables are missing, rather than emitting a confusing
+    # auth error several commands later.
+    - test -n "$DATABRICKS_HOST" || (echo "DATABRICKS_HOST is not set" && exit 1)
+    - test -n "$DATABRICKS_CLIENT_ID" || (echo "DATABRICKS_CLIENT_ID is not set" && exit 1)
+    - test -n "$DATABRICKS_CLIENT_SECRET" || (echo "DATABRICKS_CLIENT_SECRET is not set" && exit 1)
+
+# ---------------------------------------------------------------------------------------
+# Stage 1 · Validate on every merge request
+#
+# Validation resolves variables and references and checks the manifest's structure. It does
+# not deploy and it does not touch the workspace, so it is safe to run on any branch and on
+# every push. This is the stage that catches the class of error which would otherwise fail
+# halfway through a production deployment, leaving resources half-created.
+# ---------------------------------------------------------------------------------------
+
+validate:
+  stage: validate
+  <<: *databricks_auth
+  script:
+    - databricks bundle validate -t dev
+    - databricks bundle validate -t prod
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_TAG
+
+# Both targets are validated, not just the one being deployed. A manifest can be valid for
+# dev and broken for prod — a variable that only prod overrides, a workspace host that only
+# prod sets. Catching that on the merge request is the entire point; discovering it during
+# the release is too late.
+
+# ---------------------------------------------------------------------------------------
+# Stage 2 · Deploy to dev on merge to the default branch
+# ---------------------------------------------------------------------------------------
+
+deploy_dev:
+  stage: deploy
+  <<: *databricks_auth
+  environment:
+    name: development
+  script:
+    - databricks bundle deploy -t dev
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+# ---------------------------------------------------------------------------------------
+# Stage 3 · Promote to prod on a release tag
+#
+# Tag-triggered rather than branch-triggered, so what reached production is always a named,
+# immutable point in history. `when: manual` adds a human decision in the GitLab UI: the
+# pipeline waits rather than deploying the moment a tag lands.
+# ---------------------------------------------------------------------------------------
+
+promote_prod:
+  stage: promote
+  <<: *databricks_auth
+  environment:
+    name: production
+  script:
+    - databricks bundle deploy -t prod
+  rules:
+    # Semantic version tags only — v1.0.0, v2.3.1. An arbitrary tag does not ship to prod.
+    - if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/
+      when: manual
+      allow_failure: false
+
+# ---------------------------------------------------------------------------------------
+# What is deliberately absent
+#
+# There is no `databricks bundle destroy` stage. Destroying production from CI is one
+# mistyped variable away from an outage, and the blast radius is every job and pipeline the
+# bundle owns. Teardown stays a deliberate, local, human act.
+#
+# There is also no deploy on a feature branch. Bundles deployed in development mode are
+# name-prefixed per user, so parallel feature deploys do not collide — but they do
+# accumulate, and nobody cleans them up. Deploy from the default branch and let engineers
+# deploy their own work locally.
+# ---------------------------------------------------------------------------------------

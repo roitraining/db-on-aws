@@ -257,7 +257,25 @@ Everything you built over two days exists because you clicked it into being. Thi
 
     Write the three stages the approved outline describes: validate on pull request, deploy to dev on merge, promote to prod on release tag — with the service principal authenticating from GitLab CI variables.
 
+    Sketch it yourself first. Then compare against the worked reference at
+    `bundles/solutions/lab-12-reference/.gitlab-ci.yml` in the course repository.
+
+    ```yaml
+    stages:
+      - validate    # every merge request — cheap, touches nothing
+      - deploy      # merge to the default branch — dev target
+      - promote     # release tag — prod target, manual approval
+    ```
+    <!-- source: facts_extracted.md §8 -->
+
     > **Key Insight:** The service principal from Lab 11 is the same identity that runs the deployment. Your personal credentials appear nowhere in CI, which is what makes the pipeline survive your holiday and satisfy an auditor.
+
+    > **Note:** Authenticate with **OAuth machine-to-machine** — `DATABRICKS_HOST`, `DATABRICKS_CLIENT_ID` and `DATABRICKS_CLIENT_SECRET` as masked GitLab CI variables. The CLI reads those three names automatically, so there is no `databricks configure` step in the pipeline. A personal access token would also work and is the wrong choice: it belongs to a person, and it dies when they leave or rotate it.
+    <!-- source: facts_extracted.md §8 -->
+
+    > **Key Insight:** Validate **both** targets on the merge request, not just the one you are about to deploy. A manifest can be valid for dev and broken for prod — a variable only prod overrides, a workspace host only prod sets. Catching that on the merge request is the whole point of a validate stage; discovering it during the release is too late.
+
+    > **Common Pitfall:** Do not add a `destroy` stage. Destroying production from CI is one mistyped variable away from an outage, and the blast radius is every job and pipeline the bundle owns. Teardown stays a deliberate, local, human act.
 
 22. **Commit the bundle**
 
