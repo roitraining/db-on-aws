@@ -1,0 +1,61 @@
+# Performance-scale data — Lab 8 only.
+#
+# Two million rows with a deliberate 60% CA skew. Separate bundle because it is the most
+# expensive thing to build and only one lab needs it. Destroy it between deliveries.
+#
+#   databricks bundle deploy -t dev
+#   databricks bundle run build_perf_tables
+#
+# Why Lab 8 cannot use the 4,900-row migrated tables: at that volume the join lands in a
+# single partition, every task duration is identical, and the skew the lab exists to teach
+# is invisible in Summary Metrics. The switch to these tables is a taught point in the lab,
+# not an inconsistency — do not "simplify" it back to one dataset.
+
+bundle:
+  name: db_on_aws_perf_data
+
+variables:
+  catalog:
+    description: Catalog holding the shared training data
+    default: training_nic
+  perf_rows:
+    description: Row count per performance table
+    default: 2000000
+  skew_pct:
+    description: >-
+      Share of rows forced onto a single state key. 60 produces a ~9x max/median partition
+      ratio — large enough to read off Summary Metrics without making the lab slow.
+    default: 60
+
+resources:
+  schemas:
+    perf:
+      catalog_name: ${var.catalog}
+      name: perf
+      comment: Performance-scale tables for Lab 8. Not used by any other lab.
+
+  jobs:
+    build_perf_tables:
+      name: "[${bundle.target}] db-on-aws · build perf tables (Lab 8)"
+      description: >-
+        Builds the 2M-row skewed tables Lab 8 measures against, then verifies the skew
+        ratio still matches the figures the lab quotes.
+      max_concurrent_runs: 1
+      tasks:
+        - task_key: build_perf_tables
+          notebook_task:
+            notebook_path: ./src/build_perf_tables.py
+            base_parameters:
+              catalog: ${var.catalog}
+              perf_rows: ${var.perf_rows}
+              skew_pct: ${var.skew_pct}
+
+targets:
+  dev:
+    default: true
+    mode: development
+
+  prod:
+    mode: production
+    variables:
+      catalog: training_nic_prod

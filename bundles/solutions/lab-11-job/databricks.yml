@@ -1,0 +1,81 @@
+# Lab 11 solution — orchestration with a quality gate.
+#
+# ANSWER KEY. Attendees build this themselves in Lab 11.
+#
+#   databricks bundle deploy -t dev
+#   databricks bundle run medallion_job
+#
+# Demonstrates the three mechanics Lab 11 turns on:
+#   1. a task value emitted from a PYTHON notebook (SQL tasks cannot set task values)
+#   2. an If/else task reading {{tasks.<name>.values.<key>}}
+#   3. branch routing, where the untaken branch reports SKIPPED / EXCLUDED rather than failing
+#
+# The approved outline calls it a "Condition Task". The current product name is the
+# "If/else task". Both terms will come up.
+
+bundle:
+  name: db_on_aws_lab11_solution
+
+variables:
+  catalog:
+    default: training_nic
+  quality_threshold:
+    description: >-
+      Maximum dropped records tolerated before Gold promotion is blocked. The gate compares
+      against this, so lowering it below the observed count is how you demo the false branch.
+    default: 100
+
+resources:
+  jobs:
+    medallion_job:
+      name: "[${bundle.target}] db-on-aws · Lab 11 orchestration (solution)"
+      description: >-
+        Reads pipeline data-quality outcomes, emits the dropped-record count as a task value,
+        and gates Gold promotion on it with an If/else task.
+      max_concurrent_runs: 1
+      tasks:
+        - task_key: read_event_log
+          notebook_task:
+            notebook_path: ./src/read_event_log.py
+            base_parameters:
+              catalog: ${var.catalog}
+
+        - task_key: quality_gate
+          depends_on:
+            - task_key: read_event_log
+          condition_task:
+            op: LESS_THAN_OR_EQUAL
+            left: "{{tasks.read_event_log.values.dropped_records}}"
+            right: "${var.quality_threshold}"
+
+        - task_key: promote_gold
+          # `outcome: "true"` means the condition held. Omit the outcome and the task
+          # depends on the gate *running*, not on which way it went.
+          depends_on:
+            - task_key: quality_gate
+              outcome: "true"
+          notebook_task:
+            notebook_path: ./src/promote_gold.py
+            base_parameters:
+              catalog: ${var.catalog}
+
+        - task_key: halt_and_alert
+          depends_on:
+            - task_key: quality_gate
+              outcome: "false"
+          notebook_task:
+            notebook_path: ./src/halt_and_alert.py
+            base_parameters:
+              catalog: ${var.catalog}
+
+targets:
+  dev:
+    default: true
+    mode: development
+
+  prod:
+    mode: production
+    variables:
+      catalog: training_nic_prod
+      # Production tolerates nothing silently.
+      quality_threshold: 0

@@ -1,0 +1,45 @@
+# Lab 10 solution — the medallion pipeline.
+#
+# ANSWER KEY. Attendees build this themselves in Lab 10. Deploy it when you need a working
+# reference, a recovery path if a lab wedges mid-class, or a demo of the finished shape.
+#
+#   databricks bundle deploy -t dev
+#   databricks bundle run medallion_pipeline
+#
+# Requires bundles/00-foundation and bundles/30-landing-data. The Bronze table reads the
+# CSVs that 30-landing-data stages into the landing volume.
+
+bundle:
+  name: db_on_aws_lab10_solution
+
+variables:
+  catalog:
+    default: training_nic
+  target_schema:
+    description: Schema the pipeline writes Bronze, Silver and Gold into
+    default: lab10_solution
+
+resources:
+  pipelines:
+    medallion_pipeline:
+      name: "[${bundle.target}] db-on-aws · Lab 10 medallion (solution)"
+      catalog: ${var.catalog}
+      schema: ${var.target_schema}
+      serverless: true
+      # Development mode keeps the cluster warm between runs and skips retries, which is
+      # what you want when demonstrating. Flip to false for a timed production run.
+      development: true
+      libraries:
+        - notebook:
+            path: ./src/medallion.py
+
+targets:
+  dev:
+    default: true
+    mode: development
+
+  prod:
+    mode: production
+    variables:
+      catalog: training_nic_prod
+      target_schema: lab10

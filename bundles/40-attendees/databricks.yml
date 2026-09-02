@@ -1,0 +1,75 @@
+# Per-attendee schemas and grants.
+#
+# One schema per attendee for Labs 4-6, plus the shared grants that let a class read the
+# training data. Deploy once you know the roster; destroy after the delivery.
+#
+#   databricks bundle deploy -t dev
+#   databricks bundle run grant_attendee_access
+#
+# This bundle is the counterpoint to 00-foundation. There the schemas are created inside a
+# job, because on a clean workspace the catalog does not exist yet and a bundle cannot
+# declare one. Here the catalog is already in place, so the schemas are declared natively as
+# `resources.schemas` — which means `bundle destroy` cleans them up, and `bundle deploy`
+# after editing the list reconciles the difference. That is the form to prefer whenever the
+# ordering allows it, and the contrast is worth showing attendees.
+#
+# Adding an attendee is a two-line edit here plus a line in ATTENDEES in the notebook.
+# Bundles have no loop construct, so the schema list is explicit by necessity.
+
+bundle:
+  name: db_on_aws_attendees
+
+variables:
+  catalog:
+    default: training_nic
+  attendee_group:
+    description: Account group holding the class. Create it in the account console first.
+    default: training_attendees
+
+resources:
+  schemas:
+    analyst_a01:
+      catalog_name: ${var.catalog}
+      name: analyst_a01
+      comment: Attendee a01 workspace for Labs 4-6
+    analyst_a02:
+      catalog_name: ${var.catalog}
+      name: analyst_a02
+      comment: Attendee a02 workspace for Labs 4-6
+    analyst_a03:
+      catalog_name: ${var.catalog}
+      name: analyst_a03
+      comment: Attendee a03 workspace for Labs 4-6
+    analyst_a04:
+      catalog_name: ${var.catalog}
+      name: analyst_a04
+      comment: Attendee a04 workspace for Labs 4-6
+    analyst_a05:
+      catalog_name: ${var.catalog}
+      name: analyst_a05
+      comment: Attendee a05 workspace for Labs 4-6
+
+  jobs:
+    grant_attendee_access:
+      name: "[${bundle.target}] db-on-aws · grant attendee access"
+      description: >-
+        Grants the class group the three privileges needed to read the training data, and
+        gives each attendee ownership of their own schema.
+      max_concurrent_runs: 1
+      tasks:
+        - task_key: grant_attendee_access
+          notebook_task:
+            notebook_path: ./src/grant_attendee_access.py
+            base_parameters:
+              catalog: ${var.catalog}
+              attendee_group: ${var.attendee_group}
+
+targets:
+  dev:
+    default: true
+    mode: development
+
+  prod:
+    mode: production
+    variables:
+      catalog: training_nic_prod

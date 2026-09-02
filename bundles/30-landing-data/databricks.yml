@@ -1,0 +1,50 @@
+# Landing files — the Auto Loader source for Lab 10.
+#
+# Lab 10's Bronze ingest reads CSVs from a Unity Catalog volume with cloudFiles. Without
+# this bundle the volume is empty and the pipeline has nothing to pick up.
+#
+#   databricks bundle deploy -t dev
+#   databricks bundle run stage_landing_files
+#
+# The files are written as several small CSVs rather than one large one, so attendees can
+# run the pipeline, add a file with `--drop-extra`, and watch Auto Loader ingest only the
+# new one. That incremental behaviour is the point of the lab.
+
+bundle:
+  name: db_on_aws_landing_data
+
+variables:
+  catalog:
+    default: training_nic
+  file_count:
+    description: Number of CSV parts to stage. More parts, more visible incremental loads.
+    default: 4
+  rows_per_file:
+    default: 500
+
+resources:
+  jobs:
+    stage_landing_files:
+      name: "[${bundle.target}] db-on-aws · stage landing files (Lab 10)"
+      description: >-
+        Writes NIC-shaped branch CSVs into the landing volume for Lab 10's Auto Loader
+        ingest, preserving the native leading '#' on the key column.
+      max_concurrent_runs: 1
+      tasks:
+        - task_key: stage_landing_files
+          notebook_task:
+            notebook_path: ./src/stage_landing_files.py
+            base_parameters:
+              catalog: ${var.catalog}
+              file_count: ${var.file_count}
+              rows_per_file: ${var.rows_per_file}
+
+targets:
+  dev:
+    default: true
+    mode: development
+
+  prod:
+    mode: production
+    variables:
+      catalog: training_nic_prod

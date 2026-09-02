@@ -1,0 +1,59 @@
+# Lab 12 reference — the finished bundle attendees build toward.
+#
+# ANSWER KEY. Lab 12 has attendees assemble this themselves from an empty `bundle init`.
+#
+# This is the shape their manifest should reach: one pipeline, one Job that references it by
+# bundle reference rather than by ID, dev and prod targets differing only by a variable, and
+# an `include` pattern so generated resource files are actually part of the bundle.
+#
+#   databricks bundle validate
+#   databricks bundle deploy -t dev
+#   databricks bundle deploy -t prod    # same code, different catalog
+
+bundle:
+  name: medallion
+
+# Without this, anything written by `databricks bundle generate` sits on disk and is never
+# deployed. The generate command warns about exactly this, and the warning is easy to miss.
+include:
+  - resources/*.yml
+
+variables:
+  target_catalog:
+    description: Catalog the pipeline writes into
+    default: eng_test
+
+resources:
+  pipelines:
+    medallion_pipeline:
+      name: "medallion_${bundle.target}"
+      catalog: ${var.target_catalog}
+      schema: work
+      serverless: true
+      libraries:
+        - notebook:
+            path: ./pipelines/medallion.py
+
+  jobs:
+    medallion_job:
+      name: "medallion_job_${bundle.target}"
+      tasks:
+        - task_key: run_pipeline
+          pipeline_task:
+            # The whole point of Task 3. `bundle generate` will hand you a hard-coded
+            # pipeline_id here instead; replace it with this reference before committing.
+            # A hard-coded ID deploys perfectly to dev and quietly points prod at the dev
+            # pipeline.
+            pipeline_id: ${resources.pipelines.medallion_pipeline.id}
+
+targets:
+  dev:
+    default: true
+    mode: development
+    variables:
+      target_catalog: eng_test
+
+  prod:
+    mode: production
+    variables:
+      target_catalog: training_nic

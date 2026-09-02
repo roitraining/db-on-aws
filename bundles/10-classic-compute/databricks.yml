@@ -1,0 +1,58 @@
+# Classic compute — the cluster Labs 4, 8 and 9 need.
+#
+# Separate from the foundation on purpose: this is the expensive resource, and it is the one
+# you want to deploy the morning of a class and destroy the moment it ends.
+#
+#   databricks bundle deploy -t dev
+#   databricks bundle destroy -t dev
+#
+# Why classic and not serverless: the Spark UI is not available on serverless compute, and
+# Labs 4, 8 and 9 read it directly. That is a platform constraint, not a preference.
+#
+# A cold start takes about six minutes. Start it before the break preceding Lab 4.
+
+bundle:
+  name: db_on_aws_classic_compute
+
+variables:
+  node_type:
+    description: >-
+      Worker/driver instance type. m5d.large carries instance storage; plain m5.large is
+      rejected with "At least one EBS volume must be attached".
+    default: m5d.large
+  autotermination_minutes:
+    description: Idle minutes before the cluster self-terminates
+    default: 30
+  spark_version:
+    default: 16.4.x-scala2.12
+
+resources:
+  clusters:
+    lab_cluster:
+      cluster_name: "[${bundle.target}] db-on-aws · lab cluster"
+      spark_version: ${var.spark_version}
+      node_type_id: ${var.node_type}
+      # Single node: no workers, Spark runs locally on the driver. Enough for the data
+      # volumes these labs use, and the Spark UI behaves identically.
+      num_workers: 0
+      spark_conf:
+        spark.databricks.cluster.profile: singleNode
+        spark.master: "local[*]"
+      custom_tags:
+        ResourceClass: SingleNode
+        course: db-on-aws
+      autotermination_minutes: ${var.autotermination_minutes}
+      data_security_mode: SINGLE_USER
+
+targets:
+  dev:
+    default: true
+    mode: development
+
+  # A shared class wants a longer idle timeout and room to actually distribute work,
+  # so attendees see more than one task in Summary Metrics.
+  prod:
+    mode: production
+    variables:
+      autotermination_minutes: 60
+      node_type: m5d.xlarge

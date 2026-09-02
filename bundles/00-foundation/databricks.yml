@@ -1,0 +1,56 @@
+# Foundation — the catalog, schemas, volume and training data every lab depends on.
+#
+# Deploy this first. Nothing else in bundles/ works without it.
+#
+#   databricks bundle validate
+#   databricks bundle deploy -t dev
+#   databricks bundle run build_environment
+#
+# Note the asymmetry with 40-attendees: that bundle declares schemas as native
+# `resources.schemas` entries, while this one creates them inside a job. The reason is
+# ordering — a bundle cannot declare a Unity Catalog *catalog*, so on a clean workspace
+# the catalog does not exist yet and declared schemas would have nothing to live in.
+# Once the catalog exists, the declarative form is the better one. Both are correct in
+# their place, which is worth pointing out to attendees.
+
+bundle:
+  name: db_on_aws_foundation
+
+variables:
+  catalog:
+    description: Catalog holding all shared training data
+    default: training_nic
+  managed_location:
+    description: >-
+      S3 path for the catalog's managed storage. Required on accounts whose metastore
+      has no storage root — leave empty to let Unity Catalog use the metastore default.
+    default: ""
+
+resources:
+  jobs:
+    build_environment:
+      name: "[${bundle.target}] db-on-aws · build environment"
+      description: >-
+        Creates the catalog, schemas and landing volume, generates the NIC-shaped
+        training data, and plants the five defects Lab 3 exists to find.
+      max_concurrent_runs: 1
+      tasks:
+        - task_key: build_environment
+          notebook_task:
+            notebook_path: ./src/build_environment.py
+            base_parameters:
+              catalog: ${var.catalog}
+              managed_location: ${var.managed_location}
+
+targets:
+  dev:
+    default: true
+    mode: development
+    variables:
+      catalog: training_nic
+
+  # Point prod at a separate catalog so a re-run can never overwrite a live class.
+  prod:
+    mode: production
+    variables:
+      catalog: training_nic_prod
