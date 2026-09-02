@@ -13,6 +13,16 @@ all write into a catalog created in Lab 7.
 
 ---
 
+## Start here
+
+**[`SETUP.md`](SETUP.md)** — add the material to your workspace, get compute, and verify your
+environment. Everything in it happens inside Databricks; no local tooling and no access token.
+
+Taking the Advanced course without having taken the Intro course? `SETUP.md` **Part 4** is the
+bridge. Read it before Lab 7.
+
+---
+
 ## Using this repository in Databricks
 
 The intended path is a **Databricks Git folder**, so attendees read each guide inside the

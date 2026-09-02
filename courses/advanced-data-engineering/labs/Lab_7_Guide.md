@@ -15,11 +15,30 @@ You sat the Intro course as an analyst. Now you own the platform. This lab sets 
 
 ## Prerequisites
 
-- [ ] Intro Labs 1–6 completed
+- [ ] **[`SETUP.md`](../../../SETUP.md) Parts 1 and 2 completed** — course material added as a Git folder, compute selected
+- [ ] Intro Labs 1–6 completed, **or** `SETUP.md` Part 4 read — see below
 - [ ] `CREATE CATALOG` on the metastore, or an instructor who has it
 - [ ] S3 bucket name and IAM role ARN supplied by your instructor
 - [ ] GitLab repository URL and a personal access token
 - [ ] A peer in the room to verify your grants
+
+> **Did not take the Intro course?** You are not stuck, but do not skip this. Labs 7–12 assume
+> Labs 1–6 and deliberately do not re-teach them. Read **[`SETUP.md`](../../../SETUP.md) Part 4 —
+> Advanced course catch-up** before starting. It is a ten-minute read covering the four things this
+> lab assumes you already know: the three-level namespace, the leading `#` on the NIC key and why
+> it needs backticks, the three privileges required to read a table, and what the `legacy_onprem`
+> and `migrated` schemas represent. Task 2 of this lab in particular will look like a bug if you
+> have not met the third of those.
+>
+> One further heads-up: **Lab 8 builds directly on Intro Lab 4.** If you are not fluent in the
+> DataFrame API, skim `courses/cloud-analytics-business-users/labs/Lab_4_Guide.md` tonight —
+> about twenty minutes. Everything else in Labs 7–12 is self-contained.
+
+> **Note on the two repositories in this course.** The **course repository** is the public GitHub
+> repo you added in `SETUP.md` Part 1, holding these guides; it needs no credential. The **GitLab
+> repository** in Task 3 below is a *separate*, private repo supplied by your instructor, which you
+> link with a personal access token and commit to. Task 3 is about the credentialed workflow — do
+> not confuse it with the one you already have.
 
 ---
 

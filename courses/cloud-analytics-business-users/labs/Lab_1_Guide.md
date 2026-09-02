@@ -19,6 +19,9 @@ You have queried this data in SQL Server for years. It now lives in Databricks. 
 - [ ] Your assigned attendee ID (used to name your personal schema)
 - [ ] The known on-premises row count supplied by your instructor at the start of the lab
 - [ ] A browser signed out of any other Databricks workspace
+- [ ] **[`SETUP.md`](../../../SETUP.md) Parts 1 and 2 completed** — course material added as a Git folder, SQL warehouse selected
+
+> **Note:** If you have not added the course repository to your workspace yet, do that first — it takes about two minutes and puts every lab guide inside Databricks, next to the query you are running. `SETUP.md` Part 1 walks through it. The repository is public, so you will not be asked for a token or a password.
 
 ---
 
