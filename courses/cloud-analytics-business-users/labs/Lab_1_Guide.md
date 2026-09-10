@@ -20,7 +20,7 @@ You have queried this data in SQL Server for years. It now lives in Databricks. 
 - [ ] The known on-premises row count supplied by your instructor at the start of the lab
 - [ ] A browser signed out of any other Databricks workspace
 - [ ] **[`SETUP.md`](../../../SETUP.md) Parts 1 and 2 completed** — course material added as a Git folder, SQL warehouse selected
-- [ ] **The `training_nic` environment is built** — an instructor runs the notebook in [`../setup/`](../setup/) once before class (see its [`README`](../setup/README.md)). Quick check: `SELECT COUNT(*) FROM training_nic.migrated.institutions` returns 4900
+- [ ] **[Lab 0: Set Up Your Workspace](Lab_0_Guide.md) completed** — your `training_nic` catalog is built (verify: `SELECT COUNT(*) FROM training_nic.migrated.institutions` returns 4900)
 
 > **Note:** If you have not added the course repository to your workspace yet, do that first — it takes about two minutes and puts every lab guide inside Databricks, next to the query you are running. `SETUP.md` Part 1 walks through it. The repository is public, so you will not be asked for a token or a password.
 
@@ -67,7 +67,7 @@ You have queried this data in SQL Server for years. It now lives in Databricks. 
 
     In the catalog list, expand **`training_nic`**. You will see several schemas. The one holding the data migrated from SQL Server is **`migrated`**.
 
-    > **Don't see `training_nic`?** The environment has not been built yet. An instructor runs the setup notebook once — see [`../setup/README.md`](../setup/README.md) — then refresh Catalog Explorer. It takes a couple of minutes.
+    > **Don't see `training_nic`?** You have not run the setup yet. Go back and complete [Lab 0: Set Up Your Workspace](Lab_0_Guide.md), then refresh Catalog Explorer.
 
     <!-- source: facts_extracted.md §1 -->
 
