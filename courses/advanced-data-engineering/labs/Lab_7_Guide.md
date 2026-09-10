@@ -16,6 +16,7 @@ You sat the Intro course as an analyst. Now you own the platform. This lab sets 
 ## Prerequisites
 
 - [ ] **[`SETUP.md`](../../../SETUP.md) Parts 1 and 2 completed** — course material added as a Git folder, compute selected
+- [ ] **The `training_nic` environment is built** — an instructor runs the notebook in [`../setup/`](../setup/) once before class (see its [`README`](../setup/README.md)). Quick check: `SELECT COUNT(*) FROM training_nic.perf.institutions_large` returns 2,000,000
 - [ ] Intro Labs 1–6 completed, **or** `SETUP.md` Part 4 read — see below
 - [ ] `CREATE CATALOG` on the metastore, or an instructor who has it
 - [ ] S3 bucket name and IAM role ARN supplied by your instructor
