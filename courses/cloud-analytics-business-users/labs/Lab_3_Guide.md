@@ -106,7 +106,9 @@ Run these in order. Each answers a different question, and each has a blind spot
     ```
     <!-- source: facts_extracted.md §10 -->
 
-8. **Check the reverse direction**
+    > **Expected Result:** 100 keys — the missing rows from Check 1, now identified individually.
+
+8. **Now flip it — is there anything in the cloud that was never on-premises?**
 
     ```sql
     SELECT c.`#ID_RSSD`
@@ -115,6 +117,8 @@ Run these in order. Each answers a different question, and each has a blind spot
       ON c.`#ID_RSSD` = s.`#ID_RSSD`;
     ```
     <!-- source: facts_extracted.md §10 -->
+
+    > **Expected Result:** Zero rows. The migration lost data; it did not invent any.
 
 9. **Look for a pattern in what is missing**
 
@@ -130,9 +134,11 @@ Run these in order. Each answers a different question, and each has a blind spot
     ```
     <!-- source: facts_extracted.md §10 -->
 
-10. **Record what you find**
+10. **Read the pattern**
 
-    > **What Just Happened?** If the missing rows cluster in one category rather than spreading evenly, you are not looking at random loss. You are looking at a filter in the migration job. That is a far more actionable finding than "37 rows are missing."
+    > **Expected Result:** One row: charter type `250`, missing count **100**. Every single missing row shares one charter type.
+
+    > **What Just Happened?** The missing rows cluster in one category rather than spreading evenly — that is not random loss, that is a filter in the migration job. A far more actionable finding than "100 rows are missing."
 
 ### Task 4: Check 3 — Aggregate Parity
 
