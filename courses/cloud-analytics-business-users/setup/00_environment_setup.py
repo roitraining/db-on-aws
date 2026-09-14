@@ -240,7 +240,7 @@ for name in ["attributes", "financials", "state_population"]:
           .option("comment", "\0")
           .option("inferSchema", True)
           .load(f"{LANDING}/{name}.csv"))
-    df.write.mode("overwrite").saveAsTable(f"{CATALOG}.raw.{name}")
+    df.write.mode("overwrite").option("overwriteSchema", "true").saveAsTable(f"{CATALOG}.raw.{name}")
     print(f"{CATALOG}.raw.{name}: {df.count():,} rows, {len(df.columns)} columns")
 
 # COMMAND ----------
@@ -290,10 +290,10 @@ onprem = (attrs
           .withColumn("NM_LGL", F.rpad(F.col("NM_LGL"), 100, " "))            # CHAR padding
           .withColumn("CITY", F.coalesce(F.col("CITY"), F.lit("")))           # empty string, not null
           )
-onprem.write.mode("overwrite").saveAsTable(f"{CATALOG}.legacy_onprem.institutions")
+onprem.write.mode("overwrite").option("overwriteSchema", "true").saveAsTable(f"{CATALOG}.legacy_onprem.institutions")
 
 fin = spark.table(f"{CATALOG}.raw.financials")
-fin.write.mode("overwrite").saveAsTable(f"{CATALOG}.legacy_onprem.financials")
+fin.write.mode("overwrite").option("overwriteSchema", "true").saveAsTable(f"{CATALOG}.legacy_onprem.financials")
 
 print(f"legacy_onprem.institutions: {onprem.count():,} rows")
 print(f"legacy_onprem.financials:   {fin.count():,} rows")
@@ -335,7 +335,7 @@ migrated = (src
                  .otherwise(F.col("D_DT_START").cast("date"))
             ))
 
-migrated.write.mode("overwrite").saveAsTable(f"{CATALOG}.migrated.institutions")
+migrated.write.mode("overwrite").option("overwriteSchema", "true").saveAsTable(f"{CATALOG}.migrated.institutions")
 
 # Defect 2 — decimals truncated by an integer cast during migration. The join to
 # migrated.institutions keeps financials consistent with the dropped-rows defect: a real
@@ -348,7 +348,7 @@ fin_migrated = (spark.table(f"{CATALOG}.legacy_onprem.financials")
                       KEY, "inner")
                 .withColumn("TOT_ASSETS",
                             F.col("TOT_ASSETS").cast("bigint").cast("decimal(18,2)")))
-fin_migrated.write.mode("overwrite").saveAsTable(f"{CATALOG}.migrated.financials")
+fin_migrated.write.mode("overwrite").option("overwriteSchema", "true").saveAsTable(f"{CATALOG}.migrated.financials")
 
 print(f"migrated.institutions: {migrated.count():,} rows "
       f"({src.count() - migrated.count():,} dropped)")
@@ -365,7 +365,7 @@ print(f"migrated.institutions: {migrated.count():,} rows "
 # COMMAND ----------
 
 (spark.table(f"{CATALOG}.migrated.institutions")
- .write.mode("overwrite").saveAsTable(f"{CATALOG}.migrated.institutions"))
+ .write.mode("overwrite").option("overwriteSchema", "true").saveAsTable(f"{CATALOG}.migrated.institutions"))
 
 spark.sql(f"DESCRIBE HISTORY {CATALOG}.migrated.institutions").select(
     "version", "timestamp", "operation").show(truncate=False)
@@ -384,7 +384,7 @@ spark.sql(f"DESCRIBE HISTORY {CATALOG}.migrated.institutions").select(
 (spark.table(f"{CATALOG}.raw.state_population")
  .withColumnRenamed("STATE_ABBR_NM", "state_abbr")
  .withColumnRenamed("POPULATION", "population")
- .write.mode("overwrite").saveAsTable(f"{CATALOG}.reference.state_population"))
+ .write.mode("overwrite").option("overwriteSchema", "true").saveAsTable(f"{CATALOG}.reference.state_population"))
 
 spark.table(f"{CATALOG}.reference.state_population").show(5)
 
