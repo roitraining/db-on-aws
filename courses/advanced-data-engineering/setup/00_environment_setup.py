@@ -147,20 +147,20 @@ check("dominant key is CA", top["STATE_ABBR_NM"] == "CA", top["STATE_ABBR_NM"])
 check("CA holds ~60% of rows", 55 <= top_pct <= 65, f"{top_pct:.0f}%")
 check("seven distinct states", len(dist) == 7, f"{len(dist)} states")
 
-print("\n=== Partition ratio (the straggler, as data) ===")
-prev_aqe = spark.conf.get("spark.sql.adaptive.enabled")
-spark.conf.set("spark.sql.adaptive.enabled", "false")
-try:
-    joined = spark.table(f"{CATALOG}.{PERF_SCHEMA}.institutions_large").join(
-        spark.table(f"{CATALOG}.{PERF_SCHEMA}.financials_large"), on="#ID_RSSD", how="inner"
-    )
-    sizes = joined.repartition(F.col("STATE_ABBR_NM")).rdd.glom().map(len).collect()
-    nz = [x for x in sizes if x > 0]
-    ratio = max(nz) / sorted(nz)[len(nz) // 2]
-    print(f"    max={max(nz):,}  median={sorted(nz)[len(nz)//2]:,}  ratio={ratio:.1f}x")
-    check("skew ratio is large enough to see (>=5x)", ratio >= 5, f"{ratio:.1f}x")
-finally:
-    spark.conf.set("spark.sql.adaptive.enabled", prev_aqe)
+print("\n=== Skew ratio (the straggler, as data) ===")
+# Serverless (Spark Connect) exposes neither the RDD API nor the AQE config, and this
+# notebook's own README says to run it on serverless — so measure skew from key-group
+# sizes rather than physical partitions. Same signal: the max/median group ratio is what
+# Lab 8's Summary Metrics surfaces as the straggler on the classic cluster.
+joined = spark.table(f"{CATALOG}.{PERF_SCHEMA}.institutions_large").join(
+    spark.table(f"{CATALOG}.{PERF_SCHEMA}.financials_large"), on="#ID_RSSD", how="inner"
+)
+group_sizes = sorted(
+    r["n"] for r in joined.groupBy("STATE_ABBR_NM").agg(F.count("*").alias("n")).collect()
+)
+ratio = group_sizes[-1] / group_sizes[len(group_sizes) // 2]
+print(f"    max={group_sizes[-1]:,}  median={group_sizes[len(group_sizes)//2]:,}  ratio={ratio:.1f}x")
+check("skew ratio is large enough to see (>=5x)", ratio >= 5, f"{ratio:.1f}x")
 
 # COMMAND ----------
 
