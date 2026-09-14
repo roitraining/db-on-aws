@@ -1,7 +1,7 @@
 # Lab 1: Orientation and Your First Query
 
 **Course:** Databricks on AWS: Cloud Analytics for Business Users
-**Duration:** 35 minutes
+**Duration:** 45 minutes
 
 **Course Repository:** https://github.com/roitraining/db-on-aws
 
@@ -32,6 +32,7 @@ You have queried this data in SQL Server for years. It now lives in Databricks. 
 - Read the three-level namespace and explain how it maps to SQL Server's two-level naming
 - Run a `SELECT` query in the SQL editor
 - Export a result set and compare one value against the on-premises figure
+- Locate Recents, Search, your home folder, Compute, and Query History
 
 ---
 
@@ -153,6 +154,38 @@ You have queried this data in SQL Server for years. It now lives in Databricks. 
 
 ---
 
+## Part 3: Know Your Way Around
+
+### Task 5: The Ten-Minute Tour
+
+Everything you just did left traces. This task shows you where they landed — and where you will work for the rest of the course.
+
+16. **Home and Recents**
+
+    Click the Databricks logo (top left). The **Recents** list shows everything you touched today, including your saved query. This is the fastest way back tomorrow morning.
+
+17. **Search**
+
+    Click the search bar at the top and type `institutions`. Tables, queries, and dashboards all surface here. Once you know a name, search beats navigation.
+
+18. **Workspace**
+
+    In the left navigation, select **Workspace**, then **Home**. Your `lab1_row_count_<id>` file is here. Deleted items go to **Trash** (also in this panel), recoverable for 30 days.
+
+19. **Compute**
+
+    Select **Compute**, then the **SQL warehouses** tab. Find your warehouse and its state. This page answers two questions you will eventually ask: "is anything running?" and "who is paying for it?"
+
+20. **Query History**
+
+    Select **Query History**. Every query you ran today is listed with its status and duration. Check here before re-running anything that "didn't work" — it usually did.
+
+21. **Read the signposts**
+
+    Find these in the left navigation, but do not click through yet: **Dashboards** and **Genie** (you build these in Lab 6), **Alerts** (Lab 5), and **Marketplace** (third-party datasets you can browse without asking IT).
+
+---
+
 ## Stretch Task
 
 For attendees who finish early.
@@ -180,6 +213,7 @@ Keep your answers in mind — they will be relevant in Lab 3.
 - [ ] I exported the result set as CSV
 - [ ] I saw that the cloud count (4,900) does not match the on-premises figure (5,000)
 - [ ] I saved my query as `lab1_row_count_<id>`
+- [ ] I can find Recents, Search, my home folder, Compute, and Query History without help
 
 ---
 
