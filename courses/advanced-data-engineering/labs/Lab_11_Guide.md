@@ -119,7 +119,7 @@ The pipeline works when you run it. This lab makes it work when you are not ther
 
 9. **Decide what happens on the false branch**
 
-    Write down whether a failed gate should fail the run loudly or exit quietly, and why.
+    Decide: should a failed gate fail the run loudly, or exit quietly? Be ready to say why.
 
     > **Key Insight:** The gate is the difference between a pipeline that stops and a pipeline that publishes bad data on schedule. Silver already dropped the invalid rows — the gate exists because *how many* were dropped is itself a signal. One bad row is noise; ten thousand is an upstream change nobody told you about.
 

@@ -66,7 +66,7 @@ In Intro Lab 4 you answered a business question with one notebook: read, filter,
     ```
     <!-- source: facts_extracted.md §4 -->
 
-3. **Record the row count**
+3. **Count the rows**
 
     ```sql
     SELECT COUNT(*) FROM eng_<id>.work.branches_bronze;
@@ -172,7 +172,7 @@ In Intro Lab 4 you answered a business question with one notebook: read, filter,
     ```
     <!-- source: facts_extracted.md §5 -->
 
-15. **Choose deliberately and record why**
+15. **Choose deliberately**
 
     > **Key Insight:** The three actions encode three different business positions. Warn says the data is worth having even when imperfect. Drop says a bad row is worse than a missing one. Fail says publishing anything wrong is unacceptable. That is a business decision wearing engineering clothes — do not make it by default.
 

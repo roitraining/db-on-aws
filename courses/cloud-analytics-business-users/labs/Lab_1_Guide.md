@@ -87,7 +87,7 @@ You have queried this data in SQL Server for years. It now lives in Databricks. 
 
 8. **Note the full name of the table**
 
-    Write down the fully qualified name in the form `training_nic.migrated.<table>`. You will use it in the next task.
+    The fully qualified name is `training_nic.migrated.institutions`. You will use it in the next task.
 
 ---
 

@@ -52,9 +52,9 @@ Your analysts ran a four-check comparison in Intro Lab 3. This lab builds the ma
     ```
     <!-- source: facts_extracted.md §3 -->
 
-3. **Record version 0**
+3. **Confirm version 0**
 
-    Note the version number, timestamp, and operation.
+    > **Expected Result:** One commit — version **0**, operation `WRITE`.
 
     > **Key Insight:** Every write appends a commit to the transaction log. The log — not the files — is the table. This is what makes ACID guarantees possible against object storage, where you cannot lock a file.
 
@@ -149,14 +149,14 @@ Your analysts ran a four-check comparison in Intro Lab 3. This lab builds the ma
 
     > **Note:** The key column carries a leading `#` from the NIC source and must be backtick-quoted in SQL. Native names are preserved through raw and Bronze deliberately; cleaning happens at Silver.
 
-13. **Record the retention constraint**
+13. **Know the retention limits**
 
     > **Common Pitfall:** History is governed by `logRetentionDuration`, 30 days by default, but data files are retained 7 days by default. In Databricks Runtime 18.0 and above a time travel query is blocked if it requests a version older than the deleted-file retention period. Time travel is a recent-comparison tool, not an archive.
     <!-- source: facts_extracted.md §3 -->
 
 14. **State the implication for the validation framework**
 
-    Write one sentence on what this means for a UAT process that runs weekly.
+    In one sentence: what does this mean for a UAT process that runs weekly?
 
 ---
 
@@ -164,7 +164,7 @@ Your analysts ran a four-check comparison in Intro Lab 3. This lab builds the ma
 
 ### Task 4: Fix the Small-File Problem
 
-15. **Record the pre-OPTIMIZE file count**
+15. **Check the file count before OPTIMIZE**
 
     ```sql
     DESCRIBE DETAIL eng_<id>.work.institutions_delta;
@@ -178,7 +178,7 @@ Your analysts ran a four-check comparison in Intro Lab 3. This lab builds the ma
     ```
     <!-- source: facts_extracted.md §3 -->
 
-17. **Record the post-OPTIMIZE file count**
+17. **Check the file count after**
 
     ```sql
     DESCRIBE DETAIL eng_<id>.work.institutions_delta;
@@ -195,9 +195,7 @@ Your analysts ran a four-check comparison in Intro Lab 3. This lab builds the ma
     > **Key Insight:** `OPTIMIZE` compacts small files into larger ones and commits that as another version. It rewrites data layout without changing data. Time travel to earlier versions still works, which is why compaction is safe to schedule.
     <!-- source: facts_extracted.md §3 -->
 
-19. **Record the reduction**
-
-    Write the before and after file counts and the ratio.
+19. **Confirm the reduction**
 
     > **Expected Result:** `numFiles` back down from **3 to 1**, an unchanged row count of 6,000, and a fourth version logged as `OPTIMIZE`. Total size drops too — roughly **39 KB to 19 KB** — because one compacted file compresses far better than three fragments of the same data.
 

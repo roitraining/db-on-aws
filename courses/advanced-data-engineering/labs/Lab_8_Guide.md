@@ -234,7 +234,7 @@ You have a multi-join T-SQL stored procedure that runs on-premises. This lab con
 
     > **Expected Result:** Substantially faster than step 12 — around **6 seconds**, a **3× to 4×** improvement with no change to your code. The partition ratio in step 13 reproduced at exactly **9.0×** on every run; that structural number is stable even when the timings are not.
 
-17. **Write down what actually fixed it**
+17. **So what actually fixed it?**
 
     > **Key Insight:** You did not fix the skew — AQE did, at runtime, by splitting the oversized partition once it had real statistics. This is the most important thing to know about skew on current Databricks: the platform handles the common case for you, and it is on by default. The reason to understand skew anyway is that AQE has limits. It cannot help when the skew is in the *source* rather than the shuffle, when a single key is larger than one task can hold, or when a UDF makes the cost *per row* uneven rather than the row *count* uneven. Those are the cases that still land on your desk.
     <!-- source: facts_extracted.md §2 -->
@@ -269,7 +269,7 @@ You have a multi-join T-SQL stored procedure that runs on-premises. This lab con
     ```
     <!-- source: facts_extracted.md §2 -->
 
-21. **Write down your conclusion**
+21. **Sum it up**
 
     In two sentences: what made the query slow, and what would you actually change to fix it.
 

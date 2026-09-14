@@ -97,7 +97,7 @@ You sat the Intro course as an analyst. Now you own the platform. This lab sets 
     ```
     <!-- source: facts_extracted.md §1 -->
 
-    > **Note:** Record the `Location` value. A managed table lives in Unity Catalog's managed storage and Unity Catalog owns its lifecycle — drop the table and the data goes with it.
+    > **Note:** Note the `Location` value. A managed table lives in Unity Catalog's managed storage and Unity Catalog owns its lifecycle — drop the table and the data goes with it.
 
 ---
 
@@ -212,9 +212,9 @@ You sat the Intro course as an analyst. Now you own the platform. This lab sets 
     ```
     <!-- source: facts_extracted.md §1 -->
 
-16. **Record the difference**
+16. **Compare the two**
 
-    Write down the `Location` and `Type` for both tables.
+    Put the two `DESCRIBE EXTENDED` outputs side by side: `Type` is `MANAGED` vs `EXTERNAL`, and `Location` is Unity Catalog's managed storage vs your S3 path.
 
     > **Key Insight:** The difference that matters is lifecycle, not location. Dropping a managed table removes the data. Dropping an external table removes the metadata and leaves the files. For a migration where another system still reads those files, that distinction decides which kind you create.
 

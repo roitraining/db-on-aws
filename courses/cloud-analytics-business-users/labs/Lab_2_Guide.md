@@ -98,7 +98,7 @@ You already write SQL. This lab is not SQL instruction — it is a translation e
 
     > **Expected Result:** The cloud copy reports a length matching the visible characters. The on-premises copy reports a **longer** length for the same institution — the name is padded with trailing spaces.
 
-    > **Key Insight:** Fixed-width `CHAR` columns export from SQL Server padded to their declared width. The two systems hold the same name and disagree on its length. Write down what you just saw — in Lab 3 this single difference makes a naive comparison report that almost every row is wrong.
+    > **Key Insight:** Fixed-width `CHAR` columns export from SQL Server padded to their declared width. The two systems hold the same name and disagree on its length. Remember what you just saw — in Lab 3 this single difference makes a naive comparison report that almost every row is wrong.
 
 7. **Date arithmetic**
 
