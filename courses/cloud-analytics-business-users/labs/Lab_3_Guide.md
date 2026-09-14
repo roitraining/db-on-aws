@@ -17,7 +17,7 @@ You are being asked to sign off that the migrated data matches the source. This 
 
 - [ ] Labs 1 and 2 completed
 - [ ] A running serverless SQL warehouse selected
-- [ ] The name of the source-of-truth catalog, supplied by your instructor
+- [ ] Access to `training_nic.legacy_onprem` (verify: `SELECT COUNT(*) FROM training_nic.legacy_onprem.institutions` returns 5,000)
 - [ ] A shared notebook created for your findings
 - [ ] Your `LENGTH()` observation from Lab 2, step 5
 
@@ -49,33 +49,26 @@ You are being asked to sign off that the migrated data matches the source. This 
 
 2. **Identify the source of truth**
 
-    Your instructor will tell you which catalog **and schema** hold the on-premises source. It is one of two things: a **foreign catalog** federated live over the on-premises SQL Server, or a **snapshot schema** holding an extract taken at cutover. The queries in this lab work against either — substitute both placeholders.
+    The on-premises source is **`training_nic.legacy_onprem`** — a snapshot schema holding the extract taken at cutover. Every query in this lab uses it.
 
-    | Path | `<source_catalog>` | `<source_schema>` |
-    |---|---|---|
-    | Federated (live SQL Server) | the foreign catalog name | `dbo` |
-    | Snapshot (fallback) | `training_nic` | `legacy_onprem` |
-
-    > **Note:** Write both values down now. Every query in this lab uses them, and the schema differs between the two paths — it is `dbo` on the federated path because that is SQL Server's default schema, and `legacy_onprem` on the snapshot path.
-
-    > **Note:** A foreign catalog is created with `CREATE FOREIGN CATALOG ... USING CONNECTION ...` and lets you query the source system directly, without copying data. Creating one requires `CREATE CATALOG` on the metastore plus ownership of, or `CREATE FOREIGN CATALOG` on, the connection — which is why your instructor created it rather than you.
+    > **Note:** Some deliveries federate live over the on-premises SQL Server instead, via a foreign catalog (`CREATE FOREIGN CATALOG ... USING CONNECTION ...` — instructor-created, since it needs metastore privileges). In that variant, use `<foreign_catalog>.dbo` wherever this lab says `training_nic.legacy_onprem`. Everything else is identical.
     <!-- source: facts_extracted.md §9 -->
 
 3. **Count the source side**
 
-    Substitute the catalog name your instructor gave you.
-
     ```sql
     SELECT COUNT(*) AS source_rows
-    FROM <source_catalog>.<source_schema>.institutions;
+    FROM training_nic.legacy_onprem.institutions;
     ```
     <!-- source: facts_extracted.md §9 -->
 
-    > **Troubleshooting:** If a federated query fails immediately rather than returning rows, the cause is usually the connection rather than your SQL. Federated connections are always encrypted with SSL and the certificate hostname must match the endpoint requested, or the connection fails during the handshake.
+    > **Expected Result:** `source_rows` is **5,000**.
 
-4. **Record both numbers**
+    > **Troubleshooting (federated variant only):** If a federated query fails immediately rather than returning rows, the cause is usually the connection rather than your SQL. Federated connections are always encrypted with SSL and the certificate hostname must match the endpoint requested, or the connection fails during the handshake.
 
-    Write both counts in your shared notebook before going further.
+4. **Confirm the gap**
+
+    Source: **5,000**. Cloud: **4,900**. The four checks that follow find where the 100 rows went — and what else the migration broke.
 
 ---
 
@@ -90,7 +83,7 @@ Run these in order. Each answers a different question, and each has a blind spot
     ```sql
     SELECT
       (SELECT COUNT(*) FROM training_nic.migrated.institutions)   AS cloud_rows,
-      (SELECT COUNT(*) FROM <source_catalog>.<source_schema>.institutions)    AS source_rows;
+      (SELECT COUNT(*) FROM training_nic.legacy_onprem.institutions)    AS source_rows;
     ```
     <!-- source: facts_extracted.md §10 -->
 
@@ -107,7 +100,7 @@ Run these in order. Each answers a different question, and each has a blind spot
 
     ```sql
     SELECT s.`#ID_RSSD`
-    FROM <source_catalog>.<source_schema>.institutions AS s
+    FROM training_nic.legacy_onprem.institutions AS s
     LEFT ANTI JOIN training_nic.migrated.institutions AS c
       ON s.`#ID_RSSD` = c.`#ID_RSSD`;
     ```
@@ -118,7 +111,7 @@ Run these in order. Each answers a different question, and each has a blind spot
     ```sql
     SELECT c.`#ID_RSSD`
     FROM training_nic.migrated.institutions AS c
-    LEFT ANTI JOIN <source_catalog>.<source_schema>.institutions AS s
+    LEFT ANTI JOIN training_nic.legacy_onprem.institutions AS s
       ON c.`#ID_RSSD` = s.`#ID_RSSD`;
     ```
     <!-- source: facts_extracted.md §10 -->
@@ -129,7 +122,7 @@ Run these in order. Each answers a different question, and each has a blind spot
 
     ```sql
     SELECT s.CHTR_TYPE_CD, COUNT(*) AS missing_count
-    FROM <source_catalog>.<source_schema>.institutions AS s
+    FROM training_nic.legacy_onprem.institutions AS s
     LEFT ANTI JOIN training_nic.migrated.institutions AS c
       ON s.`#ID_RSSD` = c.`#ID_RSSD`
     GROUP BY s.CHTR_TYPE_CD
@@ -150,7 +143,7 @@ Run these in order. Each answers a different question, and each has a blind spot
     ```sql
     SELECT
       (SELECT SUM(TOT_ASSETS) FROM training_nic.migrated.financials) AS cloud_total,
-      (SELECT SUM(TOT_ASSETS) FROM <source_catalog>.<source_schema>.financials) AS source_total;
+      (SELECT SUM(TOT_ASSETS) FROM training_nic.legacy_onprem.financials) AS source_total;
     ```
     <!-- source: facts_extracted.md §12 -->
 
@@ -166,7 +159,7 @@ Run these in order. Each answers a different question, and each has a blind spot
       SUM(s.TOT_ASSETS) AS source_total,
       SUM(s.TOT_ASSETS) - SUM(c.TOT_ASSETS) AS difference
     FROM training_nic.migrated.financials AS c
-    JOIN <source_catalog>.<source_schema>.financials AS s
+    JOIN training_nic.legacy_onprem.financials AS s
       ON c.`#ID_RSSD` = s.`#ID_RSSD`;
     ```
     <!-- source: facts_extracted.md §12 -->
@@ -189,7 +182,7 @@ Run these in order. Each answers a different question, and each has a blind spot
     SELECT
       SUM(CASE WHEN CITY IS NULL THEN 1 ELSE 0 END)  AS null_cities,
       SUM(CASE WHEN CITY = ''    THEN 1 ELSE 0 END)  AS empty_cities
-    FROM <source_catalog>.<source_schema>.institutions;
+    FROM training_nic.legacy_onprem.institutions;
     ```
     <!-- source: facts_extracted.md §10 -->
 
@@ -207,7 +200,7 @@ Run these in order. Each answers a different question, and each has a blind spot
     ```sql
     SELECT c.`#ID_RSSD`, c.NM_LGL AS cloud_name, s.NM_LGL AS source_name
     FROM training_nic.migrated.institutions AS c
-    JOIN <source_catalog>.<source_schema>.institutions AS s
+    JOIN training_nic.legacy_onprem.institutions AS s
       ON c.`#ID_RSSD` = s.`#ID_RSSD`
     WHERE c.NM_LGL <> s.NM_LGL
     LIMIT 50;
@@ -219,7 +212,7 @@ Run these in order. Each answers a different question, and each has a blind spot
     ```sql
     SELECT COUNT(*) AS naive_mismatches
     FROM training_nic.migrated.institutions AS c
-    JOIN <source_catalog>.<source_schema>.institutions AS s
+    JOIN training_nic.legacy_onprem.institutions AS s
       ON c.`#ID_RSSD` = s.`#ID_RSSD`
     WHERE c.NM_LGL <> s.NM_LGL;
     ```
@@ -234,7 +227,7 @@ Run these in order. Each answers a different question, and each has a blind spot
     ```sql
     SELECT COUNT(*) AS real_mismatches
     FROM training_nic.migrated.institutions AS c
-    JOIN <source_catalog>.<source_schema>.institutions AS s
+    JOIN training_nic.legacy_onprem.institutions AS s
       ON c.`#ID_RSSD` = s.`#ID_RSSD`
     WHERE NULLIF(TRIM(c.NM_LGL), '') IS DISTINCT FROM NULLIF(TRIM(s.NM_LGL), '');
     ```
@@ -252,7 +245,7 @@ Run these in order. Each answers a different question, and each has a blind spot
     SELECT c.`#ID_RSSD`, c.D_DT_START AS cloud_date, s.D_DT_START AS source_date,
            datediff(c.D_DT_START, s.D_DT_START) AS day_difference
     FROM training_nic.migrated.institutions AS c
-    JOIN <source_catalog>.<source_schema>.institutions AS s
+    JOIN training_nic.legacy_onprem.institutions AS s
       ON c.`#ID_RSSD` = s.`#ID_RSSD`
     WHERE c.D_DT_START IS DISTINCT FROM s.D_DT_START
     LIMIT 50;
@@ -265,7 +258,7 @@ Run these in order. Each answers a different question, and each has a blind spot
     SELECT datediff(c.D_DT_START, s.D_DT_START) AS day_difference,
            COUNT(*) AS row_count
     FROM training_nic.migrated.institutions AS c
-    JOIN <source_catalog>.<source_schema>.institutions AS s
+    JOIN training_nic.legacy_onprem.institutions AS s
       ON c.`#ID_RSSD` = s.`#ID_RSSD`
     WHERE c.D_DT_START IS DISTINCT FROM s.D_DT_START
     GROUP BY 1
