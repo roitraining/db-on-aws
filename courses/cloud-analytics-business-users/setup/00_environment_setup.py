@@ -311,9 +311,17 @@ migrated = (src
 
 migrated.write.mode("overwrite").saveAsTable(f"{CATALOG}.migrated.institutions")
 
-# Defect 2 — decimals truncated by an integer cast during migration
+# Defect 2 — decimals truncated by an integer cast during migration. The join to
+# migrated.institutions keeps financials consistent with the dropped-rows defect: a real
+# migration job that lost institutions would have lost their financials with them. The cast
+# back to DECIMAL(18,2) puts the truncation in the values, not the schema. Both choices
+# mirror bundles/00-foundation/src/build_environment.py so the two setup paths land
+# identical tables.
 fin_migrated = (spark.table(f"{CATALOG}.legacy_onprem.financials")
-                .withColumn("TOT_ASSETS", F.col("TOT_ASSETS").cast("bigint")))
+                .join(spark.table(f"{CATALOG}.migrated.institutions").select(KEY),
+                      KEY, "inner")
+                .withColumn("TOT_ASSETS",
+                            F.col("TOT_ASSETS").cast("bigint").cast("decimal(18,2)")))
 fin_migrated.write.mode("overwrite").saveAsTable(f"{CATALOG}.migrated.financials")
 
 print(f"migrated.institutions: {migrated.count():,} rows "
@@ -414,6 +422,10 @@ print("\n=== Defects present ===")
 src_n = spark.table(f"{CATALOG}.legacy_onprem.institutions").count()
 mig_n = spark.table(f"{CATALOG}.migrated.institutions").count()
 check("defect 1 — rows dropped", mig_n < src_n, f"src={src_n:,} mig={mig_n:,}")
+
+fin_n = spark.table(f"{CATALOG}.migrated.financials").count()
+check("migrated.financials rows match migrated.institutions", fin_n == mig_n,
+      f"fin={fin_n:,} inst={mig_n:,}")
 
 pad = spark.sql(f"""
     SELECT COUNT(*) AS n FROM {CATALOG}.legacy_onprem.institutions
