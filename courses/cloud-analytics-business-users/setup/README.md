@@ -14,9 +14,10 @@ without it, Lab 1 opens Catalog Explorer to nothing.
 5. Click **Run All.**
 
 No file upload is needed. **Part 1.5** stages the pinned NIC snapshot into the landing volume
-itself: files already present are left untouched; otherwise it copies them from `SNAPSHOT_SRC`
-if you set one in Part 0, or generates the synthetic snapshot — row-for-row the same data the
-`bundles/00-foundation` path builds, so the row counts the labs quote are identical.
+itself: files already present are left untouched; otherwise they are downloaded over HTTPS from
+the course's public S3 pinned copy (`SNAPSHOT_SRC` in Part 0, bucket `roi-databricks-demo-data`).
+Setting `SNAPSHOT_SRC = ""` generates the snapshot in place instead — row-for-row the same data
+the `bundles/00-foundation` path builds, so the row counts the labs quote are identical.
 
 You are done when the last cell prints **`All setup checks passed. Environment is ready for
 Labs 1-6.`** The notebook raises on any mismatch, so a green run is a real signal.
