@@ -379,24 +379,43 @@ spark.table(f"{CATALOG}.reference.state_population").show(5)
 # MAGIC Reading a table needs three privileges, not one — `SELECT` on the table, `USE CATALOG` on the
 # MAGIC catalog, and `USE SCHEMA` on the schema. Granting only `SELECT` produces an access-denied error
 # MAGIC that looks like a bug. Lab 5 has attendees discover this themselves.
+# MAGIC
+# MAGIC **The group must exist at the ACCOUNT level.** Unity Catalog cannot grant to workspace-local
+# MAGIC groups — creating the group through the workspace admin page or workspace SCIM API produces a
+# MAGIC `WorkspaceGroup` and every grant fails with `PRINCIPAL_DOES_NOT_EXIST`. Create it at
+# MAGIC **accounts.cloud.databricks.com → User management → Groups**, add the attendees, and assign
+# MAGIC the group to this workspace. If the group is missing, this cell **skips the grants with a
+# MAGIC warning** instead of failing — the data environment is complete and admin-usable without
+# MAGIC them; re-run this cell after creating the group, before attendees arrive.
 
 # COMMAND ----------
 
-GROUP = "training_attendees"     # create this group in the account console first
+GROUP = "training_attendees"     # ACCOUNT-level group — see the cell above
 
-spark.sql(f"GRANT USE CATALOG ON CATALOG {CATALOG} TO `{GROUP}`")
+grants_ok = True
+try:
+    spark.sql(f"GRANT USE CATALOG ON CATALOG {CATALOG} TO `{GROUP}`")
+except Exception as e:
+    if "PRINCIPAL_DOES_NOT_EXIST" not in str(e):
+        raise
+    grants_ok = False
+    print(f"WARNING — no ACCOUNT-level group named '{GROUP}' exists; skipping all grants.")
+    print("Create it at accounts.cloud.databricks.com -> User management -> Groups,")
+    print("add attendees, assign it to this workspace, then re-run this cell.")
+    print("(A workspace-local group with this name does NOT count for Unity Catalog.)\n")
 
-for s in ["migrated", "legacy_onprem", "reference", "raw"]:
-    spark.sql(f"GRANT USE SCHEMA ON SCHEMA {CATALOG}.{s} TO `{GROUP}`")
-    spark.sql(f"GRANT SELECT     ON SCHEMA {CATALOG}.{s} TO `{GROUP}`")
-
-spark.sql(f"GRANT READ VOLUME ON VOLUME {CATALOG}.raw.landing TO `{GROUP}`")
+if grants_ok:
+    for s in ["migrated", "legacy_onprem", "reference", "raw"]:
+        spark.sql(f"GRANT USE SCHEMA ON SCHEMA {CATALOG}.{s} TO `{GROUP}`")
+        spark.sql(f"GRANT SELECT     ON SCHEMA {CATALOG}.{s} TO `{GROUP}`")
+    spark.sql(f"GRANT READ VOLUME ON VOLUME {CATALOG}.raw.landing TO `{GROUP}`")
 
 for a in ATTENDEES:
     schema = f"{CATALOG}.analyst_{a}"
     spark.sql(f"CREATE SCHEMA IF NOT EXISTS {schema}")
-    spark.sql(f"GRANT USE SCHEMA, CREATE TABLE, SELECT, MODIFY ON SCHEMA {schema} TO `{GROUP}`")
-    print(f"created {schema}")
+    if grants_ok:
+        spark.sql(f"GRANT USE SCHEMA, CREATE TABLE, SELECT, MODIFY ON SCHEMA {schema} TO `{GROUP}`")
+    print(f"created {schema}" + ("" if grants_ok else "  (grants pending — group missing)"))
 
 # COMMAND ----------
 
