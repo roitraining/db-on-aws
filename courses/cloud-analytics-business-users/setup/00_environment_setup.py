@@ -41,11 +41,13 @@ LANDING = f"/Volumes/{CATALOG}/raw/landing"
 # The pinned snapshot filenames expected in the landing volume.
 EXPECTED_FILES = ["attributes.csv", "financials.csv", "state_population.csv"]
 
-# Optional: a volume path or S3 URI holding the real pinned NIC snapshot. If set, Part 1.5
-# copies missing files from here. If empty, Part 1.5 generates the synthetic NIC-shaped
-# snapshot — row-for-row the data bundles/00-foundation builds, so every figure the labs
-# quote still holds.
-SNAPSHOT_SRC = ""
+# Where Part 1.5 gets the pinned NIC snapshot. Default: the course's public S3 copy
+# (bucket roi-databricks-demo-data, ROI training AWS account), fetched over plain HTTPS —
+# no credentials, instance profile, or external location required, so it works on
+# serverless. Also accepts a volume/DBFS path (copied with dbutils.fs.cp). Set to "" to
+# generate the snapshot in place instead — the generator produces row-for-row the same
+# data, so every figure the labs quote holds either way.
+SNAPSHOT_SRC = "https://roi-databricks-demo-data.s3.amazonaws.com/nic"
 
 print(f"Catalog:   {CATALOG}")
 print(f"Landing:   {LANDING}")
@@ -77,8 +79,9 @@ print("Expected files:", ", ".join(EXPECTED_FILES), "— staged next, in Part 1.
 # MAGIC This cell makes that true instead of assuming someone uploaded them:
 # MAGIC
 # MAGIC - Files **already present are never touched** — re-running cannot overwrite a delivery's data.
-# MAGIC - If `SNAPSHOT_SRC` is set (Part 0), missing files are **copied** from it.
-# MAGIC - Otherwise missing files are **generated** in place. The generator is row-for-row identical
+# MAGIC - `SNAPSHOT_SRC` (Part 0) defaults to the course's **public S3 pinned copy** — missing files
+# MAGIC   are downloaded from it over HTTPS. A volume/DBFS path works too (`dbutils.fs.cp`).
+# MAGIC - If `SNAPSHOT_SRC` is emptied, missing files are **generated** in place. The generator is row-for-row identical
 # MAGIC   to `bundles/00-foundation/src/build_environment.py` — 5,000 institutions, charter `250` on
 # MAGIC   `id % 50 == 7` (the 100 rows Part 5 drops), the same date and asset formulas — so the
 # MAGIC   figures the labs quote (4,900 migrated rows, ~705 shifted dates, …) hold either way.
@@ -100,6 +103,12 @@ to_stage = [f for f in EXPECTED_FILES if f not in _present]
 
 if not to_stage:
     print("All snapshot files already present — nothing staged, nothing touched.")
+elif SNAPSHOT_SRC.lower().startswith("http"):
+    import urllib.request
+    for f in to_stage:
+        url = f"{SNAPSHOT_SRC.rstrip('/')}/{f}"
+        urllib.request.urlretrieve(url, f"{LANDING}/{f}")
+        print(f"downloaded {f} from {url}")
 elif SNAPSHOT_SRC:
     for f in to_stage:
         dbutils.fs.cp(f"{SNAPSHOT_SRC.rstrip('/')}/{f}", f"{LANDING}/{f}")
