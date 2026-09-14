@@ -203,9 +203,11 @@ You already write SQL. This lab is not SQL instruction — it is a translation e
 
 15. **Apply values and run**
 
-    Type a start and end date that span several years into the parameter widgets, then click **Run all**.
+    Type **1990-01-01** into the `start_date` widget and **1999-12-31** into `end_date`, then click **Run all**.
 
-    > **Expected Result:** The result set changes when you change the dates, without editing any SQL.
+    > **Expected Result:** One row per state, CA highest.
+
+    Change `end_date` to **2018-12-31** and run again. Every count grows — no SQL edited.
 
 16. **Try an invalid range**
 
