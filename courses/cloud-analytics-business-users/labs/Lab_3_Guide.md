@@ -351,7 +351,7 @@ For attendees who finish early.
 | Comparison returns nearly every row | Mismatch count close to total row count | Whitespace or null-versus-empty-string. Normalise both sides with `TRIM` and `NULLIF` before comparing. |
 | Rows silently missing from a comparison | Fewer rows than expected in the mismatch list | `<>` returns null when either side is null, dropping those rows. Use `IS DISTINCT FROM`. |
 | Federated query fails immediately | Error before any rows return | Connection rather than SQL. The connection is always SSL-encrypted and fails at handshake if the certificate hostname does not match the endpoint. |
-| Cannot see the source catalog | Catalog absent from Catalog Explorer | Missing traversal grant on the foreign catalog. Ask your instructor. |
+| Cannot see `training_nic` (or the foreign catalog, on the federated variant) | Absent from Catalog Explorer | Missing traversal grant — an instructor re-runs the setup grants (setup notebook Part 7). |
 | Time travel fails with a version error | Version-not-available error | The requested version is older than the retention window, or the table has only one version. Use a recent version from `DESCRIBE HISTORY`. |
 | Sums differ but row counts match | Totals disagree with no missing rows | Expected — this is what Check 3 exists to catch. Investigate the column type rather than the row set. |
 | Cast error mid-comparison | Statement fails on a value | Strict typing. Use `TRY_CAST` if null is the outcome you want for unparseable input. |

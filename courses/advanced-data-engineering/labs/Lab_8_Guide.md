@@ -17,7 +17,7 @@ You have a multi-join T-SQL stored procedure that runs on-premises. This lab con
 
 - [ ] Lab 7 completed — you have `eng_<id>.work`
 - [ ] **A classic cluster attached** — the Spark UI is not available on serverless
-- [ ] The T-SQL stored procedure supplied by your instructor
+- [ ] Nothing else — the T-SQL procedure you will rewrite is printed in Task 1
 - [ ] `training_nic.perf` tables present (created by the environment setup script)
 - [ ] Intro Lab 4 completed (DataFrame basics are assumed, not taught here)
 
@@ -40,9 +40,33 @@ You have a multi-join T-SQL stored procedure that runs on-premises. This lab con
 
 ### Task 1: Read the Procedure and Rewrite It
 
-1. **Read the supplied T-SQL procedure**
+1. **Read the T-SQL procedure**
 
-    Identify its joins, its filters, its aggregation, and its output shape before writing any Python.
+    This is the procedure as it ran on-premises. Identify its joins, its filters, its aggregation, and its output shape before writing any Python.
+
+    ```sql
+    CREATE PROCEDURE dbo.usp_StateCharterAssets
+    AS
+    BEGIN
+        SET NOCOUNT ON;
+
+        SELECT
+            i.STATE_ABBR_NM,
+            i.CHTR_TYPE_CD,
+            COUNT(*)          AS institution_count,
+            SUM(f.TOT_ASSETS) AS total_assets
+        FROM dbo.institutions AS i
+        INNER JOIN dbo.financials AS f
+            ON f.ID_RSSD = i.ID_RSSD
+        LEFT JOIN dbo.state_population AS p
+            ON p.STATE_ABBR_NM = i.STATE_ABBR_NM
+        WHERE i.CHTR_TYPE_CD IS NOT NULL
+        GROUP BY i.STATE_ABBR_NM, i.CHTR_TYPE_CD
+        ORDER BY total_assets DESC;
+    END;
+    ```
+
+    > **Note:** The left join to `state_population` contributes nothing to the output. It is preserved in the rewrite anyway — deciding whether dead joins survive a migration is a business call, not a technical one.
 
 2. **Load the source tables**
 

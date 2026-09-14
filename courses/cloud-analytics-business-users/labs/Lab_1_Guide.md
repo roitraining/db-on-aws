@@ -50,7 +50,7 @@ You have queried this data in SQL Server for years. It now lives in Databricks. 
 
 3. **Select a SQL warehouse**
 
-    In the compute selector at the top right of the editor, choose the serverless SQL warehouse named by your instructor. If it shows as stopped, selecting it starts it.
+    In the compute selector at the top right of the editor, choose **Serverless Starter Warehouse** (your instructor will say if this class uses a different one). If it shows as stopped, selecting it starts it.
 
     > **Note:** A SQL warehouse is the compute that runs your queries. Nothing runs without one selected. Serverless warehouses start in seconds; a classic warehouse can take several minutes.
 
@@ -79,7 +79,7 @@ You have queried this data in SQL Server for years. It now lives in Databricks. 
 
     Select the **institutions** table and review the **Columns** tab. Note the column names and data types.
 
-    > **Note:** If the table list does not contain a table with that exact name, ask your instructor for the correct name before continuing. Every remaining step in this lab refers to it.
+    > **Note:** If there is no **institutions** table, the setup has not been run — go back to [Lab 0](Lab_0_Guide.md). Every remaining step in this lab refers to this table.
 
     > **Key Insight:** Unity Catalog uses a three-level namespace — `catalog.schema.table` — where SQL Server used two, as in `dbo.TableName`. The catalog level is new. Everything you reference will have three parts unless you set a session default.
 

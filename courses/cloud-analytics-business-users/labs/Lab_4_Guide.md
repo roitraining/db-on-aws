@@ -42,7 +42,7 @@ Everything so far has been reading someone else's data. This lab is the first th
 
 1. **Confirm your compute**
 
-    Attach the notebook to the classic cluster named by your instructor. Check the cluster selector at the top of the notebook.
+    Attach the notebook to the classic cluster — named **`db-on-aws · lab cluster`** (with a `[target]` prefix) in the standard deploy. Check the cluster selector at the top of the notebook; if no classic cluster exists, see `SETUP.md`.
 
 2. **Read the migrated table into a DataFrame**
 
