@@ -2,8 +2,6 @@
 # MAGIC %md
 # MAGIC # Environment Setup — Cloud Analytics for Business Users
 # MAGIC
-# MAGIC **INSTRUCTOR ONLY. Do not distribute to attendees.**
-# MAGIC
 # MAGIC This notebook is the **authoritative schema contract** for Labs 1–6. Every table and column
 # MAGIC referenced by a lab guide is created here. If a lab and this notebook disagree, this notebook wins
 # MAGIC and the lab is wrong.
