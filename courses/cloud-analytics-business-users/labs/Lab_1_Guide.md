@@ -17,7 +17,6 @@ You have queried this data in SQL Server for years. It now lives in Databricks. 
 
 - [ ] Workspace URL, username, and password provided by your instructor
 - [ ] Your assigned attendee ID (used to name your personal schema)
-- [ ] The known on-premises row count supplied by your instructor at the start of the lab
 - [ ] A browser signed out of any other Databricks workspace
 - [ ] **[`SETUP.md`](../../../SETUP.md) Parts 1 and 2 completed** — course material added as a Git folder, SQL warehouse selected
 - [ ] **[Lab 0: Set Up Your Workspace](Lab_0_Guide.md) completed** — your `training_nic` catalog is built (verify: `SELECT COUNT(*) FROM training_nic.migrated.institutions` returns 4900)
@@ -132,31 +131,25 @@ You have queried this data in SQL Server for years. It now lives in Databricks. 
 
     <!-- source: facts_extracted.md §5 -->
 
-13. **Record the number**
-
-    Write the row count down. Your instructor will give you the figure this table had on-premises.
-
-    > **Expected Result:** A single row with one column, `row_count`, containing a whole number.
+    > **Expected Result:** A single row with one column, `row_count`, containing **4,900**.
 
 ### Task 4: Export and Compare
 
-14. **Export the result**
+13. **Export the result**
 
-    Use the download control above the result grid to export the result set as CSV.
+    Above the result grid, click the **arrow on the Table tab** (left of the **+** icon) and select **Download CSV**.
 
-15. **Compare against the on-premises figure**
+14. **Compare against the on-premises figure**
 
-    Place your exported number next to the on-premises figure supplied by your instructor.
+    On-premises, this table had **5,000** rows. Your count is **4,900**. They do not match. Do not try to explain the difference yet.
 
-16. **Record whether they match**
+    > **What Just Happened?** One count, two systems — the smallest possible unit of migration validation. The gap is real and deliberate. Lab 3 is where you find out what the migration did wrong.
 
-    Write down both numbers and whether they agree. Do not attempt to explain any difference yet.
+15. **Save your query**
 
-    > **What Just Happened?** You have just performed the smallest possible unit of migration validation: one count, two systems. If the numbers differ, that is a finding, not a mistake on your part. Lab 3 is where you will investigate properly, using a framework rather than a single count.
+    Click **Save** and name the query **`lab1_row_count_<id>`**, using your attendee ID. Saved queries persist and can be shared with colleagues, which replaces emailing `.sql` files.
 
-17. **Save your query**
-
-    Use **Save** to name and keep the query. Saved queries persist and can be shared with colleagues, which replaces emailing `.sql` files.
+    > **Note:** Every lab names saved work `lab<number>_<purpose>_<id>`. Stick to the convention — six labs of ad-hoc names cannot be sorted.
 
 ---
 
@@ -170,7 +163,7 @@ Explore the other schemas in `training_nic`. Using Catalog Explorer, answer:
 - Which schema holds reference or lookup data?
 - Open the **History** tab on the institutions table. How many versions does it have, and what does that suggest about how it was created?
 
-Write your answers down. They will be relevant in Lab 3.
+Keep your answers in mind — they will be relevant in Lab 3.
 
 ---
 
@@ -183,10 +176,10 @@ Write your answers down. They will be relevant in Lab 3.
 - [ ] I can state what the three levels of `training_nic.migrated.institutions` mean
 - [ ] I ran `USE CATALOG` and `USE SCHEMA` successfully
 - [ ] I ran a `SELECT` with `LIMIT` and saw results
-- [ ] I produced a row count for the institutions table
+- [ ] I produced a row count for the institutions table (4,900)
 - [ ] I exported the result set as CSV
-- [ ] I recorded both the cloud row count and the on-premises figure
-- [ ] I saved my query with a name
+- [ ] I saw that the cloud count (4,900) does not match the on-premises figure (5,000)
+- [ ] I saved my query as `lab1_row_count_<id>`
 
 ---
 
