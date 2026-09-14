@@ -217,9 +217,11 @@ You already write SQL. This lab is not SQL instruction — it is a translation e
 
 ### Task 5: Commit to a Git Folder
 
-17. **Save the query**
+17. **Rename, then save the query**
 
-    Use **Save** and name the query using your attendee ID, for example `lab2_state_summary_<id>`.
+    Click the query name in the header and rename it to `lab2_state_summary_<id>`, using your attendee ID. Then click **Save**. When asked where to move the file, keep your home folder.
+
+    > **Note:** Rename first. Saving before renaming moves a file still called *Untitled query*.
 
 18. **Open the Git folder**
 

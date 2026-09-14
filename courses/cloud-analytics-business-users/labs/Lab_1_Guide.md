@@ -147,7 +147,7 @@ You have queried this data in SQL Server for years. It now lives in Databricks. 
 
 15. **Save your query**
 
-    Click **Save** and name the query **`lab1_row_count_<id>`**, using your attendee ID. Saved queries persist and can be shared with colleagues, which replaces emailing `.sql` files.
+    Click the query name in the header, rename it to **`lab1_row_count_<id>`** using your attendee ID, then click **Save**. When asked where to move the file, keep your home folder. Saved queries persist and can be shared with colleagues, which replaces emailing `.sql` files.
 
     > **Note:** Every lab names saved work `lab<number>_<purpose>_<id>`. Stick to the convention — six labs of ad-hoc names cannot be sorted.
 
