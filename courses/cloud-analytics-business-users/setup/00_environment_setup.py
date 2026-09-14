@@ -60,7 +60,24 @@ print(f"Attendees: {len(ATTENDEES)}")
 
 # COMMAND ----------
 
-spark.sql(f"CREATE CATALOG IF NOT EXISTS {CATALOG}")
+# CREATE CATALOG IF NOT EXISTS validates the metastore storage root BEFORE checking
+# existence — on accounts with Default Storage enabled and no storage root it fails even
+# when the catalog already exists. Check existence explicitly instead (same fix as
+# bundles/00-foundation/src/build_environment.py).
+if any(r[0] == CATALOG for r in spark.sql("SHOW CATALOGS").collect()):
+    print(f"Catalog {CATALOG} already exists — skipping creation.")
+else:
+    try:
+        spark.sql(f"CREATE CATALOG {CATALOG}")
+    except Exception as e:
+        if "Metastore storage root URL does not exist" not in str(e):
+            raise
+        raise Exception(
+            f"Cannot create catalog '{CATALOG}': the metastore has no storage root "
+            f"(Default Storage is enabled on the account). Create it once with an "
+            f"explicit location, then re-run this notebook:\n\n"
+            f"  CREATE CATALOG {CATALOG} MANAGED LOCATION 's3://<bucket>/<prefix>/{CATALOG}'"
+        ) from e
 
 for s in SCHEMAS:
     spark.sql(f"CREATE SCHEMA IF NOT EXISTS {CATALOG}.{s}")
