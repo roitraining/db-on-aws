@@ -17,7 +17,7 @@
 # MAGIC |---|---|
 # MAGIC | Native NIC column names | **Preserved through raw and Bronze**, including the leading `#` on the key |
 # MAGIC | Cleaning | Happens at Silver, not on ingest — this is the true migration shape |
-# MAGIC | Source files | **Pinned snapshot** uploaded to the landing volume; never downloaded live before a delivery |
+# MAGIC | Source files | **Pinned snapshot** staged into the landing volume by Part 1.5 — copied from `SNAPSHOT_SRC`, or generated in place; never downloaded live before a delivery |
 # MAGIC | Source of truth | `legacy_onprem` carries genuine SQL Server export artifacts |
 # MAGIC | Cloud copy | `migrated` carries five deliberate defects |
 
@@ -41,6 +41,12 @@ LANDING = f"/Volumes/{CATALOG}/raw/landing"
 # The pinned snapshot filenames expected in the landing volume.
 EXPECTED_FILES = ["attributes.csv", "financials.csv", "state_population.csv"]
 
+# Optional: a volume path or S3 URI holding the real pinned NIC snapshot. If set, Part 1.5
+# copies missing files from here. If empty, Part 1.5 generates the synthetic NIC-shaped
+# snapshot — row-for-row the data bundles/00-foundation builds, so every figure the labs
+# quote still holds.
+SNAPSHOT_SRC = ""
+
 print(f"Catalog:   {CATALOG}")
 print(f"Landing:   {LANDING}")
 print(f"Attendees: {len(ATTENDEES)}")
@@ -59,8 +65,82 @@ for s in SCHEMAS:
 
 spark.sql(f"CREATE VOLUME IF NOT EXISTS {CATALOG}.raw.landing")
 
-print(f"Upload the pinned NIC snapshot to: {LANDING}")
-print("Expected files:", ", ".join(EXPECTED_FILES))
+print(f"Landing volume ready: {LANDING}")
+print("Expected files:", ", ".join(EXPECTED_FILES), "— staged next, in Part 1.5")
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Part 1.5 · Stage the Pinned Snapshot
+# MAGIC
+# MAGIC The landing volume must hold the three snapshot files before anything downstream runs.
+# MAGIC This cell makes that true instead of assuming someone uploaded them:
+# MAGIC
+# MAGIC - Files **already present are never touched** — re-running cannot overwrite a delivery's data.
+# MAGIC - If `SNAPSHOT_SRC` is set (Part 0), missing files are **copied** from it.
+# MAGIC - Otherwise missing files are **generated** in place. The generator is row-for-row identical
+# MAGIC   to `bundles/00-foundation/src/build_environment.py` — 5,000 institutions, charter `250` on
+# MAGIC   `id % 50 == 7` (the 100 rows Part 5 drops), the same date and asset formulas — so the
+# MAGIC   figures the labs quote (4,900 migrated rows, ~705 shifted dates, …) hold either way.
+# MAGIC   The header carries the same leading `#` on the key that the real NIC files do.
+# MAGIC
+# MAGIC Nothing here downloads from NIC. The snapshot stays pinned by construction.
+
+# COMMAND ----------
+
+import csv
+from datetime import date, timedelta
+
+try:
+    _present = [f.name for f in dbutils.fs.ls(LANDING)]
+except Exception:
+    _present = []
+
+to_stage = [f for f in EXPECTED_FILES if f not in _present]
+
+if not to_stage:
+    print("All snapshot files already present — nothing staged, nothing touched.")
+elif SNAPSHOT_SRC:
+    for f in to_stage:
+        dbutils.fs.cp(f"{SNAPSHOT_SRC.rstrip('/')}/{f}", f"{LANDING}/{f}")
+        print(f"copied {f} from {SNAPSHOT_SRC}")
+else:
+    SNAP_ROWS = 5000
+    STATES = ["CA", "CA", "CA", "CA", "TX", "NY", "FL", "IL", "OH", "WA"]
+    CHARTERS = ["200", "300", "400", "500"]
+
+    def _write_csv(name, header, rows):
+        with open(f"{LANDING}/{name}", "w", newline="") as fh:
+            w = csv.writer(fh)
+            w.writerow(header)
+            w.writerows(rows)
+        print(f"generated {name}: {len(rows):,} rows")
+
+    if "attributes.csv" in to_stage:
+        _write_csv(
+            "attributes.csv",
+            ["#ID_RSSD", "NM_LGL", "CITY", "STATE_ABBR_NM", "CHTR_TYPE_CD", "D_DT_START"],
+            [[i,
+              f"INSTITUTION {i} NATIONAL BANK",
+              "" if i % 23 == 0 else f"CITY_{i % 400}",
+              STATES[i % 10],
+              "250" if i % 50 == 7 else CHARTERS[i % 4],
+              (date(1950, 1, 1) + timedelta(days=i * 5)).isoformat()]
+             for i in range(1, SNAP_ROWS + 1)])
+
+    if "financials.csv" in to_stage:
+        _write_csv(
+            "financials.csv",
+            ["#ID_RSSD", "TOT_ASSETS"],
+            [[i, f"{((i * 7919) % 900000) + 1000 + (i % 100) / 100.0:.2f}"]
+             for i in range(1, SNAP_ROWS + 1)])
+
+    if "state_population.csv" in to_stage:
+        _write_csv(
+            "state_population.csv",
+            ["STATE_ABBR_NM", "POPULATION"],
+            [["CA", 39538223], ["TX", 29145505], ["FL", 21538187], ["NY", 20201249],
+             ["IL", 12812508], ["OH", 11799448], ["WA", 7705281]])
 
 # COMMAND ----------
 
@@ -83,7 +163,8 @@ missing = [f for f in EXPECTED_FILES if f not in found]
 
 print("Found in landing:", found)
 if missing:
-    raise Exception(f"STOP — missing expected files: {missing}. Upload the pinned snapshot first.")
+    raise Exception(f"STOP — missing expected files: {missing}. "
+                    "Part 1.5 should have staged these — check its output for errors.")
 
 for f in found:
     df = (spark.read.format("csv")
