@@ -58,7 +58,7 @@ do every step yourself, in your own account.
 7. Click **Create Git folder.**
 
     > The repository is **public**, so you will **not** be asked for a token or password. If you
-    > are, stop and tell your instructor — do not create a token.
+    > are, stop and tell your instructor—do not create a token.
 
 8. Confirm the clone worked. Under your user folder you should now see:
 
@@ -123,7 +123,7 @@ do every step yourself, in your own account.
 - [ ] `training_nic` appears in Catalog Explorer (**Catalog** in the sidebar)
 - [ ] `SELECT COUNT(*) FROM training_nic.migrated.institutions` returns 4900
 
-If all four are ticked, you are ready for **Lab 1**.
+If all four are checked, you are ready for **Lab 1**.
 
 ---
 
@@ -133,8 +133,8 @@ If all four are ticked, you are ready for **Lab 1**.
 |---|---|---|
 | No serverless compute in the dropdown | Not enabled for your account | Ask your instructor |
 | `Metastore storage root URL does not exist … Default Storage` | The metastore has no default managed location | Ask your instructor for an S3 path, run `CREATE CATALOG training_nic MANAGED LOCATION 's3://<bucket>/<prefix>/training_nic';`, then **Run All** again |
-| Prompted for a GitHub token | Repo treated as private | The repo is public — tell your instructor rather than creating a token |
-| `training_nic` still missing after a run | The notebook did not finish | Re-open it, confirm it ends with "All setup checks passed" |
+| Prompted for a GitHub token | Repo treated as private | The repo is public—tell your instructor rather than creating a token |
+| `training_nic` still missing after a run | The notebook did not finish | Reopen it, confirm it ends with "All setup checks passed" |
 
 ---
 
