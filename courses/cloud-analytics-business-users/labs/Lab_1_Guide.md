@@ -178,7 +178,7 @@ Everything you just did left traces. This task shows you where they landed—and
 
 20. **Query History**
 
-    Select **Query History**. Every query you ran today is listed with its status and duration. Check here before re-running anything that "didn't work"—it usually did.
+    Select **Query History**. Every query you ran today is listed with its status and duration. Check here before rerunning anything that "didn't work"—it usually did.
 
 21. **Read the signposts**
 
@@ -224,12 +224,12 @@ Keep your answers in mind—they will be relevant in Lab 3.
 
 | Issue | Symptom | Solution |
 |---|---|---|
-| Cannot see the catalog | `training_nic` does not appear in Catalog Explorer | Missing traversal grant. Ask your instructor to re-run the grants. |
+| Cannot see the catalog | `training_nic` does not appear in Catalog Explorer | Missing traversal grant. Ask your instructor to rerun the grants. |
 | Query never starts | Query sits queued and no results appear | The SQL warehouse is stopped or still starting. Check the compute selector at the top right of the editor. |
 | `SELECT TOP` fails | Syntax error near `TOP` | `TOP` is T-SQL. Use `LIMIT n` at the end of the statement. |
 | Table not found | Error naming the table | You are missing a namespace level. Either fully qualify as `training_nic.migrated.<table>` or run both `USE CATALOG` and `USE SCHEMA`. |
 | A cast that worked in SQL Server errors | Cast raises rather than returning null | Expected. Databricks does not silently coerce invalid values. Use `TRY_CAST` if null is the outcome you want. |
-| Export control not visible | No download option above results | The query must have completed and returned rows. Re-run and wait for the result grid. |
+| Export control not visible | No download option above results | The query must have completed and returned rows. Rerun and wait for the result grid. |
 
 ---
 
