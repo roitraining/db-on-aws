@@ -27,7 +27,7 @@ You are being asked to sign off that the migrated data matches the source. This 
 
 - Apply a four-check UAT framework in the order that keeps noise out of your results
 - Compare row counts, key sets, and aggregates between two systems
-- Normalise both sides before drawing a conclusion from a row-level comparison
+- Normalize both sides before drawing a conclusion from a row-level comparison
 - Distinguish a genuine data defect from a comparison artefact
 - Query a Delta table as it existed at an earlier version
 - Document findings so an engineer can act on them
@@ -49,9 +49,9 @@ You are being asked to sign off that the migrated data matches the source. This 
 
 2. **Identify the source of truth**
 
-    The on-premises source is **`training_nic.legacy_onprem`** — a snapshot schema holding the extract taken at cutover. Every query in this lab uses it.
+    The on-premises source is **`training_nic.legacy_onprem`**—a snapshot schema holding the extract taken at cutover. Every query in this lab uses it.
 
-    > **Note:** Some deliveries federate live over the on-premises SQL Server instead, via a foreign catalog (`CREATE FOREIGN CATALOG ... USING CONNECTION ...` — instructor-created, since it needs metastore privileges). In that variant, use `<foreign_catalog>.dbo` wherever this lab says `training_nic.legacy_onprem`. Everything else is identical.
+    > **Note:** Some deliveries federate live over the on-premises SQL Server instead, via a foreign catalog (`CREATE FOREIGN CATALOG ... USING CONNECTION ...`—instructor-created, since it needs metastore privileges). In that variant, use `<foreign_catalog>.dbo` wherever this lab says `training_nic.legacy_onprem`. Everything else is identical.
     <!-- source: facts_extracted.md §9 -->
 
 3. **Count the source side**
@@ -68,7 +68,7 @@ You are being asked to sign off that the migrated data matches the source. This 
 
 4. **Confirm the gap**
 
-    Source: **5,000**. Cloud: **4,900**. The four checks that follow find where the 100 rows went — and what else the migration broke.
+    Source: **5,000**. Cloud: **4,900**. The four checks that follow find where the 100 rows went—and what else the migration broke.
 
 ---
 
@@ -76,7 +76,7 @@ You are being asked to sign off that the migrated data matches the source. This 
 
 Run these in order. Each answers a different question, and each has a blind spot the next one covers.
 
-### Task 2: Check 1 — Row Count Parity
+### Task 2: Check 1—Row Count Parity
 
 5. **Compare the totals**
 
@@ -94,7 +94,7 @@ Run these in order. Each answers a different question, and each has a blind spot
     > **Key Insight:** Check 1 answers "did everything arrive?" and nothing else. It tells you nothing about whether the rows that *did* arrive are correct. A migration can pass this check and still be badly wrong.
     <!-- source: facts_extracted.md §10 -->
 
-### Task 3: Check 2 — Key Parity
+### Task 3: Check 2—Key Parity
 
 7. **Find keys present in the source but missing from the cloud**
 
@@ -106,9 +106,9 @@ Run these in order. Each answers a different question, and each has a blind spot
     ```
     <!-- source: facts_extracted.md §10 -->
 
-    > **Expected Result:** 100 keys — the missing rows from Check 1, now identified individually.
+    > **Expected Result:** 100 keys—the missing rows from Check 1, now identified individually.
 
-8. **Now flip it — is there anything in the cloud that was never on-premises?**
+8. **Now flip it—is there anything in the cloud that was never on-premises?**
 
     ```sql
     SELECT c.`#ID_RSSD`
@@ -138,13 +138,13 @@ Run these in order. Each answers a different question, and each has a blind spot
 
     > **Expected Result:** One row: charter type `250`, missing count **100**. Every single missing row shares one charter type.
 
-    > **What Just Happened?** The missing rows cluster in one category rather than spreading evenly — that is not random loss, that is a filter in the migration job. A far more actionable finding than "100 rows are missing."
+    > **What Just Happened?** The missing rows cluster in one category rather than spreading evenly—that is not random loss, that is a filter in the migration job. A far more actionable finding than "100 rows are missing."
 
-### Task 4: Check 3 — Aggregate Parity
+### Task 4: Check 3—Aggregate Parity
 
 11. **Compare sums on a numeric column**
 
-    Financial figures are not in the institution record. NIC's Attributes file holds identification, classification and structure only — no balance-sheet data. The amounts come from a separate reporting table keyed on the same `ID_RSSD`.
+    Financial figures are not in the institution record. NIC's Attributes file holds identification, classification and structure only—no balance-sheet data. The amounts come from a separate reporting table keyed on the same `ID_RSSD`.
 
     ```sql
     SELECT
@@ -197,11 +197,11 @@ Run these in order. Each answers a different question, and each has a blind spot
     > **Key Insight:** Check 3 catches errors that are invisible row by row. A value that is slightly wrong on every row looks fine in a spot check and only appears when you sum the column.
     <!-- source: facts_extracted.md §10 -->
 
-### Task 5: Check 4 — Row-Level Comparison
+### Task 5: Check 4—Row-Level Comparison
 
 16. **Run the naive comparison first**
 
-    Do this before normalising anything. You are meant to see what it produces.
+    Do this before normalizing anything. You are meant to see what it produces.
 
     ```sql
     SELECT c.`#ID_RSSD`, c.NM_LGL AS cloud_name, s.NM_LGL AS source_name
@@ -226,7 +226,7 @@ Run these in order. Each answers a different question, and each has a blind spot
 
     > **What Just Happened?** If that number is implausibly large, stop before reporting it. A result claiming almost every row is wrong is far more likely to be a problem with your comparison than with the migration. Look at the values returned in step 16 and compare them character by character. Your `LENGTH()` observation from Lab 2 is the clue.
 
-18. **Normalise both sides and re-run**
+18. **Normalize both sides and re-run**
 
     Apply `TRIM` to remove padding and `NULLIF` to collapse empty strings to null, on **both** sides of the comparison.
 
@@ -243,9 +243,9 @@ Run these in order. Each answers a different question, and each has a blind spot
 
 19. **Compare the two counts**
 
-    Record the naive figure and the normalised figure side by side. The gap between them is the noise you were about to report as a defect.
+    Record the naive figure and the normalized figure side by side. The gap between them is the noise you were about to report as a defect.
 
-20. **Apply the same normalisation to a date column**
+20. **Apply the same normalization to a date column**
 
     ```sql
     SELECT c.`#ID_RSSD`, c.D_DT_START AS cloud_date, s.D_DT_START AS source_date,
@@ -306,15 +306,15 @@ Run these in order. Each answers a different question, and each has a blind spot
 
     For every discrepancy, write four things: which check surfaced it, how many rows it affects, what the affected rows have in common, and what you believe caused it.
 
-25. **Separate findings from artefacts**
+25. **Separate findings from artifacts**
 
-    List separately anything that appeared to be a defect but resolved once you normalised. An engineer needs to know what you ruled out as well as what you found.
+    List separately anything that appeared to be a defect but resolved once you normalized. An engineer needs to know what you ruled out as well as what you found.
 
 26. **State a recommendation**
 
     Write one sentence per finding saying whether it blocks cutover. Not every difference does.
 
-    > **Expected Result:** A notebook containing your four check results, a numbered list of findings with row counts and suspected causes, a separate list of ruled-out artefacts, and a cutover recommendation.
+    > **Expected Result:** A notebook containing your four check results, a numbered list of findings with row counts and suspected causes, a separate list of ruled-out artifacts, and a cutover recommendation.
 
 ---
 
@@ -324,7 +324,7 @@ For attendees who finish early.
 
 1. Write a single query that reports all four checks as one result set, one row per check, with a pass or fail column. This is the beginning of a reusable validation framework rather than a one-off investigation.
 2. Extend the row-level comparison to every text column at once rather than one at a time. What makes this expensive, and why is it the last check rather than the first?
-3. You found a difference. Prove it is not caused by the comparison itself — write the query that demonstrates the defect exists independent of your normalisation choices.
+3. You found a difference. Prove it is not caused by the comparison itself—write the query that demonstrates the defect exists independent of your normalization choices.
 
 ---
 
@@ -336,12 +336,12 @@ For attendees who finish early.
 - [ ] I grouped the missing keys to look for a shared attribute
 - [ ] I compared sums restricted to keys present on both sides
 - [ ] I counted nulls and empty strings as separate figures on both sides
-- [ ] I ran the row-level comparison **before** normalising and recorded the count
+- [ ] I ran the row-level comparison **before** normalizing and recorded the count
 - [ ] I re-ran it with `TRIM` and `NULLIF` applied to both sides
-- [ ] I can explain the gap between the naive and normalised counts
+- [ ] I can explain the gap between the naive and normalized counts
 - [ ] I checked whether any date difference was consistent across rows
 - [ ] I viewed table history and queried an earlier version
-- [ ] My notebook separates confirmed findings from ruled-out artefacts
+- [ ] My notebook separates confirmed findings from ruled-out artifacts
 - [ ] Each finding has a row count, a shared attribute, and a suspected cause
 - [ ] I stated whether each finding blocks cutover
 
@@ -357,9 +357,9 @@ For attendees who finish early.
 | Comparison returns nearly every row | Mismatch count close to total row count | Whitespace or null-versus-empty-string. Normalise both sides with `TRIM` and `NULLIF` before comparing. |
 | Rows silently missing from a comparison | Fewer rows than expected in the mismatch list | `<>` returns null when either side is null, dropping those rows. Use `IS DISTINCT FROM`. |
 | Federated query fails immediately | Error before any rows return | Connection rather than SQL. The connection is always SSL-encrypted and fails at handshake if the certificate hostname does not match the endpoint. |
-| Cannot see `training_nic` (or the foreign catalog, on the federated variant) | Absent from Catalog Explorer | Missing traversal grant — an instructor re-runs the setup grants (setup notebook Part 7). |
+| Cannot see `training_nic` (or the foreign catalog, on the federated variant) | Absent from Catalog Explorer | Missing traversal grant—an instructor re-runs the setup grants (setup notebook Part 7). |
 | Time travel fails with a version error | Version-not-available error | The requested version is older than the retention window, or the table has only one version. Use a recent version from `DESCRIBE HISTORY`. |
-| Sums differ but row counts match | Totals disagree with no missing rows | Expected — this is what Check 3 exists to catch. Investigate the column type rather than the row set. |
+| Sums differ but row counts match | Totals disagree with no missing rows | Expected—this is what Check 3 exists to catch. Investigate the column type rather than the row set. |
 | Cast error mid-comparison | Statement fails on a value | Strict typing. Use `TRY_CAST` if null is the outcome you want for unparseable input. |
 
 ---
@@ -372,7 +372,7 @@ For attendees who finish early.
 | Federated queries | Each query reaches the source system over JDBC | The source is shared by the whole class. Avoid `SELECT *` without `LIMIT` against it. |
 | Row-level comparison | Most expensive of the four checks | Run it last, and only after the cheaper checks have narrowed the question. |
 
-**Cleanup:** No tables created. Keep your findings notebook — it is referenced in the Day 2 wrap-up.
+**Cleanup:** No tables created. Keep your findings notebook—it is referenced in the Day 2 wrap-up.
 
 ---
 
@@ -393,7 +393,7 @@ Answers are held in the Knowledge Check Bank.
 
 ## Next Steps
 
-Day 2 moves from validating someone else's pipeline to building your own. Lab 4 introduces the DataFrame API and has you produce a summary table that you will publish in Lab 5 and visualise in Lab 6.
+Day 2 moves from validating someone else's pipeline to building your own. Lab 4 introduces the DataFrame API and has you produce a summary table that you will publish in Lab 5 and visualize in Lab 6.
 
 ---
 
