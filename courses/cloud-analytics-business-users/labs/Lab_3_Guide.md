@@ -1,5 +1,5 @@
 # Lab 3: UAT—Comparing Cloud Data to On-Premises
-
+re
 **Course:** Databricks on AWS: Cloud Analytics for Business Users
 **Duration:** 60 minutes
 
@@ -226,7 +226,7 @@ Run these in order. Each answers a different question, and each has a blind spot
 
     > **What Just Happened?** If that number is implausibly large, stop before reporting it. A result claiming almost every row is wrong is far more likely to be a problem with your comparison than with the migration. Look at the values returned in step 16 and compare them character by character. Your `LENGTH()` observation from Lab 2 is the clue.
 
-18. **Normalize both sides and re-run**
+18. **Normalize both sides and rerun**
 
     Apply `TRIM` to remove padding and `NULLIF` to collapse empty strings to null, on **both** sides of the comparison.
 
@@ -337,7 +337,7 @@ For attendees who finish early.
 - [ ] I compared sums restricted to keys present on both sides
 - [ ] I counted nulls and empty strings as separate figures on both sides
 - [ ] I ran the row-level comparison **before** normalizing and recorded the count
-- [ ] I re-ran it with `TRIM` and `NULLIF` applied to both sides
+- [ ] I reran it with `TRIM` and `NULLIF` applied to both sides
 - [ ] I can explain the gap between the naive and normalized counts
 - [ ] I checked whether any date difference was consistent across rows
 - [ ] I viewed table history and queried an earlier version
