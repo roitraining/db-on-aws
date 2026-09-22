@@ -224,7 +224,7 @@ For attendees who finish early.
 | Scheduled dashboard refresh | Each refresh runs the dataset query | Match the refresh interval to how often the data actually changes. |
 | Genie queries | Each question runs generated SQL | Fine for a lab; be aware that an open Genie space is an open query surface. |
 
-**Cleanup:** Unshare the dashboard from your partner and pause any scheduled refresh. Keep the dashboard itself — it is referenced in the course wrap-up.
+**Cleanup:** Unshare the dashboard from your partner and pause any scheduled refresh. Keep the dashboard itself—it is referenced in the course wrap-up.
 
 ---
 
@@ -244,7 +244,7 @@ Answers are held in the Knowledge Check Bank.
 
 ## Next Steps
 
-This is the final lab. In the wrap-up, map what you built — a validated dataset, a summary table, a published view, an alert, and a dashboard — back onto your team's migration roadmap, and note which questions to take to the engineering team.
+This is the final lab. In the wrap-up, map what you built—a validated dataset, a summary table, a published view, an alert, and a dashboard—back onto your team's migration roadmap, and note which questions to take to the engineering team.
 
 Attendees continuing to **Databricks on AWS: Advanced Data Engineering** will rebuild this same pipeline at two further levels of sophistication, starting from the summary table you created in Lab 4.
 
