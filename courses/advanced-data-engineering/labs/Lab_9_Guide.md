@@ -247,7 +247,7 @@ Your analysts ran a four-check comparison in Intro Lab 3. This lab builds the ma
 | Column not found on the key | Error naming `#ID_RSSD` | Backtick-quote it. Native NIC names are preserved deliberately. |
 | File count does not drop | `numFiles` unchanged after `OPTIMIZE` | The files were already large enough to leave alone. Compaction has a target size. |
 | `OPTIMIZE` is slow | Long-running command | Expected on a fragmented table. It rewrites data. |
-| Row count changed after `OPTIMIZE` | Counts differ | It should not. Re-check the query—compaction does not alter data. |
+| Row count changed after `OPTIMIZE` | Counts differ | It should not. Recheck the query—compaction does not alter data. |
 | Duplicate keys after incremental loads | Repeated `#ID_RSSD` values | Expected here—the loads deliberately overlap. In production this is what a merge or AUTO CDC prevents. |
 
 ---
