@@ -236,7 +236,7 @@ For attendees who finish early.
 
 1. Set the threshold deliberately so the alert fires, and observe the state change to `TRIGGERED`. What would a stakeholder have seen instead if you had no alert?
 2. Revoke your partner's `USE SCHEMA` while leaving `SELECT` in place. Confirm the failure returns, then explain to them exactly which of the three grants is missing.
-3. Write the `SHOW GRANTS` statements needed to audit all three levels — catalog, schema, and view—and describe how you would find a permission gap using only their output.
+3. Write the `SHOW GRANTS` statements needed to audit all three levels—catalog, schema, and view—and describe how you would find a permission gap using only their output.
 
 ---
 
