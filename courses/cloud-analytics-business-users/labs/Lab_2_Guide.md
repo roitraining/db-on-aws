@@ -280,7 +280,7 @@ For attendees who finish early.
 | `LEN` not found | Unresolved function | Use `LENGTH`. |
 | `ISNULL` behaves unexpectedly | Wrong argument count | Use `COALESCE`, which accepts more than two arguments. |
 | Date difference has the wrong sign | Result is negative when you expected positive | Argument order. Databricks takes the end date first. |
-| Cast raises an error | Statement fails on a bad value | Expected behaviour. Use `TRY_CAST` if null is the outcome you want. |
+| Cast raises an error | Statement fails on a bad value | Expected behavior. Use `TRY_CAST` if null is the outcome you want. |
 | Table not found in the join | Error naming one side | Cross-schema joins need at least one side fully qualified, or `USE SCHEMA` on both. |
 | Parameter widget does not appear | No widget above the editor | The marker must be a colon immediately followed by the name, with no space. |
 | Parameter returns no rows | Empty result | Check the date range is the right way round and that the type is set to Date, not String. |
