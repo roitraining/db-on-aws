@@ -15,7 +15,7 @@ You have a multi-join T-SQL stored procedure that runs on-premises. This lab con
 
 ## Prerequisites
 
-- [ ] Lab 7 completed — you have `eng_<id>.work`
+- [ ] Lab 7 completed—you have `eng_<id>.work`
 - [ ] **A classic cluster attached**—the Spark UI is not available on serverless
 - [ ] Nothing else—the T-SQL procedure you will rewrite is printed in Task 1
 - [ ] `training_nic.perf` tables present (created by the environment setup script)
@@ -149,7 +149,7 @@ You have a multi-join T-SQL stored procedure that runs on-premises. This lab con
 
     Count the stages. Each stage boundary is a shuffle.
 
-    > **Key Insight:** Narrow transformations — `filter`, `select`, `withColumn`—run inside a stage because each partition can be processed independently. Wide transformations—`join`, `groupBy`, `distinct`—force a shuffle and therefore a new stage. The number of stages tells you how many times your data crossed the cluster.
+    > **Key Insight:** Narrow transformations—`filter`, `select`, `withColumn`—run inside a stage because each partition can be processed independently. Wide transformations—`join`, `groupBy`, `distinct`—force a shuffle and therefore a new stage. The number of stages tells you how many times your data crossed the cluster.
     <!-- source: facts_extracted.md §2 -->
 
 10. **Record shuffle read and write for the largest stage**
@@ -321,7 +321,7 @@ You have a multi-join T-SQL stored procedure that runs on-premises. This lab con
 | Cache appears to do nothing | No time improvement | The DataFrame is used once. Caching only pays back on reuse. |
 | Cache makes it slower | Time increased | Caching costs a write. On a single-use DataFrame that cost is never recovered. |
 | One task runs far longer | Stage waits on a single task | Skew. Find the dominant key; more executors will not help. |
-| Error surfaces at `count()` | Failure on an action | Lazy evaluation — the fault is in an earlier transformation. |
+| Error surfaces at `count()` | Failure on an action | Lazy evaluation—the fault is in an earlier transformation. |
 | No straggler visible | Max task duration equals median | You are on the 4,900-row tables, or AQE is still on. Either one hides it. |
 | Broadcast hint changes nothing | Plan identical before and after | The table was already under the auto-broadcast threshold. Read the plan first. |
 
