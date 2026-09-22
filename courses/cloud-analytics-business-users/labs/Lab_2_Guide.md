@@ -9,7 +9,7 @@
 
 ## Overview
 
-You already write SQL. This lab is not SQL instruction — it is a translation exercise. You will convert T-SQL constructs into Databricks SQL, join tables that live in two different schemas in one statement, and then make the query reusable by a colleague who does not write SQL at all.
+You already write SQL. This lab is not SQL instruction—it is a translation exercise. You will convert T-SQL constructs into Databricks SQL, join tables that live in two different schemas in one statement, and then make the query reusable by a colleague who does not write SQL at all.
 
 ---
 
@@ -96,13 +96,13 @@ You already write SQL. This lab is not SQL instruction — it is a translation e
     ```
     <!-- source: facts_extracted.md §5 -->
 
-    > **Expected Result:** The cloud copy reports a length matching the visible characters. The on-premises copy reports a **longer** length for the same institution — the name is padded with trailing spaces.
+    > **Expected Result:** The cloud copy reports a length matching the visible characters. The on-premises copy reports a **longer** length for the same institution—the name is padded with trailing spaces.
 
-    > **Key Insight:** Fixed-width `CHAR` columns export from SQL Server padded to their declared width. The two systems hold the same name and disagree on its length. Remember what you just saw — in Lab 3 this single difference makes a naive comparison report that almost every row is wrong.
+    > **Key Insight:** Fixed-width `CHAR` columns export from SQL Server padded to their declared width. The two systems hold the same name and disagree on its length. Remember what you just saw—in Lab 3 this single difference makes a naive comparison report that almost every row is wrong.
 
 7. **Date arithmetic**
 
-    This is the translation most likely to give you a wrong answer rather than an error. In T-SQL you write `DATEDIFF(day, start, end)`. In Databricks SQL the function is `datediff(endDate, startDate)` — **end date first**, no unit argument, and the result is always in days.
+    This is the translation most likely to give you a wrong answer rather than an error. In T-SQL you write `DATEDIFF(day, start, end)`. In Databricks SQL the function is `datediff(endDate, startDate)`—**end date first**, no unit argument, and the result is always in days.
 
     ```sql
     SELECT datediff('2009-07-31', '2009-07-30') AS forward,
@@ -112,7 +112,7 @@ You already write SQL. This lab is not SQL instruction — it is a translation e
 
     > **Expected Result:** `forward` returns `1` and `backward` returns `-1`.
 
-    > **Common Pitfall:** Both the T-SQL order and the Databricks order compile and return a number. Only the sign differs. A mistake here does not raise an error — it silently produces a plausible wrong answer.
+    > **Common Pitfall:** Both the T-SQL order and the Databricks order compile and return a number. Only the sign differs. A mistake here does not raise an error—it silently produces a plausible wrong answer.
 
 8. **Strict type casting**
 
@@ -130,7 +130,7 @@ You already write SQL. This lab is not SQL instruction — it is a translation e
     ```
     <!-- source: facts_extracted.md §5 -->
 
-    > **Key Insight:** SQL Server would silently coerce or truncate. Databricks refuses. During a migration this is a feature, not an obstacle — silent coercion is exactly how bad data reaches a report unnoticed.
+    > **Key Insight:** SQL Server would silently coerce or truncate. Databricks refuses. During a migration this is a feature, not an obstacle—silent coercion is exactly how bad data reaches a report unnoticed.
 
 ---
 
@@ -166,13 +166,13 @@ You already write SQL. This lab is not SQL instruction — it is a translation e
 
     > **Expected Result:** One row per state, ordered by institution count descending.
 
-    > **Key Insight:** Look at the join condition. `STATE_ABBR_NM` on the left is the native NIC column name, carried through from the source files untouched. `state_abbr` on the right is a curated reference table we control, so it uses a clean name. Joining a raw-named table to a curated one is the normal state of affairs, not a mistake — and it is why the Silver layer exists.
+    > **Key Insight:** Look at the join condition. `STATE_ABBR_NM` on the left is the native NIC column name, carried through from the source files untouched. `state_abbr` on the right is a curated reference table we control, so it uses a clean name. Joining a raw-named table to a curated one is the normal state of affairs, not a mistake—and it is why the Silver layer exists.
 
 12. **Confirm what made the join possible**
 
     Note that you did not need a linked server, a synonym, or a cross-database permission. Both schemas sit under the same catalog and you hold the traversal grants on it.
 
-    > **Key Insight:** Reading either table needs three privileges — `SELECT` on the table, `USE CATALOG` on the catalog, and `USE SCHEMA` on each schema. Joining across schemas simply means you need `USE SCHEMA` on both.
+    > **Key Insight:** Reading either table needs three privileges—`SELECT` on the table, `USE CATALOG` on the catalog, and `USE SCHEMA` on each schema. Joining across schemas simply means you need `USE SCHEMA` on both.
     <!-- source: facts_extracted.md §3 -->
 
 ---
@@ -207,7 +207,7 @@ You already write SQL. This lab is not SQL instruction — it is a translation e
 
     > **Expected Result:** One row per state, CA highest.
 
-    Change `end_date` to **2018-12-31** and run again. Every count grows — no SQL edited.
+    Change `end_date` to **2018-12-31** and run again. Every count grows—no SQL edited.
 
 16. **Try an invalid range**
 
@@ -248,7 +248,7 @@ For attendees who finish early.
 
 1. Rewrite the Task 3 join using `USE SCHEMA` so that only one side of the join needs qualification. Which form would you rather hand to a colleague, and why?
 2. Add a third parameter for a minimum institution count and apply it with a `HAVING` clause.
-3. Using `LENGTH()` and `TRIM()`, find how many rows in `institutions` have a `NM_LGL` whose length changes when trimmed. Record the number — you will need it in Lab 3.
+3. Using `LENGTH()` and `TRIM()`, find how many rows in `institutions` have a `NM_LGL` whose length changes when trimmed. Record the number—you will need it in Lab 3.
 
 ---
 
@@ -271,7 +271,7 @@ For attendees who finish early.
 
 ## Troubleshooting Reference
 
-> **Key Insight:** Most failures in this lab are dialect differences, not mistakes. A T-SQL construct that errors here usually has a direct equivalent — check the translation reference before rewriting the query.
+> **Key Insight:** Most failures in this lab are dialect differences, not mistakes. A T-SQL construct that errors here usually has a direct equivalent—check the translation reference before rewriting the query.
 <!-- source: facts_extracted.md §5 -->
 
 | Issue | Symptom | Solution |
@@ -295,7 +295,7 @@ For attendees who finish early.
 | Serverless SQL warehouse | Billed while running; auto-stops when idle | Leave auto-stop enabled. |
 | Repeated full scans | Re-running the join while experimenting | Keep `LIMIT` on exploratory queries; remove it only for the final aggregate. |
 
-**Cleanup:** No tables were created. Your saved query and commit are intentional and should be left in place — Lab 5 publishes from work you build on later.
+**Cleanup:** No tables were created. Your saved query and commit are intentional and should be left in place—Lab 5 publishes from work you build on later.
 
 ---
 
