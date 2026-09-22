@@ -24,7 +24,7 @@ You sat the Intro course as an analyst. Now you own the platform. This lab sets 
 - [ ] A peer in the room to verify your grants
 
 > **Did not take the Intro course?** You are not stuck, but do not skip this. Labs 7–12 assume
-> Labs 1–6 and deliberately do not re-teach them. Read **[`SETUP.md`](../../../SETUP.md) Part 4—
+> Labs 1–6 and deliberately do not reteach them. Read **[`SETUP.md`](../../../SETUP.md) Part 4—
 > Advanced course catch-up** before starting. It is a ten-minute read covering the four things this
 > lab assumes you already know: the three-level namespace, the leading `#` on the NIC key and why
 > it needs backticks, the three privileges required to read a table, and what the `legacy_onprem`
@@ -224,7 +224,7 @@ You sat the Intro course as an analyst. Now you own the platform. This lab sets 
 
 ## Stretch Task
 
-1. Drop the external table, confirm the S3 files survive, then recreate the table over the same path without re-reading the source.
+1. Drop the external table, confirm the S3 files survive, then recreate the table over the same path without rereading the source.
 2. Grant your peer `READ FILES` on the external location but not `SELECT` on the table. What can they do, and what does that tell you about the two permission systems?
 3. Write the `SHOW GRANTS` statements needed to audit catalog, schema, and table in one pass, and describe how you would spot an over-permissioned principal.
 
