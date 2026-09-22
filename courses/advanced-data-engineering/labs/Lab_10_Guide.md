@@ -77,7 +77,7 @@ In Intro Lab 4 you answered a business question with one notebook: read, filter,
 
     Re-execute step 2 without changing anything.
 
-5. **Re-count and compare**
+5. **Recount and compare**
 
     > **What Just Happened?** The count did not change. File metadata is persisted in a key-value store in the checkpoint location, so already-ingested files are not reprocessed. That is what exactly-once means in practice, and it is why the checkpoint is not optional.
     <!-- source: facts_extracted.md §4 -->
@@ -133,7 +133,7 @@ In Intro Lab 4 you answered a business question with one notebook: read, filter,
 
 10. **Note where cleaning happened**
 
-    > **Key Insight:** Bronze kept the `#`. Silver removed it. That ordering is the point of the Medallion pattern—Bronze is a faithful record of what arrived, so you can always re-derive Silver if your cleaning logic turns out to be wrong. Clean on ingest and you have destroyed the evidence.
+    > **Key Insight:** Bronze kept the `#`. Silver removed it. That ordering is the point of the Medallion pattern—Bronze is a faithful record of what arrived, so you can always rederive Silver if your cleaning logic turns out to be wrong. Clean on ingest and you have destroyed the evidence.
 
 ### Task 4: All Three Violation Actions
 
@@ -280,7 +280,7 @@ In Intro Lab 4 you answered a business question with one notebook: read, filter,
 ## Checkpoint: Verify Your Progress
 
 - [ ] I ingested with raw `readStream` and an explicit checkpoint
-- [ ] I re-ran the write and confirmed no rows were duplicated
+- [ ] I reran the write and confirmed no rows were duplicated
 - [ ] I can explain what the checkpoint stores and why
 - [ ] I can state the difference between directory listing and file notification
 - [ ] I expressed the same ingestion as a declarative streaming table
@@ -305,7 +305,7 @@ In Intro Lab 4 you answered a business question with one notebook: read, filter,
 | Issue | Symptom | Solution |
 |---|---|---|
 | AUTO CDC step fails | Unsupported operation | The pipeline is not on serverless, Pro, or Advanced. AUTO CDC is unsupported on Apache Spark Declarative Pipelines. |
-| Re-run duplicates rows | Row count grows on re-execution | The checkpoint location changed or was deleted. |
+| Rerun duplicates rows | Row count grows on re-execution | The checkpoint location changed or was deleted. |
 | Header read as data | Columns named `_c0`, `_c1` | `header` not set, or a `#` header was treated as a comment. Set `comment` explicitly. |
 | Column not found in Silver | Error on `#ID_RSSD` | Bronze keeps the hash; rename at Silver. In SQL, backtick-quote it. |
 | Pipeline fails on an expectation | Update does not complete | Expected if the action is `FAIL UPDATE`. That is the action working. |
