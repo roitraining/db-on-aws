@@ -24,7 +24,7 @@ You sat the Intro course as an analyst. Now you own the platform. This lab sets 
 - [ ] A peer in the room to verify your grants
 
 > **Did not take the Intro course?** You are not stuck, but do not skip this. Labs 7–12 assume
-> Labs 1–6 and deliberately do not re-teach them. Read **[`SETUP.md`](../../../SETUP.md) Part 4 —
+> Labs 1–6 and deliberately do not re-teach them. Read **[`SETUP.md`](../../../SETUP.md) Part 4—
 > Advanced course catch-up** before starting. It is a ten-minute read covering the four things this
 > lab assumes you already know: the three-level namespace, the leading `#` on the NIC key and why
 > it needs backticks, the three privileges required to read a table, and what the `legacy_onprem`
@@ -38,7 +38,7 @@ You sat the Intro course as an analyst. Now you own the platform. This lab sets 
 > **Note on the two repositories in this course.** The **course repository** is the public GitHub
 > repo you added in `SETUP.md` Part 1, holding these guides; it needs no credential. The **GitLab
 > repository** in Task 3 below is a *separate*, private repo supplied by your instructor, which you
-> link with a personal access token and commit to. Task 3 is about the credentialed workflow — do
+> link with a personal access token and commit to. Task 3 is about the credentialed workflow—do
 > not confuse it with the one you already have.
 
 ---
