@@ -15,7 +15,7 @@ You already write SQL. This lab is not SQL instruction—it is a translation exe
 
 ## Prerequisites
 
-- [ ] Lab 1 completed — you can locate `training_nic.migrated` and run a query
+- [ ] Lab 1 completed—you can locate `training_nic.migrated` and run a query
 - [ ] A running serverless SQL warehouse selected in the SQL editor
 - [ ] GitLab repository URL and credentials supplied by your instructor
 - [ ] Your assigned attendee ID
