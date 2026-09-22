@@ -79,9 +79,9 @@ You have queried this data in SQL Server for years. It now lives in Databricks. 
 
     Select the **institutions** table and review the **Columns** tab. Note the column names and data types.
 
-    > **Note:** If there is no **institutions** table, the setup has not been run — go back to [Lab 0](Lab_0_Guide.md). Every remaining step in this lab refers to this table.
+    > **Note:** If there is no **institutions** table, the setup has not been run—go back to [Lab 0](Lab_0_Guide.md). Every remaining step in this lab refers to this table.
 
-    > **Key Insight:** Unity Catalog uses a three-level namespace — `catalog.schema.table` — where SQL Server used two, as in `dbo.TableName`. The catalog level is new. Everything you reference will have three parts unless you set a session default.
+    > **Key Insight:** Unity Catalog uses a three-level namespace—`catalog.schema.table`—where SQL Server used two, as in `dbo.TableName`. The catalog level is new. Everything you reference will have three parts unless you set a session default.
 
     <!-- source: facts_extracted.md §2 -->
 
@@ -144,13 +144,13 @@ You have queried this data in SQL Server for years. It now lives in Databricks. 
 
     On-premises, this table had **5,000** rows. Your count is **4,900**. They do not match. Do not try to explain the difference yet.
 
-    > **What Just Happened?** One count, two systems — the smallest possible unit of migration validation. The gap is real and deliberate. Lab 3 is where you find out what the migration did wrong.
+    > **What Just Happened?** One count, two systems—the smallest possible unit of migration validation. The gap is real and deliberate. Lab 3 is where you find out what the migration did wrong.
 
 15. **Save your query**
 
     Click the query name in the header, rename it to **`lab1_row_count_<id>`** using your attendee ID, then click **Save**. When asked where to move the file, keep your home folder. Saved queries persist and can be shared with colleagues, which replaces emailing `.sql` files.
 
-    > **Note:** Every lab names saved work `lab<number>_<purpose>_<id>`. Stick to the convention — six labs of ad-hoc names cannot be sorted.
+    > **Note:** Every lab names saved work `lab<number>_<purpose>_<id>`. Stick to the convention—six labs of ad-hoc names cannot be sorted.
 
 ---
 
@@ -158,7 +158,7 @@ You have queried this data in SQL Server for years. It now lives in Databricks. 
 
 ### Task 5: The Ten-Minute Tour
 
-Everything you just did left traces. This task shows you where they landed — and where you will work for the rest of the course.
+Everything you just did left traces. This task shows you where they landed—and where you will work for the rest of the course.
 
 16. **Home and Recents**
 
@@ -178,7 +178,7 @@ Everything you just did left traces. This task shows you where they landed — a
 
 20. **Query History**
 
-    Select **Query History**. Every query you ran today is listed with its status and duration. Check here before re-running anything that "didn't work" — it usually did.
+    Select **Query History**. Every query you ran today is listed with its status and duration. Check here before re-running anything that "didn't work"—it usually did.
 
 21. **Read the signposts**
 
@@ -196,7 +196,7 @@ Explore the other schemas in `training_nic`. Using Catalog Explorer, answer:
 - Which schema holds reference or lookup data?
 - Open the **History** tab on the institutions table. How many versions does it have, and what does that suggest about how it was created?
 
-Keep your answers in mind — they will be relevant in Lab 3.
+Keep your answers in mind—they will be relevant in Lab 3.
 
 ---
 
@@ -219,7 +219,7 @@ Keep your answers in mind — they will be relevant in Lab 3.
 
 ## Troubleshooting Reference
 
-> **Key Insight:** Reading a table needs three privileges, not one — `SELECT` on the table, `USE CATALOG` on the parent catalog, and `USE SCHEMA` on the parent schema. A `SELECT` grant on its own produces an access-denied error that looks like a bug but is not.
+> **Key Insight:** Reading a table needs three privileges, not one—`SELECT` on the table, `USE CATALOG` on the parent catalog, and `USE SCHEMA` on the parent schema. A `SELECT` grant on its own produces an access-denied error that looks like a bug but is not.
 <!-- source: facts_extracted.md §3 -->
 
 | Issue | Symptom | Solution |
