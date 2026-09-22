@@ -171,7 +171,7 @@ You sat the Intro course as an analyst. Now you own the platform. This lab sets 
 
     > **Key Insight:** Notice you were sent to the UI. Almost everything else in Unity Catalog is SQL, and it is worth asking why this is not. A credential is a secret-bearing object with an AWS-side handshake, so it deliberately does not live in a statement you might paste into a shared notebook.
 
-12. **Create an external location over the bucket path — this part is SQL**
+12. **Create an external location over the bucket path—this part is SQL**
 
     ```sql
     CREATE EXTERNAL LOCATION IF NOT EXISTS `loc_<id>`
@@ -275,7 +275,7 @@ You sat the Intro course as an analyst. Now you own the platform. This lab sets 
 | Table copies | Two full copies of the source table | Small at training scale; drop both at course end. |
 | S3 storage | External table files persist after the table is dropped | Delete the prefix explicitly during cleanup. |
 
-**Cleanup:** Keep the catalog, schema and Git folder — Labs 8–12 all build on them. Drop the two `institutions_*` tables at the end of the course and remove the S3 prefix.
+**Cleanup:** Keep the catalog, schema and Git folder—Labs 8–12 all build on them. Drop the two `institutions_*` tables at the end of the course and remove the S3 prefix.
 
 ---
 
