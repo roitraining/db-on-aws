@@ -15,7 +15,7 @@ The pipeline works when you run it. This lab makes it work when you are not ther
 
 ## Prerequisites
 
-- [ ] Lab 10 completed — the Medallion pipeline exists and runs
+- [ ] Lab 10 completed—the Medallion pipeline exists and runs
 - [ ] A service principal with grants on `eng_<id>` and the training catalog
 - [ ] An email destination configured for notifications
 - [ ] Permission to create Lakeflow Jobs
@@ -66,7 +66,7 @@ The pipeline works when you run it. This lab makes it work when you are not ther
 
     > **Note:** `details` is a JSON column and the `flow_progress` event type carries expectation metrics. The colon syntax navigates the JSON directly.
 
-    > **Troubleshooting:** `event_log()` can only be called by the **owner** of the streaming table or materialized view you pass it. If this task fails with a permission error, check ownership before checking your SQL — and remember this when you change Run As in Task 5.
+    > **Troubleshooting:** `event_log()` can only be called by the **owner** of the streaming table or materialized view you pass it. If this task fails with a permission error, check ownership before checking your SQL—and remember this when you change Run As in Task 5.
     <!-- source: facts_extracted.md §7 -->
 
 4. **Emit the count as a Task Value**
@@ -109,7 +109,7 @@ The pipeline works when you run it. This lab makes it work when you are not ther
 
     Set the operator to `LESS_THAN` and the right operand to your chosen threshold.
 
-    > **Common Pitfall:** Operands accept numeric, string and boolean values only, and anything non-numeric is serialized to a string and compared **as a string**. The comparison operators do compare numerically — `"12.0" >= "12"` evaluates true — but only when both sides are genuinely numeric. A value emitted as a string is why a gate silently always takes one branch.
+    > **Common Pitfall:** Operands accept numeric, string and boolean values only, and anything non-numeric is serialized to a string and compared **as a string**. The comparison operators do compare numerically—`"12.0" >= "12"` evaluates true—but only when both sides are genuinely numeric. A value emitted as a string is why a gate silently always takes one branch.
     <!-- source: facts_extracted.md §7 -->
 
 8. **Add the Gold task on the true branch**
@@ -121,7 +121,7 @@ The pipeline works when you run it. This lab makes it work when you are not ther
 
     Decide: should a failed gate fail the run loudly, or exit quietly? Be ready to say why.
 
-    > **Key Insight:** The gate is the difference between a pipeline that stops and a pipeline that publishes bad data on schedule. Silver already dropped the invalid rows — the gate exists because *how many* were dropped is itself a signal. One bad row is noise; ten thousand is an upstream change nobody told you about.
+    > **Key Insight:** The gate is the difference between a pipeline that stops and a pipeline that publishes bad data on schedule. Silver already dropped the invalid rows—the gate exists because *how many* were dropped is itself a signal. One bad row is noise; ten thousand is an upstream change nobody told you about.
 
 10. **Run the Job and confirm the gate evaluated**
 
@@ -152,14 +152,14 @@ The pipeline works when you run it. This lab makes it work when you are not ther
 
     Cause the Gold task to fail while leaving upstream tasks succeeding.
 
-15. **Use repair-and-rerun rather than re-running the Job**
+15. **Use repair-and-rerun rather than rerunning the Job**
 
     Repair re-executes only the failed tasks.
     <!-- source: facts_extracted.md §7 -->
 
-16. **Compare what re-ran against what did not**
+16. **Compare what reran against what did not**
 
-    > **Key Insight:** A full re-run reprocesses Bronze and Silver you already paid for and already validated. Repair restarts from the failure. On a nightly job with a two-hour ingest, that difference is the difference between recovering before the business day and not.
+    > **Key Insight:** A full rerun reprocesses Bronze and Silver you already paid for and already validated. Repair restarts from the failure. On a nightly job with a two-hour ingest, that difference is the difference between recovering before the business day and not.
 
 ### Task 5: Run As a Service Principal
 
@@ -172,7 +172,7 @@ The pipeline works when you run it. This lab makes it work when you are not ther
 
     It will very likely fail, and probably at the event-log task rather than anywhere obvious. That is the point of the exercise.
 
-    > **Key Insight:** `event_log()` can only be called by the **owner** of the streaming table you pass it. You own it; the service principal does not. Every other task may succeed while this one fails, which is exactly how implicit permissions announce themselves — not as a permissions error at the start, but as one failure deep in a DAG that worked yesterday.
+    > **Key Insight:** `event_log()` can only be called by the **owner** of the streaming table you pass it. You own it; the service principal does not. Every other task may succeed while this one fails, which is exactly how implicit permissions announce themselves—not as a permissions error at the start, but as one failure deep in a DAG that worked yesterday.
     <!-- source: facts_extracted.md §7 -->
 
 19. **Grant the service principal what it needs**
@@ -184,7 +184,7 @@ The pipeline works when you run it. This lab makes it work when you are not ther
     ```
     <!-- source: facts_extracted.md §1 -->
 
-20. **Re-run and confirm success**
+20. **Rerun and confirm success**
 
     > **What Just Happened?** The job ran under your identity for two days and worked. The moment it ran under an identity that is not you, every permission you had implicitly became a permission that had to be granted explicitly. That is the point of the exercise.
 
@@ -226,7 +226,7 @@ The pipeline works when you run it. This lab makes it work when you are not ther
 
 ## Troubleshooting Reference
 
-> **Key Insight:** Nearly every Run As failure is a missing grant, and it will not resemble a permissions error at first glance — it usually surfaces as a table-not-found. The service principal cannot see what you can see.
+> **Key Insight:** Nearly every Run As failure is a missing grant, and it will not resemble a permissions error at first glance—it usually surfaces as a table-not-found. The service principal cannot see what you can see.
 <!-- source: facts_extracted.md §1 -->
 
 | Issue | Symptom | Solution |
@@ -237,7 +237,7 @@ The pipeline works when you run it. This lab makes it work when you are not ther
 | Task value rejected | Error on `set` | The JSON representation exceeds 48 KiB. Emit a scalar, not a result set. |
 | Condition always takes one branch | Gate never flips | The operand is a string rather than a number. Cast to `int` before emitting. |
 | `event_log()` permission error | Event-log task fails, others succeed | It can only be called by the **owner** of the streaming table or materialized view. Common the moment Run As changes. |
-| Job fails under Run As | Table or schema not found | The service principal lacks `USE CATALOG`, `USE SCHEMA`, or `SELECT` — or does not own the streaming table the event log is read from. |
+| Job fails under Run As | Table or schema not found | The service principal lacks `USE CATALOG`, `USE SCHEMA`, or `SELECT`—or does not own the streaming table the event log is read from. |
 | Repair re-runs everything | Whole job re-executes | You triggered a new run rather than repairing the failed one. |
 | No failure notification | Job failed silently | The notification is configured on the wrong event, or the destination is unset. |
 | Gold refreshes despite violations | Gate did not hold | The Gold task has a dependency on the pipeline task rather than the Condition Task. |
