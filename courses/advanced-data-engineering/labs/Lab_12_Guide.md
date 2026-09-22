@@ -248,7 +248,7 @@ Everything you built over two days exists because you clicked it into being. Thi
 
 20. **Understand `deployment bind`**
 
-    Binding places an already-running workspace resource under bundle control without recreating it.
+    Binding places an already-running workspace resource under bundle control without re-creating it.
     <!-- source: facts_extracted.md §8 -->
 
     > **Key Insight:** This is the migration path, and it is the reason bundles are adoptable at all. You do not have to stop your running jobs, rebuild them as code, and cut over. You generate the configuration from what exists, bind it, and it is under version control from the next deploy onward—with no downtime and no re-creation.
