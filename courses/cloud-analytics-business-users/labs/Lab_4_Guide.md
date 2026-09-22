@@ -262,7 +262,7 @@ For attendees who finish early.
 | `display()` on a full DataFrame | Reads far more than needed | Always `.limit()` when eyeballing data. |
 | Repeated re-runs | Each action re-reads unless cached | Cache only when you will reuse the same DataFrame several times. |
 
-**Cleanup:** Keep `institution_summary` — Labs 5 and 6 both build on it. Detach from the cluster when finished.
+**Cleanup:** Keep `institution_summary`—Labs 5 and 6 both build on it. Detach from the cluster when finished.
 
 ---
 
