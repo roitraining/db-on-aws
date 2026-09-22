@@ -216,7 +216,7 @@ The pipeline works when you run it. This lab makes it work when you are not ther
 - [ ] I ran the Job and saw the gate evaluate
 - [ ] I configured a failure email notification
 - [ ] I forced a failure and received the alert
-- [ ] I used repair-and-rerun and confirmed only failed tasks re-ran
+- [ ] I used repair-and-rerun and confirmed only failed tasks reran
 - [ ] I set Run As to a service principal
 - [ ] I granted the service principal the privileges it needed
 - [ ] The Job succeeded under the service principal
