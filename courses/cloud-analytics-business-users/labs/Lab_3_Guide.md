@@ -28,7 +28,7 @@ You are being asked to sign off that the migrated data matches the source. This 
 - Apply a four-check UAT framework in the order that keeps noise out of your results
 - Compare row counts, key sets, and aggregates between two systems
 - Normalize both sides before drawing a conclusion from a row-level comparison
-- Distinguish a genuine data defect from a comparison artefact
+- Distinguish a genuine data defect from a comparison artifact
 - Query a Delta table as it existed at an earlier version
 - Document findings so an engineer can act on them
 
@@ -354,7 +354,7 @@ For attendees who finish early.
 
 | Issue | Symptom | Solution |
 |---|---|---|
-| Comparison returns nearly every row | Mismatch count close to total row count | Whitespace or null-versus-empty-string. Normalise both sides with `TRIM` and `NULLIF` before comparing. |
+| Comparison returns nearly every row | Mismatch count close to total row count | Whitespace or null-versus-empty-string. Normalize both sides with `TRIM` and `NULLIF` before comparing. |
 | Rows silently missing from a comparison | Fewer rows than expected in the mismatch list | `<>` returns null when either side is null, dropping those rows. Use `IS DISTINCT FROM`. |
 | Federated query fails immediately | Error before any rows return | Connection rather than SQL. The connection is always SSL-encrypted and fails at handshake if the certificate hostname does not match the endpoint. |
 | Cannot see `training_nic` (or the foreign catalog, on the federated variant) | Absent from Catalog Explorer | Missing traversal grant—an instructor re-runs the setup grants (setup notebook Part 7). |
