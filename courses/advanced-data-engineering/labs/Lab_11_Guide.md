@@ -50,7 +50,7 @@ The pipeline works when you run it. This lab makes it work when you are not ther
 
 3. **Add a second task that reads the event log**
 
-    This task must be a **Python notebook** task, not a SQL task — see step 4 for why.
+    This task must be a **Python notebook** task, not a SQL task—see step 4 for why.
 
     The event log is read through the `event_log()` table-valued function, which takes either a table name or a `pipeline_id`. The pipeline records its own quality outcomes; orchestration reads them rather than recomputing from the data.
 
@@ -198,7 +198,7 @@ The pipeline works when you run it. This lab makes it work when you are not ther
 
 ## Stretch Task
 
-1. Add a For Each task that runs the Silver step once per state, parameterised from a list. What did that change about the DAG, and what would it cost at fifty states?
+1. Add a For Each task that runs the Silver step once per state, parameterized from a list. What did that change about the DAG, and what would it cost at fifty states?
 2. Configure a file-arrival trigger so the Job runs when new files land rather than on a schedule. Which upstream assumption does that remove?
 3. Query `system.query.history` to attribute this Job's compute cost. Who would you send that figure to, and what decision would it inform?
 
@@ -238,7 +238,7 @@ The pipeline works when you run it. This lab makes it work when you are not ther
 | Condition always takes one branch | Gate never flips | The operand is a string rather than a number. Cast to `int` before emitting. |
 | `event_log()` permission error | Event-log task fails, others succeed | It can only be called by the **owner** of the streaming table or materialized view. Common the moment Run As changes. |
 | Job fails under Run As | Table or schema not found | The service principal lacks `USE CATALOG`, `USE SCHEMA`, or `SELECT`—or does not own the streaming table the event log is read from. |
-| Repair re-runs everything | Whole job re-executes | You triggered a new run rather than repairing the failed one. |
+| Repair reruns everything | Whole job re-executes | You triggered a new run rather than repairing the failed one. |
 | No failure notification | Job failed silently | The notification is configured on the wrong event, or the destination is unset. |
 | Gold refreshes despite violations | Gate did not hold | The Gold task has a dependency on the pipeline task rather than the Condition Task. |
 
@@ -249,7 +249,7 @@ The pipeline works when you run it. This lab makes it work when you are not ther
 | Resource | Driver | Control |
 |---|---|---|
 | Job cluster | Started per run, terminated after | Preferred over an all-purpose cluster for scheduled work. |
-| Full re-runs | Reprocesses work already done | Use repair-and-rerun on failure. |
+| Full reruns | Reprocesses work already done | Use repair-and-rerun on failure. |
 | Schedule frequency | Every trigger costs compute | Match to how often data actually arrives; a file-arrival trigger avoids empty runs. |
 
 **Cleanup:** Keep the Job — Lab 12 declares it as a bundle resource. Pause its schedule so it does not run after class.
