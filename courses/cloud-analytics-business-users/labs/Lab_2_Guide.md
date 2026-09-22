@@ -293,7 +293,7 @@ For attendees who finish early.
 | Resource | Driver | Control |
 |---|---|---|
 | Serverless SQL warehouse | Billed while running; auto-stops when idle | Leave auto-stop enabled. |
-| Repeated full scans | Re-running the join while experimenting | Keep `LIMIT` on exploratory queries; remove it only for the final aggregate. |
+| Repeated full scans | Rerunning the join while experimenting | Keep `LIMIT` on exploratory queries; remove it only for the final aggregate. |
 
 **Cleanup:** No tables were created. Your saved query and commit are intentional and should be left in place—Lab 5 publishes from work you build on later.
 
