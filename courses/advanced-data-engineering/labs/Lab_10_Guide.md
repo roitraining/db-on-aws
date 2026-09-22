@@ -114,7 +114,7 @@ In Intro Lab 4 you answered a business question with one notebook: read, filter,
 
 ---
 
-## Part 2: Silver — Conform and Gate
+## Part 2: Silver—Conform and Gate
 
 ### Task 3: Clean the Native Names
 
@@ -322,7 +322,7 @@ In Intro Lab 4 you answered a business question with one notebook: read, filter,
 | Materialized view refresh | Runs a serverless pipeline | Match refresh frequency to how often the data actually changes. |
 | Directory listing | Repeated listing at scale | File notification mode is recommended for most production workloads. |
 
-**Cleanup:** Keep the pipeline — Labs 11 and 12 wrap and deploy it. Stop any continuous update.
+**Cleanup:** Keep the pipeline—Labs 11 and 12 wrap and deploy it. Stop any continuous update.
 
 ---
 
