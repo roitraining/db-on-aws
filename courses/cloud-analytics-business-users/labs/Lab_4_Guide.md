@@ -9,7 +9,7 @@
 
 ## Overview
 
-Everything so far has been reading someone else's data. This lab is the first thing you build and own: read a table, clean it, summarise it, and write the result back as a table your colleagues can use. It is the simplest complete pipeline, and the same shape scales all the way up.
+Everything so far has been reading someone else's data. This lab is the first thing you build and own: read a table, clean it, summarize it, and write the result back as a table your colleagues can use. It is the simplest complete pipeline, and the same shape scales all the way up.
 
 ---
 
@@ -42,7 +42,7 @@ Everything so far has been reading someone else's data. This lab is the first th
 
 1. **Confirm your compute**
 
-    Attach the notebook to the classic cluster — named **`db-on-aws · lab cluster`** (with a `[target]` prefix) in the standard deploy. Check the cluster selector at the top of the notebook; if no classic cluster exists, see `SETUP.md`.
+    Attach the notebook to the classic cluster—named **`db-on-aws · lab cluster`** (with a `[target]` prefix) in the standard deploy. Check the cluster selector at the top of the notebook; if no classic cluster exists, see `SETUP.md`.
 
 2. **Read the migrated table into a DataFrame**
 
@@ -119,11 +119,11 @@ Everything so far has been reading someone else's data. This lab is the first th
     ```
     <!-- source: facts_extracted.md §13 -->
 
-    > **What Just Happened?** You have built a four-step plan and Spark has read nothing. The plan is what gets optimised, which is why chaining transformations costs nothing until you ask for an answer.
+    > **What Just Happened?** You have built a four-step plan and Spark has read nothing. The plan is what gets optimized, which is why chaining transformations costs nothing until you ask for an answer.
 
 ### Task 3: Aggregate
 
-10. **Summarise by business unit and period**
+10. **Summarize by business unit and period**
 
     ```python
     summary = (slim
@@ -158,7 +158,7 @@ Everything so far has been reading someone else's data. This lab is the first th
 
     Note three figures for the aggregation stage: the number of tasks, the shuffle write volume, and the shuffle read volume.
 
-    > **Key Insight:** The task count reflects how many partitions the data was split into. The shuffle figures show how much data moved across the cluster to bring matching keys together. A `groupBy` cannot avoid a shuffle — that is what it is.
+    > **Key Insight:** The task count reflects how many partitions the data was split into. The shuffle figures show how much data moved across the cluster to bring matching keys together. A `groupBy` cannot avoid a shuffle—that is what it is.
     <!-- source: facts_extracted.md §13 -->
 
 14. **Compare against a query that does not shuffle**
@@ -170,7 +170,7 @@ Everything so far has been reading someone else's data. This lab is the first th
 
 15. **Look at the stages for that cell**
 
-    > **What Just Happened?** A filter is narrow — each partition can be processed independently, so there is no shuffle. An aggregation is wide — rows with the same key must end up together, which means moving data. When a query is slow, this distinction is the first thing to check.
+    > **What Just Happened?** A filter is narrow—each partition can be processed independently, so there is no shuffle. An aggregation is wide—rows with the same key must end up together, which means moving data. When a query is slow, this distinction is the first thing to check.
 
 ---
 
@@ -240,7 +240,7 @@ For attendees who finish early.
 
 ## Troubleshooting Reference
 
-> **Key Insight:** If a cell returns instantly, it probably did nothing. Lazy evaluation means errors often surface at the action, not at the transformation that caused them — read the whole chain, not just the failing line.
+> **Key Insight:** If a cell returns instantly, it probably did nothing. Lazy evaluation means errors often surface at the action, not at the transformation that caused them—read the whole chain, not just the failing line.
 <!-- source: facts_extracted.md §13 -->
 
 | Issue | Symptom | Solution |
@@ -273,7 +273,7 @@ For attendees who finish early.
 3. Your `groupBy` produced a large shuffle read. What does that figure represent physically?
 4. The key column is `#ID_RSSD`. How do you reference it in SQL, and how in the DataFrame API?
 5. You wrote the summary with `saveAsTable` rather than saving a file. What did that buy you?
-6. For read, clean, aggregate and verify — which would you do in PySpark and which in SQL, and why?
+6. For read, clean, aggregate and verify—which would you do in PySpark and which in SQL, and why?
 7. When is caching a mistake?
 
 Answers are held in the Knowledge Check Bank.
