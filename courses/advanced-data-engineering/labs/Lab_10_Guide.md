@@ -240,7 +240,7 @@ In Intro Lab 4 you answered a business question with one notebook: read, filter,
     > a stream of change events has no inherent order, so you must name the column that supplies it.
     <!-- source: facts_extracted.md §6 -->
 
-    > **Key Insight:** The AUTO CDC APIs replace the APPLY CHANGES APIs and have identical syntax. You will meet `APPLY CHANGES INTO`, `apply_changes()` and `apply_changes_from_snapshot()` in existing pipelines; they still work. Lead with the new names, recognise the old.
+    > **Key Insight:** The AUTO CDC APIs replace the APPLY CHANGES APIs and have identical syntax. You will meet `APPLY CHANGES INTO`, `apply_changes()` and `apply_changes_from_snapshot()` in existing pipelines; they still work. Lead with the new names, recognize the old.
     <!-- source: facts_extracted.md §6 -->
 
     > **Common Pitfall:** AUTO CDC is not supported on Apache Spark Declarative Pipelines. The pipeline must run on serverless Lakeflow pipelines or the Pro or Advanced edition. If your pipeline fails at this step, check the edition before debugging the syntax.
