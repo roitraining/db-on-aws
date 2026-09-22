@@ -271,7 +271,7 @@ In Intro Lab 4 you answered a business question with one notebook: read, filter,
 
 ## Stretch Task
 
-1. Delete the checkpoint directory and re-run the raw stream. What happens, and what does that tell you about where the exactly-once guarantee actually lives?
+1. Delete the checkpoint directory and rerun the raw stream. What happens, and what does that tell you about where the exactly-once guarantee actually lives?
 2. Set the `key_is_numeric` expectation to `FAIL UPDATE` and feed the pipeline a bad row. Capture the failure, then argue whether that action is right for this dataset.
 3. Implement the same Bronze ingest with file notification mode instead of directory listing. What extra cloud configuration did it require, and at what data volume would it pay for itself?
 
