@@ -220,7 +220,7 @@ You have a multi-join T-SQL stored procedure that runs on-premises. This lab con
 
 ### Task 5: Let AQE Do Its Job
 
-16. **Turn Adaptive Query Execution back on and re-time**
+16. **Turn Adaptive Query Execution back on and retime**
 
     ```python
     spark.conf.set("spark.sql.adaptive.enabled", "true")
@@ -241,7 +241,7 @@ You have a multi-join T-SQL stored procedure that runs on-premises. This lab con
 
 ### Task 6: Cache and Compare
 
-18. **Cache the joined DataFrame and re-time**
+18. **Cache the joined DataFrame and retime**
 
     ```python
     joined.cache()
@@ -253,13 +253,13 @@ You have a multi-join T-SQL stored procedure that runs on-premises. This lab con
     ```
     <!-- source: facts_extracted.md §2 -->
 
-    > **Expected Result:** A large drop—roughly **3.3s to 0.5s** on the reference cluster—because the second count reads memory instead of re-reading and re-joining.
+    > **Expected Result:** A large drop—roughly **3.3s to 0.5s** on the reference cluster—because the second count reads memory instead of rereading and rejoining.
 
 19. **Check what caching did not fix**
 
-    Re-run the distribution measurement from step 13.
+    Rerun the distribution measurement from step 13.
 
-    > **Key Insight:** Caching avoids re-reading and re-joining. It does not change how rows are distributed, so the underlying skew is untouched—the ratio is exactly what it was. Caching helps when you reuse a DataFrame several times; it does nothing for skew, and on a DataFrame used once it is pure overhead.
+    > **Key Insight:** Caching avoids rereading and rejoining. It does not change how rows are distributed, so the underlying skew is untouched—the ratio is exactly what it was. Caching helps when you reuse a DataFrame several times; it does nothing for skew, and on a DataFrame used once it is pure overhead.
     <!-- source: facts_extracted.md §2 -->
 
 20. **Release the cache**
@@ -332,7 +332,7 @@ You have a multi-join T-SQL stored procedure that runs on-premises. This lab con
 | Resource | Driver | Control |
 |---|---|---|
 | Classic cluster | Billed while running, including idle | Detach and auto-terminate at session end. |
-| Repeated timing runs | Each re-run re-executes the plan | Time deliberately, not repeatedly. |
+| Repeated timing runs | Each rerun re-executes the plan | Time deliberately, not repeatedly. |
 | Cache | Consumes executor memory | `unpersist()` when finished, as in step 17. |
 
 **Cleanup:** No tables created. Unpersist the cache and detach from the cluster.
