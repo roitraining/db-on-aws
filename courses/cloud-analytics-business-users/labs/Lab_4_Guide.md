@@ -199,7 +199,7 @@ Everything so far has been reading someone else's data. This lab is the first th
     ```
     <!-- source: facts_extracted.md §2 -->
 
-    > **Key Insight:** You just switched languages mid-notebook and it cost nothing. Verification queries are read-only and ad hoc, which is exactly what SQL is best at. The read-clean-aggregate chain above was PySpark because each step needed to be inspectable and re-runnable.
+    > **Key Insight:** You just switched languages mid-notebook and it cost nothing. Verification queries are read-only and ad hoc, which is exactly what SQL is best at. The read-clean-aggregate chain above was PySpark because each step needed to be inspectable and rerunnable.
 
 18. **Record which language you would use for each stage**
 
@@ -213,7 +213,7 @@ Everything so far has been reading someone else's data. This lab is the first th
 
 For attendees who finish early.
 
-1. Re-run the aggregation with `spark.conf.set("spark.sql.shuffle.partitions", 8)` and compare task counts in the Spark UI. What changed, and did it get faster?
+1. Rerun the aggregation with `spark.conf.set("spark.sql.shuffle.partitions", 8)` and compare task counts in the Spark UI. What changed, and did it get faster?
 2. Add `.cache()` before the aggregation and run it twice. Compare the two run times, then explain why the second was faster and when caching would be a bad idea.
 3. Rewrite the entire pipeline as a single SQL statement. Which version would you rather hand to a colleague, and which would you rather maintain as a scheduled job?
 
@@ -260,7 +260,7 @@ For attendees who finish early.
 |---|---|---|
 | Classic cluster | Billed while running, including idle | Detach and let it auto-terminate at the end of the session. |
 | `display()` on a full DataFrame | Reads far more than needed | Always `.limit()` when eyeballing data. |
-| Repeated re-runs | Each action re-reads unless cached | Cache only when you will reuse the same DataFrame several times. |
+| Repeated reruns | Each action rereads unless cached | Cache only when you will reuse the same DataFrame several times. |
 
 **Cleanup:** Keep `institution_summary`—Labs 5 and 6 both build on it. Detach from the cluster when finished.
 
