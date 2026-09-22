@@ -201,11 +201,11 @@ Your analysts ran a four-check comparison in Intro Lab 3. This lab builds the ma
 
     > **Common Pitfall:** Do not read that size drop as data loss. Confirm it is not by rerunning your row count, and by time traveling to version 0—it still returns the original 5,000 rows.
 
-20. **State when you would use Liquid Clustering instead of partitioning**
+20. **State when you would use liquid clustering instead of partitioning**
 
     Write two sentences.
 
-    > **Key Insight:** Manual partitioning fixes a layout at write time and is expensive to change. Liquid Clustering reclusters incrementally as data arrives, which suits a migration where load patterns are still being discovered. For a table whose access pattern you do not yet know, choosing partitions early is a guess you will pay for.
+    > **Key Insight:** Manual partitioning fixes a layout at write time and is expensive to change. Liquid clustering reclusters incrementally as data arrives, which suits a migration where load patterns are still being discovered. For a table whose access pattern you do not yet know, choosing partitions early is a guess you will pay for.
 
 ---
 
@@ -213,7 +213,7 @@ Your analysts ran a four-check comparison in Intro Lab 3. This lab builds the ma
 
 1. Run `VACUUM` with a dry run and describe exactly what it would remove. Why is that irreversible in a way `OPTIMIZE` is not?
 2. Build a reusable validation query that takes two version numbers and reports row-count delta, key delta, and aggregate delta in one result set. This is the framework your analysts execute.
-3. Enable Liquid Clustering on a copy of the table with a clustering key, load data, and compare file layout against the unclustered original.
+3. Enable liquid clustering on a copy of the table with a clustering key, load data, and compare file layout against the unclustered original.
 
 ---
 
@@ -232,7 +232,7 @@ Your analysts ran a four-check comparison in Intro Lab 3. This lab builds the ma
 - [ ] I recorded the file count before `OPTIMIZE`
 - [ ] I ran `OPTIMIZE` and recorded the file count after
 - [ ] I confirmed history survived compaction
-- [ ] I stated when Liquid Clustering beats manual partitioning
+- [ ] I stated when liquid clustering beats manual partitioning
 
 ---
 
