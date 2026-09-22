@@ -97,7 +97,7 @@ The last step is the one stakeholders actually see. You will build a dashboard o
     Select a bar in the bar chart and observe the effect on the line chart.
     <!-- source: facts_extracted.md §16 -->
 
-    > **What Just Happened?** A stakeholder can now slice your analysis themselves. That is the difference between a report you re-run on request and one that answers follow-up questions without you.
+    > **What Just Happened?** A stakeholder can now slice your analysis themselves. That is the difference between a report you rerun on request and one that answers follow-up questions without you.
 
 ---
 
