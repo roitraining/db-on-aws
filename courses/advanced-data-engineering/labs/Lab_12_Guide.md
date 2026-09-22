@@ -15,19 +15,19 @@ Everything you built over two days exists because you clicked it into being. Thi
 
 ## Prerequisites
 
-- [ ] Labs 7–11 completed — the pipeline and Job both exist
+- [ ] Labs 7–11 completed—the pipeline and Job both exist
 - [ ] Databricks CLI installed locally and authenticated to the workspace
-- [ ] **CLI v1.0 or later** — check with `databricks --version` before you start
+- [ ] **CLI v1.0 or later**—check with `databricks --version` before you start
 - [ ] The GitLab repository from Lab 7, cloned locally
 - [ ] Two catalogs available for dev and prod targets
 
-> **Common Pitfall:** Verify the CLI version first. Bundle commands on a CLI from the 0.x line shell out to Terraform, and those builds fail before doing any work with `error downloading Terraform: unable to verify checksums signature: openpgp: key expired`. It reads like a network or proxy fault and it is neither — it is an expired signing key baked into an old binary, and the only fix is upgrading the CLI. This was reproduced on v0.224.0 and resolved on v1.14.1.
+> **Common Pitfall:** Verify the CLI version first. Bundle commands on a CLI from the 0.x line shell out to Terraform, and those builds fail before doing any work with `error downloading Terraform: unable to verify checksums signature: openpgp: key expired`. It reads like a network or proxy fault and it is neither—it is an expired signing key baked into an old binary, and the only fix is upgrading the CLI. This was reproduced on v0.224.0 and resolved on v1.14.1.
 
 ---
 
 ## Objectives
 
-- Initialise a bundle and explain each top-level mapping in `databricks.yml`
+- Initialize a bundle and explain each top-level mapping in `databricks.yml`
 - Declare an existing pipeline and Job as bundle resources
 - Define dev and prod targets with per-target catalog overrides
 - Run `validate` and read what it checks
@@ -39,7 +39,7 @@ Everything you built over two days exists because you clicked it into being. Thi
 
 ## Part 1: The Manifest
 
-### Task 1: Initialise
+### Task 1: Initialiez
 
 1. **Create a bundle in your repository**
 
@@ -166,9 +166,9 @@ Everything you built over two days exists because you clicked it into being. Thi
 
 12. **Break something deliberately**
 
-    Change a resource reference to a name that does not exist and re-run `validate`.
+    Change a resource reference to a name that does not exist and rerun `validate`.
 
-13. **Fix it and re-validate**
+13. **Fix it and revalidate**
 
     > **Key Insight:** Validate is what runs on a pull request. It is cheap, it touches nothing, and it catches the class of error that would otherwise fail halfway through a production deployment leaving resources half-created.
 
@@ -231,7 +231,7 @@ Everything you built over two days exists because you clicked it into being. Thi
     ```
     <!-- source: facts_extracted.md §8 -->
 
-    > **Key Insight:** That is a hard-coded ID — precisely the thing step 9 warned you never to write. `generate` reports what the workspace currently holds, and the workspace holds a resolved ID, so a faithful capture of reality is also an anti-pattern. Replace it with `${resources.pipelines.medallion_pipeline.id}` by hand before you commit. This is the single most important habit in the lab: `generate` gets you 90% of the way and hands you the last 10% as a trap that deploys perfectly to dev and quietly points prod at your development pipeline.
+    > **Key Insight:** That is a hard-coded ID—precisely the thing step 9 warned you never to write. `generate` reports what the workspace currently holds, and the workspace holds a resolved ID, so a faithful capture of reality is also an anti-pattern. Replace it with `${resources.pipelines.medallion_pipeline.id}` by hand before you commit. This is the single most important habit in the lab: `generate` gets you 90% of the way and hands you the last 10% as a trap that deploys perfectly to dev and quietly points prod at your development pipeline.
 
 19. **Confirm the deployment metadata**
 
@@ -251,11 +251,11 @@ Everything you built over two days exists because you clicked it into being. Thi
     Binding places an already-running workspace resource under bundle control without recreating it.
     <!-- source: facts_extracted.md §8 -->
 
-    > **Key Insight:** This is the migration path, and it is the reason bundles are adoptable at all. You do not have to stop your running jobs, rebuild them as code, and cut over. You generate the configuration from what exists, bind it, and it is under version control from the next deploy onward — with no downtime and no re-creation.
+    > **Key Insight:** This is the migration path, and it is the reason bundles are adoptable at all. You do not have to stop your running jobs, rebuild them as code, and cut over. You generate the configuration from what exists, bind it, and it is under version control from the next deploy onward—with no downtime and no re-creation.
 
 21. **Sketch the GitLab CI flow**
 
-    Write the three stages the approved outline describes: validate on pull request, deploy to dev on merge, promote to prod on release tag — with the service principal authenticating from GitLab CI variables.
+    Write the three stages the approved outline describes: validate on pull request, deploy to dev on merge, promote to prod on release tag—with the service principal authenticating from GitLab CI variables.
 
     Sketch it yourself first. Then compare against the worked reference at
     `bundles/solutions/lab-12-reference/.gitlab-ci.yml` in the course repository.
@@ -270,10 +270,10 @@ Everything you built over two days exists because you clicked it into being. Thi
 
     > **Key Insight:** The service principal from Lab 11 is the same identity that runs the deployment. Your personal credentials appear nowhere in CI, which is what makes the pipeline survive your holiday and satisfy an auditor.
 
-    > **Note:** Authenticate with **OAuth machine-to-machine** — `DATABRICKS_HOST`, `DATABRICKS_CLIENT_ID` and `DATABRICKS_CLIENT_SECRET` as masked GitLab CI variables. The CLI reads those three names automatically, so there is no `databricks configure` step in the pipeline. A personal access token would also work and is the wrong choice: it belongs to a person, and it dies when they leave or rotate it.
+    > **Note:** Authenticate with **OAuth machine-to-machine**—`DATABRICKS_HOST`, `DATABRICKS_CLIENT_ID` and `DATABRICKS_CLIENT_SECRET` as masked GitLab CI variables. The CLI reads those three names automatically, so there is no `databricks configure` step in the pipeline. A personal access token would also work and is the wrong choice: it belongs to a person, and it dies when they leave or rotate it.
     <!-- source: facts_extracted.md §8 -->
 
-    > **Key Insight:** Validate **both** targets on the merge request, not just the one you are about to deploy. A manifest can be valid for dev and broken for prod — a variable only prod overrides, a workspace host only prod sets. Catching that on the merge request is the whole point of a validate stage; discovering it during the release is too late.
+    > **Key Insight:** Validate **both** targets on the merge request, not just the one you are about to deploy. A manifest can be valid for dev and broken for prod—a variable only prod overrides, a workspace host only prod sets. Catching that on the merge request is the whole point of a validate stage; discovering it during the release is too late.
 
     > **Common Pitfall:** Do not add a `destroy` stage. Destroying production from CI is one mistyped variable away from an outage, and the blast radius is every job and pipeline the bundle owns. Teardown stays a deliberate, local, human act.
 
@@ -287,13 +287,13 @@ Everything you built over two days exists because you clicked it into being. Thi
 
 1. Add a second Job to the bundle that runs only in prod, using a target-specific resource override. What did that require, and what does it suggest about how far targets can diverge before you have two pipelines again?
 2. Write the `.gitlab-ci.yml` implementing the three stages. Where does the service principal credential live, and what happens if the release tag is malformed?
-3. Deploy to dev, change the pipeline in the workspace UI, then re-deploy. What happened to your manual change, and what does that tell you about who owns a bundle-managed resource?
+3. Deploy to dev, change the pipeline in the workspace UI, then redeploy. What happened to your manual change, and what does that tell you about who owns a bundle-managed resource?
 
 ---
 
 ## Checkpoint: Verify Your Progress
 
-- [ ] I initialised a bundle in my repository
+- [ ] I initialized a bundle in my repository
 - [ ] I can name all four top-level mappings and what each does
 - [ ] I know which target must carry `default: true`
 - [ ] I defined dev and prod targets
@@ -325,7 +325,7 @@ Everything you built over two days exists because you clicked it into being. Thi
 | Job cannot find the pipeline | Reference error at run time | A hard-coded pipeline ID rather than a bundle reference. |
 | Deploy overwrites a manual change | UI edits disappear | Expected. A bundle-managed resource is owned by the manifest. |
 | Authentication fails in CI | Deploy fails only in CI | The service principal credential is missing or unscoped in GitLab CI variables. |
-| `bundle generate` output does not match | Generated YAML differs from yours | Expected — it reflects the resource's actual state, which may have drifted. |
+| `bundle generate` output does not match | Generated YAML differs from yours | Expected—it reflects the resource's actual state, which may have drifted. |
 
 ---
 
@@ -335,9 +335,9 @@ Everything you built over two days exists because you clicked it into being. Thi
 |---|---|---|
 | Deployed pipeline and Job | Cost when they run, not when declared | Deploy freely to dev; keep schedules paused until intended. |
 | Duplicate dev and prod resources | Two environments, two sets | Targets exist so they are cheap to keep separate. Do not run both on a schedule during the course. |
-| `validate` | Free — touches nothing | Run it constantly. |
+| `validate` | Free—touches nothing | Run it constantly. |
 
-**Cleanup:** Destroy the dev deployment at the end of the course, or pause all schedules. Keep the repository — it is the deliverable you take away.
+**Cleanup:** Destroy the dev deployment at the end of the course, or pause all schedules. Keep the repository—it is the deliverable you take away.
 
 ---
 
@@ -348,7 +348,7 @@ Everything you built over two days exists because you clicked it into being. Thi
 3. Your dev and prod pipelines are identical except for the catalog. How is that expressed, and why is a second copy the wrong answer?
 4. What does `validate` check, and why is it the right thing to run on a pull request?
 5. The Job references the pipeline by bundle reference rather than ID. What failure does that prevent, and why would that failure be hard to spot?
-6. You have thirty running jobs built by hand. What is the adoption path that does not require recreating them?
+6. You have thirty running jobs built by hand. What is the adoption path that does not require re-creating them?
 7. Someone edits a bundle-managed job in the UI and the next deploy reverts it. Is that a bug? Justify your answer.
 8. Which identity authenticates the deploy in CI, and why not a person's?
 
