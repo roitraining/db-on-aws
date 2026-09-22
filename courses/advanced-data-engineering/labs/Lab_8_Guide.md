@@ -16,8 +16,8 @@ You have a multi-join T-SQL stored procedure that runs on-premises. This lab con
 ## Prerequisites
 
 - [ ] Lab 7 completed — you have `eng_<id>.work`
-- [ ] **A classic cluster attached** — the Spark UI is not available on serverless
-- [ ] Nothing else — the T-SQL procedure you will rewrite is printed in Task 1
+- [ ] **A classic cluster attached**—the Spark UI is not available on serverless
+- [ ] Nothing else—the T-SQL procedure you will rewrite is printed in Task 1
 - [ ] `training_nic.perf` tables present (created by the environment setup script)
 - [ ] Intro Lab 4 completed (DataFrame basics are assumed, not taught here)
 
@@ -66,7 +66,7 @@ You have a multi-join T-SQL stored procedure that runs on-premises. This lab con
     END;
     ```
 
-    > **Note:** The left join to `state_population` contributes nothing to the output. It is preserved in the rewrite anyway — deciding whether dead joins survive a migration is a business call, not a technical one.
+    > **Note:** The left join to `state_population` contributes nothing to the output. It is preserved in the rewrite anyway—deciding whether dead joins survive a migration is a business call, not a technical one.
 
 2. **Load the source tables**
 
@@ -149,7 +149,7 @@ You have a multi-join T-SQL stored procedure that runs on-premises. This lab con
 
     Count the stages. Each stage boundary is a shuffle.
 
-    > **Key Insight:** Narrow transformations — `filter`, `select`, `withColumn` — run inside a stage because each partition can be processed independently. Wide transformations — `join`, `groupBy`, `distinct` — force a shuffle and therefore a new stage. The number of stages tells you how many times your data crossed the cluster.
+    > **Key Insight:** Narrow transformations — `filter`, `select`, `withColumn`—run inside a stage because each partition can be processed independently. Wide transformations—`join`, `groupBy`, `distinct`—force a shuffle and therefore a new stage. The number of stages tells you how many times your data crossed the cluster.
     <!-- source: facts_extracted.md §2 -->
 
 10. **Record shuffle read and write for the largest stage**
@@ -177,7 +177,7 @@ You have a multi-join T-SQL stored procedure that runs on-premises. This lab con
     ```
     <!-- source: facts_extracted.md §2 -->
 
-    > **Expected Result:** Noticeably slower than the same query will run in step 16. Measured across repeated runs on the reference cluster: **17–28 seconds**. Absolute times move with cluster size, warm caches, and what else is running, so record *your* number — the step 16 comparison is the point, not matching this figure.
+    > **Expected Result:** Noticeably slower than the same query will run in step 16. Measured across repeated runs on the reference cluster: **17–28 seconds**. Absolute times move with cluster size, warm caches, and what else is running, so record *your* number—the step 16 comparison is the point, not matching this figure.
 
 13. **Measure how unevenly the rows are distributed**
 
@@ -190,14 +190,14 @@ You have a multi-join T-SQL stored procedure that runs on-premises. This lab con
     ```
     <!-- source: facts_extracted.md §2 -->
 
-    > **Expected Result:** Seven non-empty partitions, a maximum of about **1,200,000** rows against a median of about **133,000** — a ratio near **9×**. That ratio is the straggler, expressed as data rather than as time.
+    > **Expected Result:** Seven non-empty partitions, a maximum of about **1,200,000** rows against a median of about **133,000**—a ratio near **9×**. That ratio is the straggler, expressed as data rather than as time.
 
 14. **Confirm it in Summary Metrics**
 
     Open Summary Metrics for the shuffle stage and compare maximum task duration against the median.
     <!-- source: facts_extracted.md §2 -->
 
-    > **Key Insight:** If the maximum task duration greatly exceeds the median, one task is doing far more work than its peers. That is **skew** — one key has disproportionately many rows — and it is a different problem from having too much data overall. More cluster does not fix skew; the straggler is still one task.
+    > **Key Insight:** If the maximum task duration greatly exceeds the median, one task is doing far more work than its peers. That is **skew**—one key has disproportionately many rows—and it is a different problem from having too much data overall. More cluster does not fix skew; the straggler is still one task.
     <!-- source: facts_extracted.md §2 -->
 
 15. **Name the skewed key**
@@ -232,11 +232,11 @@ You have a multi-join T-SQL stored procedure that runs on-premises. This lab con
     ```
     <!-- source: facts_extracted.md §2 -->
 
-    > **Expected Result:** Substantially faster than step 12 — around **6 seconds**, a **3× to 4×** improvement with no change to your code. The partition ratio in step 13 reproduced at exactly **9.0×** on every run; that structural number is stable even when the timings are not.
+    > **Expected Result:** Substantially faster than step 12—around **6 seconds**, a **3× to 4×** improvement with no change to your code. The partition ratio in step 13 reproduced at exactly **9.0×** on every run; that structural number is stable even when the timings are not.
 
 17. **So what actually fixed it?**
 
-    > **Key Insight:** You did not fix the skew — AQE did, at runtime, by splitting the oversized partition once it had real statistics. This is the most important thing to know about skew on current Databricks: the platform handles the common case for you, and it is on by default. The reason to understand skew anyway is that AQE has limits. It cannot help when the skew is in the *source* rather than the shuffle, when a single key is larger than one task can hold, or when a UDF makes the cost *per row* uneven rather than the row *count* uneven. Those are the cases that still land on your desk.
+    > **Key Insight:** You did not fix the skew—AQE did, at runtime, by splitting the oversized partition once it had real statistics. This is the most important thing to know about skew on current Databricks: the platform handles the common case for you, and it is on by default. The reason to understand skew anyway is that AQE has limits. It cannot help when the skew is in the *source* rather than the shuffle, when a single key is larger than one task can hold, or when a UDF makes the cost *per row* uneven rather than the row *count* uneven. Those are the cases that still land on your desk.
     <!-- source: facts_extracted.md §2 -->
 
 ### Task 6: Cache and Compare
@@ -253,13 +253,13 @@ You have a multi-join T-SQL stored procedure that runs on-premises. This lab con
     ```
     <!-- source: facts_extracted.md §2 -->
 
-    > **Expected Result:** A large drop — roughly **3.3s to 0.5s** on the reference cluster — because the second count reads memory instead of re-reading and re-joining.
+    > **Expected Result:** A large drop—roughly **3.3s to 0.5s** on the reference cluster—because the second count reads memory instead of re-reading and re-joining.
 
 19. **Check what caching did not fix**
 
     Re-run the distribution measurement from step 13.
 
-    > **Key Insight:** Caching avoids re-reading and re-joining. It does not change how rows are distributed, so the underlying skew is untouched — the ratio is exactly what it was. Caching helps when you reuse a DataFrame several times; it does nothing for skew, and on a DataFrame used once it is pure overhead.
+    > **Key Insight:** Caching avoids re-reading and re-joining. It does not change how rows are distributed, so the underlying skew is untouched—the ratio is exactly what it was. Caching helps when you reuse a DataFrame several times; it does nothing for skew, and on a DataFrame used once it is pure overhead.
     <!-- source: facts_extracted.md §2 -->
 
 20. **Release the cache**
@@ -280,7 +280,7 @@ You have a multi-join T-SQL stored procedure that runs on-premises. This lab con
 ## Stretch Task
 
 1. Set `spark.sql.shuffle.partitions` to a much lower and a much higher value than the default of 200, with AQE off. Record task counts and durations for both. Which direction helped, and why did the other hurt?
-2. Join `inst_l` to `training_nic.reference.state_population` and inspect the physical plan with `.explain()`. Now wrap the small table in `F.broadcast()` and inspect it again. **Expect no difference** — both plans already show `BroadcastHashJoin`, because that table is seven rows and Spark broadcasts anything under `spark.sql.autoBroadcastJoinThreshold` automatically. The lesson is to read the plan before optimising it: the hint you were about to add had already been applied, and a hint that changes nothing is a hint that hides what the engine is actually doing.
+2. Join `inst_l` to `training_nic.reference.state_population` and inspect the physical plan with `.explain()`. Now wrap the small table in `F.broadcast()` and inspect it again. **Expect no difference**—both plans already show `BroadcastHashJoin`, because that table is seven rows and Spark broadcasts anything under `spark.sql.autoBroadcastJoinThreshold` automatically. The lesson is to read the plan before optimising it: the hint you were about to add had already been applied, and a hint that changes nothing is a hint that hides what the engine is actually doing.
 3. Write the version of this query you would put into production, and justify every difference from the version you first wrote.
 
 ---
@@ -310,7 +310,7 @@ You have a multi-join T-SQL stored procedure that runs on-premises. This lab con
 
 ## Troubleshooting Reference
 
-> **Key Insight:** A slow query has three common causes that look identical from the outside — too much data, too many stages, or one skewed key. Summary Metrics distinguishes them in about ten seconds.
+> **Key Insight:** A slow query has three common causes that look identical from the outside—too much data, too many stages, or one skewed key. Summary Metrics distinguishes them in about ten seconds.
 <!-- source: facts_extracted.md §2 -->
 
 | Issue | Symptom | Solution |
