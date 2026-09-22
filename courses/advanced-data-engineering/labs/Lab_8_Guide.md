@@ -301,7 +301,7 @@ You have a multi-join T-SQL stored procedure that runs on-premises. This lab con
 - [ ] I identified `CA` as the skewed key and recorded its share
 - [ ] I re-enabled AQE and recorded the improvement
 - [ ] I can state what AQE fixed, and three cases where it would not have
-- [ ] I cached the joined DataFrame and re-timed it
+- [ ] I cached the joined DataFrame and retimed it
 - [ ] I confirmed caching did not change the skew ratio
 - [ ] I released the cache
 - [ ] I wrote a two-sentence conclusion naming the real fix
