@@ -1,4 +1,4 @@
-# Lab 3: UAT — Comparing Cloud Data to On-Premises
+# Lab 3: UAT—Comparing Cloud Data to On-Premises
 
 **Course:** Databricks on AWS: Cloud Analytics for Business Users
 **Duration:** 60 minutes
