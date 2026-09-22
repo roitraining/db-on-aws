@@ -9,15 +9,15 @@
 
 ## Overview
 
-In Intro Lab 4 you answered a business question with one notebook: read, filter, aggregate, write. This lab answers the same question with a governed, incremental, quality-gated pipeline. Same data, same final figure, considerably more machinery — and every piece of that machinery exists for a reason you will see fail if it is missing.
+In Intro Lab 4 you answered a business question with one notebook: read, filter, aggregate, write. This lab answers the same question with a governed, incremental, quality-gated pipeline. Same data, same final figure, considerably more machinery—and every piece of that machinery exists for a reason you will see fail if it is missing.
 
 ---
 
 ## Prerequisites
 
 - [ ] Labs 7–9 completed
-- [ ] Intro Lab 4 completed — you built the simple tier of this pipeline
-- [ ] **Serverless Lakeflow pipelines, or Pro/Advanced edition** — AUTO CDC is not supported on Apache Spark Declarative Pipelines
+- [ ] Intro Lab 4 completed—you built the simple tier of this pipeline
+- [ ] **Serverless Lakeflow pipelines, or Pro/Advanced edition**—AUTO CDC is not supported on Apache Spark Declarative Pipelines
 - [ ] `training_nic.raw.landing` volume with a `branches/` subdirectory
 - [ ] A peer to receive the Gold grant
 
@@ -35,7 +35,7 @@ In Intro Lab 4 you answered a business question with one notebook: read, filter,
 
 ---
 
-## Part 1: Ingest — Raw Before Declarative
+## Part 1: Ingest—Raw Before Declarative
 
 ### Task 1: Structured Streaming by Hand
 
@@ -107,7 +107,7 @@ In Intro Lab 4 you answered a business question with one notebook: read, filter,
 
 8. **Compare the two forms**
 
-    > **Key Insight:** The declarative version has no explicit checkpoint, no trigger, and no output table name in the writer — the pipeline manages all three. It is the same Structured Streaming underneath. What you gained is lifecycle management; what you gave up is direct control of the writer.
+    > **Key Insight:** The declarative version has no explicit checkpoint, no trigger, and no output table name in the writer—the pipeline manages all three. It is the same Structured Streaming underneath. What you gained is lifecycle management; what you gave up is direct control of the writer.
 
     > **Note:** `dp` comes from `from pyspark import pipelines as dp`, which replaced `import dlt`. You will still see `@dlt` in existing code and it still runs.
     <!-- source: facts_extracted.md §5 -->
@@ -133,7 +133,7 @@ In Intro Lab 4 you answered a business question with one notebook: read, filter,
 
 10. **Note where cleaning happened**
 
-    > **Key Insight:** Bronze kept the `#`. Silver removed it. That ordering is the point of the Medallion pattern — Bronze is a faithful record of what arrived, so you can always re-derive Silver if your cleaning logic turns out to be wrong. Clean on ingest and you have destroyed the evidence.
+    > **Key Insight:** Bronze kept the `#`. Silver removed it. That ordering is the point of the Medallion pattern—Bronze is a faithful record of what arrived, so you can always re-derive Silver if your cleaning logic turns out to be wrong. Clean on ingest and you have destroyed the evidence.
 
 ### Task 4: All Three Violation Actions
 
@@ -174,7 +174,7 @@ In Intro Lab 4 you answered a business question with one notebook: read, filter,
 
 15. **Choose deliberately**
 
-    > **Key Insight:** The three actions encode three different business positions. Warn says the data is worth having even when imperfect. Drop says a bad row is worse than a missing one. Fail says publishing anything wrong is unacceptable. That is a business decision wearing engineering clothes — do not make it by default.
+    > **Key Insight:** The three actions encode three different business positions. Warn says the data is worth having even when imperfect. Drop says a bad row is worse than a missing one. Fail says publishing anything wrong is unacceptable. That is a business decision wearing engineering clothes—do not make it by default.
 
 ---
 
@@ -230,7 +230,7 @@ In Intro Lab 4 you answered a business question with one notebook: read, filter,
 
     > **Common Pitfall:** `AUTO CDC INTO` is not a statement you can write on its own. Without the
     > `CREATE FLOW <name> AS` wrapper the pipeline fails with **`Missing clause CREATE FLOW for
-    > operation AUTO CDC`**, and `SEQUENCE BY` is required rather than optional — it tells the
+    > operation AUTO CDC`**, and `SEQUENCE BY` is required rather than optional—it tells the
     > engine which column orders the change events. Omit either and the failure is a syntax error,
     > not a data error, so do not go looking at your source table.
     <!-- source: facts_extracted.md §6 -->
@@ -265,7 +265,7 @@ In Intro Lab 4 you answered a business question with one notebook: read, filter,
 
 21. **Compare your Gold figure against Intro Lab 4**
 
-    > **What Just Happened?** The number matches what you produced in one notebook two days ago. Everything added since — incremental ingest, checkpoints, expectations, layer separation, CDC — bought you repeatability, auditability, and a defensible answer to "how do you know this is right?", not a different answer.
+    > **What Just Happened?** The number matches what you produced in one notebook two days ago. Everything added since—incremental ingest, checkpoints, expectations, layer separation, CDC—bought you repeatability, auditability, and a defensible answer to "how do you know this is right?", not a different answer.
 
 ---
 
@@ -299,7 +299,7 @@ In Intro Lab 4 you answered a business question with one notebook: read, filter,
 
 ## Troubleshooting Reference
 
-> **Key Insight:** Pipeline failures divide cleanly into edition problems, checkpoint problems, and expectation problems. Check the edition first — it produces the most confusing error of the three.
+> **Key Insight:** Pipeline failures divide cleanly into edition problems, checkpoint problems, and expectation problems. Check the edition first—it produces the most confusing error of the three.
 <!-- source: facts_extracted.md §6 -->
 
 | Issue | Symptom | Solution |
