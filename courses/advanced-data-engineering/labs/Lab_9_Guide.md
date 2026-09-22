@@ -16,9 +16,9 @@ Your analysts ran a four-check comparison in Intro Lab 3. This lab builds the ma
 ## Prerequisites
 
 - [ ] Labs 7–8 completed
-- [ ] **A classic cluster attached** — file-level inspection needs it
+- [ ] **A classic cluster attached**—file-level inspection needs it
 - [ ] `eng_<id>.work` schema from Lab 7
-- [ ] Intro Lab 3 completed — the four-check framework is assumed
+- [ ] Intro Lab 3 completed—the four-check framework is assumed
 
 ---
 
@@ -54,9 +54,9 @@ Your analysts ran a four-check comparison in Intro Lab 3. This lab builds the ma
 
 3. **Confirm version 0**
 
-    > **Expected Result:** One commit — version **0**, operation `WRITE`.
+    > **Expected Result:** One commit—version **0**, operation `WRITE`.
 
-    > **Key Insight:** Every write appends a commit to the transaction log. The log — not the files — is the table. This is what makes ACID guarantees possible against object storage, where you cannot lock a file.
+    > **Key Insight:** Every write appends a commit to the transaction log. The log—not the files—is the table. This is what makes ACID guarantees possible against object storage, where you cannot lock a file.
 
 4. **Count the underlying files**
 
@@ -65,7 +65,7 @@ Your analysts ran a four-check comparison in Intro Lab 3. This lab builds the ma
     ```
     <!-- source: facts_extracted.md §3 -->
 
-    > **Expected Result:** `numFiles` of **1**, at roughly 30 KB. Write both down — this is your baseline for Part 4.
+    > **Expected Result:** `numFiles` of **1**, at roughly 30 KB. Write both down—this is your baseline for Part 4.
 
 ---
 
@@ -93,14 +93,14 @@ Your analysts ran a four-check comparison in Intro Lab 3. This lab builds the ma
     ```
     <!-- source: facts_extracted.md §9 -->
 
-7. **Re-read the history**
+7. **Reread the history**
 
     ```sql
     DESCRIBE HISTORY eng_<id>.work.institutions_delta;
     ```
     <!-- source: facts_extracted.md §3 -->
 
-8. **Re-count the files**
+8. **Recount the files**
 
     ```sql
     DESCRIBE DETAIL eng_<id>.work.institutions_delta;
@@ -109,7 +109,7 @@ Your analysts ran a four-check comparison in Intro Lab 3. This lab builds the ma
 
 9. **Compare against your baseline**
 
-    > **Expected Result:** Three versions in the history — `CREATE OR REPLACE TABLE AS SELECT`, `WRITE`, `WRITE` — and `numFiles` risen from **1 to 3**.
+    > **Expected Result:** Three versions in the history—`CREATE OR REPLACE TABLE AS SELECT`, `WRITE`, `WRITE`—and `numFiles` risen from **1 to 3**.
 
     > **What Just Happened?** Two small loads added two commits and one file each. Each incremental write produces its own files regardless of how few rows it carries. Three files is harmless. The point is the *rate*: this table grew its file count by 200% on two loads of 500 rows. Run that pattern nightly for a year and you have thousands of small files, each of which must be opened on every read.
 
@@ -197,15 +197,15 @@ Your analysts ran a four-check comparison in Intro Lab 3. This lab builds the ma
 
 19. **Confirm the reduction**
 
-    > **Expected Result:** `numFiles` back down from **3 to 1**, an unchanged row count of 6,000, and a fourth version logged as `OPTIMIZE`. Total size drops too — roughly **39 KB to 19 KB** — because one compacted file compresses far better than three fragments of the same data.
+    > **Expected Result:** `numFiles` back down from **3 to 1**, an unchanged row count of 6,000, and a fourth version logged as `OPTIMIZE`. Total size drops too—roughly **39 KB to 19 KB**—because one compacted file compresses far better than three fragments of the same data.
 
-    > **Common Pitfall:** Do not read that size drop as data loss. Confirm it is not by re-running your row count, and by time travelling to version 0 — it still returns the original 5,000 rows.
+    > **Common Pitfall:** Do not read that size drop as data loss. Confirm it is not by rerunning your row count, and by time traveling to version 0—it still returns the original 5,000 rows.
 
 20. **State when you would use Liquid Clustering instead of partitioning**
 
     Write two sentences.
 
-    > **Key Insight:** Manual partitioning fixes a layout at write time and is expensive to change. Liquid Clustering re-clusters incrementally as data arrives, which suits a migration where load patterns are still being discovered. For a table whose access pattern you do not yet know, choosing partitions early is a guess you will pay for.
+    > **Key Insight:** Manual partitioning fixes a layout at write time and is expensive to change. Liquid Clustering reclusters incrementally as data arrives, which suits a migration where load patterns are still being discovered. For a table whose access pattern you do not yet know, choosing partitions early is a guess you will pay for.
 
 ---
 
@@ -247,8 +247,8 @@ Your analysts ran a four-check comparison in Intro Lab 3. This lab builds the ma
 | Column not found on the key | Error naming `#ID_RSSD` | Backtick-quote it. Native NIC names are preserved deliberately. |
 | File count does not drop | `numFiles` unchanged after `OPTIMIZE` | The files were already large enough to leave alone. Compaction has a target size. |
 | `OPTIMIZE` is slow | Long-running command | Expected on a fragmented table. It rewrites data. |
-| Row count changed after `OPTIMIZE` | Counts differ | It should not. Re-check the query — compaction does not alter data. |
-| Duplicate keys after incremental loads | Repeated `#ID_RSSD` values | Expected here — the loads deliberately overlap. In production this is what a merge or AUTO CDC prevents. |
+| Row count changed after `OPTIMIZE` | Counts differ | It should not. Re-check the query—compaction does not alter data. |
+| Duplicate keys after incremental loads | Repeated `#ID_RSSD` values | Expected here—the loads deliberately overlap. In production this is what a merge or AUTO CDC prevents. |
 
 ---
 
@@ -260,7 +260,7 @@ Your analysts ran a four-check comparison in Intro Lab 3. This lab builds the ma
 | `OPTIMIZE` | Rewrites data; cost scales with table size | Schedule it, do not run it after every write. |
 | Version accumulation | Each write retains prior files for the retention window | Understand `VACUUM` before using it — it is irreversible. |
 
-**Cleanup:** Keep `institutions_delta` — Lab 10 references its layout for comparison. Detach from the cluster.
+**Cleanup:** Keep `institutions_delta`—Lab 10 references its layout for comparison. Detach from the cluster.
 
 ---
 
