@@ -32,8 +32,7 @@ You sat the Intro course as an analyst. Now you own the platform. This lab sets 
 > have not met the third of those.
 >
 > One further heads-up: **Lab 8 builds directly on Intro Lab 4.** If you are not fluent in the
-> DataFrame API, skim `courses/cloud-analytics-business-users/labs/Lab_4_Guide.md` tonight—
-> about twenty minutes. Everything else in Labs 7–12 is self-contained.
+> DataFrame API, skim `courses/cloud-analytics-business-users/labs/Lab_4_Guide.md` tonight—about twenty minutes. Everything else in Labs 7–12 is self-contained.
 
 > **Note on the two repositories in this course.** The **course repository** is the public GitHub
 > repo you added in `SETUP.md` Part 1, holding these guides; it needs no credential. The **GitLab
