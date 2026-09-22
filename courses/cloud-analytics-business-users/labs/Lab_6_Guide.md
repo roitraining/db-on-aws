@@ -9,13 +9,13 @@
 
 ## Overview
 
-The last step is the one stakeholders actually see. You will build a dashboard on the view you published in Lab 5, make it interactive, share it with a colleague, and then ask Genie two questions about the same data — including one where you check whether its answer can be trusted.
+The last step is the one stakeholders actually see. You will build a dashboard on the view you published in Lab 5, make it interactive, share it with a colleague, and then ask Genie two questions about the same data—including one where you check whether its answer can be trusted.
 
 ---
 
 ## Prerequisites
 
-- [ ] Lab 5 completed — `institution_summary_published` exists and your partner can query it
+- [ ] Lab 5 completed—`institution_summary_published` exists and your partner can query it
 - [ ] A running serverless SQL warehouse
 - [ ] The same partner from Lab 5, to receive the shared dashboard
 - [ ] Genie enabled on the workspace
@@ -52,7 +52,7 @@ The last step is the one stakeholders actually see. You will build a dashboard o
 
 3. **Confirm the data loads**
 
-    > **Expected Result:** A preview showing rows from your published view. If it is empty, the view is empty — go back to Lab 5 before continuing.
+    > **Expected Result:** A preview showing rows from your published view. If it is empty, the view is empty—go back to Lab 5 before continuing.
 
 ### Task 2: Build Two Charts
 
@@ -110,7 +110,7 @@ The last step is the one stakeholders actually see. You will build a dashboard o
     Publish it, choosing the shared-credentials option. Dashboards can be published with shared or individual data permissions.
     <!-- source: facts_extracted.md §16 -->
 
-    > **Key Insight:** With shared credentials, viewers see the data through your access rather than their own, so everyone sees consistent figures. With individual permissions, each viewer sees only what their own grants allow — which can mean two people looking at the same dashboard and seeing different numbers. Choose deliberately.
+    > **Key Insight:** With shared credentials, viewers see the data through your access rather than their own, so everyone sees consistent figures. With individual permissions, each viewer sees only what their own grants allow—which can mean two people looking at the same dashboard and seeing different numbers. Choose deliberately.
 
 12. **Share with your partner**
 
@@ -144,7 +144,7 @@ The last step is the one stakeholders actually see. You will build a dashboard o
 
 17. **Ask your first business question**
 
-    Ask something a stakeholder would genuinely ask, in plain English — for example, which charter type has grown the most in the last twenty years.
+    Ask something a stakeholder would genuinely ask, in plain English—for example, which charter type has grown the most in the last twenty years.
     <!-- source: facts_extracted.md §16 -->
 
 18. **Read the generated SQL, not just the answer**
@@ -153,20 +153,20 @@ The last step is the one stakeholders actually see. You will build a dashboard o
 
 19. **Ask a second question that is harder to answer**
 
-    Ask something ambiguous or requiring a judgement — for example, which states are underserved relative to population.
+    Ask something ambiguous or requiring a judgement—for example, which states are underserved relative to population.
 
 20. **Verify that answer against your own query**
 
     Write the SQL yourself and compare results.
     <!-- source: facts_extracted.md §16 -->
 
-    > **What Just Happened?** If the two disagree, Genie is not broken and neither are you. It answered the question it understood, which may not be the question you asked. "Underserved" has no definition in the data — Genie had to invent one.
+    > **What Just Happened?** If the two disagree, Genie is not broken and neither are you. It answered the question it understood, which may not be the question you asked. "Underserved" has no definition in the data—Genie had to invent one.
 
 21. **Record when you would and would not trust it**
 
     Write two sentences: one describing a question you would let Genie answer unsupervised, and one describing a question you would always verify.
 
-    > **Key Insight:** Genie is trustworthy in proportion to how well-defined the question is. A question with an unambiguous answer in the data is safe. A question requiring a definition — "best", "underserved", "at risk" — is where it will confidently supply its own.
+    > **Key Insight:** Genie is trustworthy in proportion to how well-defined the question is. A question with an unambiguous answer in the data is safe. A question requiring a definition—"best", "underserved", "at risk"—is where it will confidently supply its own.
 
 ---
 
@@ -210,7 +210,7 @@ For attendees who finish early.
 | Partner cannot open the dashboard | Access denied | Publishing and sharing are separate steps. Confirm you did both. |
 | Partner sees different numbers | Figures disagree between viewers | You published with individual rather than shared permissions, so each viewer sees only their own grants. |
 | Filter only affects one chart | One chart responds, the other does not | The filter is scoped to a single widget. Change its scope to both. |
-| Genie gives a confidently wrong answer | Plausible answer, wrong figures | Working as intended for this lab. Read the generated SQL — it answered a different question from the one you asked. |
+| Genie gives a confidently wrong answer | Plausible answer, wrong figures | Working as intended for this lab. Read the generated SQL—it answered a different question from the one you asked. |
 | Genie cannot find a column | Question returns nothing useful | The space may not be scoped to your view, or the column names are opaque. Native NIC names are hard for it too. |
 | Charts are slow | Long load times | The dashboard runs its dataset query on a warehouse. Confirm one is running and consider a materialized view for a heavily-read dashboard. |
 
