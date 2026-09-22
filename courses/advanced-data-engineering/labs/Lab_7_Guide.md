@@ -32,7 +32,7 @@ You sat the Intro course as an analyst. Now you own the platform. This lab sets 
 > have not met the third of those.
 >
 > One further heads-up: **Lab 8 builds directly on Intro Lab 4.** If you are not fluent in the
-> DataFrame API, skim `courses/cloud-analytics-business-users/labs/Lab_4_Guide.md` tonight —
+> DataFrame API, skim `courses/cloud-analytics-business-users/labs/Lab_4_Guide.md` tonight—
 > about twenty minutes. Everything else in Labs 7–12 is self-contained.
 
 > **Note on the two repositories in this course.** The **course repository** is the public GitHub
@@ -79,7 +79,7 @@ You sat the Intro course as an analyst. Now you own the platform. This lab sets 
     > ```
     >
     > The path must sit inside an external location you are allowed to use. Your instructor will
-    > tell you which form this workspace needs — worth settling before the whole room hits it at once.
+    > tell you which form this workspace needs—worth settling before the whole room hits it at once.
     <!-- source: facts_extracted.md §1 -->
 
 2. **Create a managed table from the training data**
@@ -97,7 +97,7 @@ You sat the Intro course as an analyst. Now you own the platform. This lab sets 
     ```
     <!-- source: facts_extracted.md §1 -->
 
-    > **Note:** Note the `Location` value. A managed table lives in Unity Catalog's managed storage and Unity Catalog owns its lifecycle — drop the table and the data goes with it.
+    > **Note:** Note the `Location` value. A managed table lives in Unity Catalog's managed storage and Unity Catalog owns its lifecycle—drop the table and the data goes with it.
 
 ---
 
@@ -162,7 +162,7 @@ You sat the Intro course as an analyst. Now you own the platform. This lab sets 
 
 11. **Create a storage credential in Catalog Explorer**
 
-    A storage credential wraps the IAM role Databricks assumes to reach your bucket. **There is no SQL statement for this** — it is created in the UI or through the API.
+    A storage credential wraps the IAM role Databricks assumes to reach your bucket. **There is no SQL statement for this**—it is created in the UI or through the API.
 
     Go to **Catalog → Connect → Credentials → Create credential**, choose credential type **AWS IAM Role**, and enter a name of `cred_<id>` plus the IAM Role ARN your instructor supplied.
     <!-- source: facts_extracted.md §1 -->
@@ -181,7 +181,7 @@ You sat the Intro course as an analyst. Now you own the platform. This lab sets 
     ```
     <!-- source: facts_extracted.md §1 -->
 
-    > **Note:** This needs `CREATE EXTERNAL LOCATION` on **both** the metastore and the storage credential. Two objects, two privileges — the credential says *how* to authenticate, the location says *what path* that credential is allowed to cover.
+    > **Note:** This needs `CREATE EXTERNAL LOCATION` on **both** the metastore and the storage credential. Two objects, two privileges—the credential says *how* to authenticate, the location says *what path* that credential is allowed to cover.
 
 13. **Verify the location is reachable**
 
@@ -190,7 +190,7 @@ You sat the Intro course as an analyst. Now you own the platform. This lab sets 
     ```
     <!-- source: facts_extracted.md §1 -->
 
-    > **Common Pitfall:** Read the error text before you react. Your prefix is empty at this point, so `LIST` returns **`No such file or directory`** — that is the expected result here and it is *not* a permissions failure. It proves the credential worked: Databricks reached S3 and found nothing there. You will see files appear at this same path in Task 5.
+    > **Common Pitfall:** Read the error text before you react. Your prefix is empty at this point, so `LIST` returns **`No such file or directory`**—that is the expected result here and it is *not* a permissions failure. It proves the credential worked: Databricks reached S3 and found nothing there. You will see files appear at this same path in Task 5.
 
     > **Troubleshooting:** A genuine failure reads as an *access* or *access denied* error rather than a missing path, and it is an IAM trust or bucket policy problem, not a Unity Catalog problem. The role must trust Databricks and permit the bucket path.
 
