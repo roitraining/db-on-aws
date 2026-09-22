@@ -15,7 +15,7 @@ You have a summary table. A colleague needs it. The old answer was to email a sp
 
 ## Prerequisites
 
-- [ ] Lab 4 completed — `training_nic.analyst_<id>.institution_summary` exists
+- [ ] Lab 4 completed—`training_nic.analyst_<id>.institution_summary` exists
 - [ ] A running serverless SQL warehouse selected in the SQL editor
 - [ ] The attendee ID of a **partner** in the room, who will verify your grant
 - [ ] Your own email address for the alert notification
@@ -65,9 +65,9 @@ You have a summary table. A colleague needs it. The old answer was to email a sp
     ```
     <!-- source: facts_extracted.md §2 -->
 
-    > **Key Insight:** The view gives colleagues a live window onto your logic. If you fix the underlying query, everyone sees the fix immediately — there is no copy to go stale, and no second version circulating by email.
+    > **Key Insight:** The view gives colleagues a live window onto your logic. If you fix the underlying query, everyone sees the fix immediately—there is no copy to go stale, and no second version circulating by email.
 
-### Task 2: Grant Access — and Watch It Fail First
+### Task 2: Grant Access—and Watch It Fail First
 
 4. **Grant SELECT on the view only**
 
@@ -115,7 +115,7 @@ You have a summary table. A colleague needs it. The old answer was to email a sp
 
     Swap roles and verify your partner's view from your own account. Confirming from the other side is the only way to know a grant actually worked.
 
-    > **Key Insight:** `USE CATALOG` does not grant access to anything by itself. It is a traversal privilege — permission to walk through the namespace. That is why granting `SELECT` alone leaves a colleague stuck.
+    > **Key Insight:** `USE CATALOG` does not grant access to anything by itself. It is a traversal privilege—permission to walk through the namespace. That is why granting `SELECT` alone leaves a colleague stuck.
     <!-- source: facts_extracted.md §3 -->
 
 ---
@@ -148,14 +148,14 @@ You have a summary table. A colleague needs it. The old answer was to email a sp
     ```
     <!-- source: facts_extracted.md §14 -->
 
-    > **Note:** A materialized view is a Unity Catalog managed table that physically stores query results. Databricks automatically creates and runs a serverless pipeline to process the refresh, and the size of your warehouse does not limit that compute — cost scales with data volume, not warehouse size.
+    > **Note:** A materialized view is a Unity Catalog managed table that physically stores query results. Databricks automatically creates and runs a serverless pipeline to process the refresh, and the size of your warehouse does not limit that compute—cost scales with data volume, not warehouse size.
     <!-- source: facts_extracted.md §14 -->
 
 13. **Decide which one you would publish**
 
     Write down which you would give a colleague and why.
 
-    > **Key Insight:** A view costs nothing until queried and is never stale. A materialized view costs compute on every refresh and can be stale between them, but returns fast. That trade — freshness against query latency — is the entire decision. For a dashboard refreshed hourly and read hundreds of times, the materialized view wins. For a query run twice a week, it does not.
+    > **Key Insight:** A view costs nothing until queried and is never stale. A materialized view costs compute on every refresh and can be stale between them, but returns fast. That trade—freshness against query latency—is the entire decision. For a dashboard refreshed hourly and read hundreds of times, the materialized view wins. For a query run twice a week, it does not.
     <!-- source: facts_extracted.md §14 -->
 
     > **Common Pitfall:** Materialized views do not support time travel. If someone needs to query the published dataset as it looked last Tuesday, a materialized view cannot answer that.
@@ -174,7 +174,7 @@ You have a summary table. A colleague needs it. The old answer was to email a sp
 
 15. **Author the query inside the alert**
 
-    You cannot point an alert at a query you saved earlier — each alert owns its own query definition, authored in the alert editor.
+    You cannot point an alert at a query you saved earlier—each alert owns its own query definition, authored in the alert editor.
 
     ```sql
     SELECT COUNT(*) AS row_count
@@ -196,7 +196,7 @@ You have a summary table. A colleague needs it. The old answer was to email a sp
 
 18. **Configure the condition**
 
-    In the **Condition** field, set the alert to trigger when the row count falls below a threshold you choose — pick a number just under the current count so you can see it work.
+    In the **Condition** field, set the alert to trigger when the row count falls below a threshold you choose—pick a number just under the current count so you can see it work.
     <!-- source: facts_extracted.md §15 -->
 
 19. **Test the condition**
@@ -214,7 +214,7 @@ You have a summary table. A colleague needs it. The old answer was to email a sp
     Click the calendar icon and set a frequency. For the lab, choose the shortest interval available so you can observe a run.
     <!-- source: facts_extracted.md §15 -->
 
-    > **Note:** Ticking **Show cron syntax** in the schedule dialog lets you edit the schedule directly using Quartz Cron syntax, which is what you would use for anything more specific than a fixed interval.
+    > **Note:** Checking **Show cron syntax** in the schedule dialog lets you edit the schedule directly using Quartz Cron syntax, which is what you would use for anything more specific than a fixed interval.
 
 22. **Save the alert**
 
@@ -236,7 +236,7 @@ For attendees who finish early.
 
 1. Set the threshold deliberately so the alert fires, and observe the state change to `TRIGGERED`. What would a stakeholder have seen instead if you had no alert?
 2. Revoke your partner's `USE SCHEMA` while leaving `SELECT` in place. Confirm the failure returns, then explain to them exactly which of the three grants is missing.
-3. Write the `SHOW GRANTS` statements needed to audit all three levels — catalog, schema, and view — and describe how you would find a permission gap using only their output.
+3. Write the `SHOW GRANTS` statements needed to audit all three levels — catalog, schema, and view—and describe how you would find a permission gap using only their output.
 
 ---
 
@@ -262,7 +262,7 @@ For attendees who finish early.
 
 ## Troubleshooting Reference
 
-> **Key Insight:** Almost every access failure in Unity Catalog is a missing traversal grant rather than a missing `SELECT`. Check `USE SCHEMA` first — it is the one people forget.
+> **Key Insight:** Almost every access failure in Unity Catalog is a missing traversal grant rather than a missing `SELECT`. Check `USE SCHEMA` first—it is the one people forget.
 <!-- source: facts_extracted.md §3 -->
 <!-- source: facts_extracted.md §14 -->
 <!-- source: facts_extracted.md §15 -->
@@ -288,7 +288,7 @@ For attendees who finish early.
 | Materialized view refresh | Runs a serverless pipeline; cost scales with **data volume**, not warehouse size | Refresh on a schedule matched to how often the data actually changes, not as often as possible. |
 | Alert schedule | Runs its query on every interval | The lab uses a short interval to demonstrate. In production, match the interval to how quickly you need to know. |
 
-**Cleanup:** Keep the view — Lab 6 builds a dashboard on it. **Delete the materialized view and set the alert to a long interval or pause it**, so neither keeps consuming after class.
+**Cleanup:** Keep the view—Lab 6 builds a dashboard on it. **Delete the materialized view and set the alert to a long interval or pause it**, so neither keeps consuming after class.
 
 ---
 
