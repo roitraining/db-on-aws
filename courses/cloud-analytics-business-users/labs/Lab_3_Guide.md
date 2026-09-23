@@ -18,7 +18,7 @@ You are being asked to sign off that the migrated data matches the source. This 
 - [ ] Labs 1 and 2 completed
 - [ ] A running serverless SQL warehouse selected
 - [ ] Access to `training_nic.legacy_onprem` (verify: `SELECT COUNT(*) FROM training_nic.legacy_onprem.institutions` returns 5,000)
-- [ ] A findings notebook created: in the left sidebar click **+ New**, then **Notebook**; rename it `lab3_findings_<id>`. No compute needed—you are writing notes, not running code, so use **%md** (Markdown) cells. Click **Share** at the top right and give your instructor **Can View**—this is the shared notebook the class findings review draws from.
+- [ ] A findings notebook created: in the left sidebar click **Workspace**, open **Users → your.email** (your own user folder), click **Create** at the top right, and choose **Notebook**; rename it `lab3_findings_<id>`. No compute needed—you are writing notes, not running code, so use **%md** (Markdown) cells. Click **Share** at the top right and give your instructor **Can View**—this is the shared notebook the class findings review draws from.
 - [ ] Your `LENGTH()` observation from Lab 2, step 5
 
 ---

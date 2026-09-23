@@ -43,10 +43,11 @@ Everything so far has been reading someone else's data. This lab is the first th
 
     In Lab 3 you created a notebook just to hold notes. This time the notebook is where the work happens, and it needs compute:
 
-    1. In the left sidebar, click **+ New**, then **Notebook**.
-    2. Rename it from **Untitled Notebook** to `Lab 4 - DataFrames` by clicking the title.
-    3. In the language selector next to the title, choose **Python**.
-    4. Open the compute selector at the top right of the notebook and attach the classic cluster—named **`db-on-aws · lab cluster`** (with a `[target]` prefix) in the standard deploy. Not a SQL warehouse and not serverless.
+    1. In the left sidebar, click **Workspace**, and navigate to **Users → your.email** (your own user folder—the same place you created the Git folder in Lab 0).
+    2. Click **Create** at the top right and choose **Notebook**.
+    3. Rename it from **Untitled Notebook** to `Lab 4 - DataFrames` by clicking the title.
+    4. In the language selector next to the title, choose **Python**.
+    5. Open the compute selector at the top right of the notebook and attach the classic cluster—named **`db-on-aws · lab cluster`** (with a `[target]` prefix) in the standard deploy. Not a SQL warehouse and not serverless.
 
     > **Common Pitfall:** If the compute selector only offers serverless or a SQL warehouse, the classic cluster is not running yet—ask your instructor, or see `SETUP.md`. Part 3 of this lab reads the Spark UI, which only a classic cluster provides.
 
