@@ -98,6 +98,15 @@ Everything so far has been reading someone else's data. This lab is the first th
     ```
     <!-- source: facts_extracted.md §12 -->
 
+    Look at what `filtered` now holds:
+
+    ```python
+    display(filtered.limit(10))
+    ```
+    <!-- source: facts_extracted.md §13 -->
+
+    > **Expected Result:** Ten rows, every one with `STATE_ABBR_NM` = `CA`.
+
 7. **Add a calculated column**
 
     Derive a clean name and a name-length flag, so the padding you met in Lab 3 is handled once rather than in every downstream query.
@@ -109,6 +118,15 @@ Everything so far has been reading someone else's data. This lab is the first th
     ```
     <!-- source: facts_extracted.md §12 -->
 
+    Compare the raw and derived columns side by side:
+
+    ```python
+    display(cleaned.select("NM_LGL", "NM_LGL_CLEAN", "D_DT_START", "start_year").limit(10))
+    ```
+    <!-- source: facts_extracted.md §13 -->
+
+    > **Expected Result:** `NM_LGL_CLEAN` shows the same names without the trailing padding, and `start_year` holds just the year pulled out of `D_DT_START`.
+
 8. **Select only what you need**
 
     ```python
@@ -117,16 +135,25 @@ Everything so far has been reading someone else's data. This lab is the first th
     ```
     <!-- source: facts_extracted.md §12 -->
 
+    ```python
+    display(slim.limit(10))
+    ```
+    <!-- source: facts_extracted.md §13 -->
+
+    > **Expected Result:** The same rows, now only six columns wide.
+
     > **Common Pitfall:** Selecting every column and filtering later works, but reads far more than you need. Narrow early.
 
-9. **Confirm the transformations still have not executed**
+9. **Look at the plan behind the chain**
+
+    Each `display()` you just ran was an **action**—it executed the plan built up to that point so you could see the data. The chain itself is still only a plan. Prove it:
 
     ```python
     slim.explain(mode="formatted")
     ```
     <!-- source: facts_extracted.md §13 -->
 
-    > **What Just Happened?** You have built a four-step plan and Spark has read nothing. The plan is what gets optimized, which is why chaining transformations costs nothing until you ask for an answer.
+    > **What Just Happened?** `explain()` printed a four-step plan without reading any data. Defining the chain costs nothing; only an action—like each `display()` above—executes it, and every action re-runs the whole plan to that point, not just the newest step. The plan is what gets optimized, which is why chaining transformations is free until you ask for an answer.
 
 ### Task 3: Aggregate
 
