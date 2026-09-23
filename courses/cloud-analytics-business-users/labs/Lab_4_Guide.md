@@ -185,7 +185,15 @@ Everything so far has been reading someone else's data. This lab is the first th
 
 12. **Open the Spark UI**
 
-    From the cluster attached to your notebook, open the Spark UI and select the **Stages** tab. Find the stages produced by the cell you just ran.
+    1. In the left sidebar, click **Compute**. (Open it in a new browser tab if you want to keep the notebook visible—right-click, **Open link in new tab**.)
+    2. In the cluster list, click the name of the classic cluster your notebook is attached to—**`db-on-aws · lab cluster`** in the standard deploy.
+    3. Across the top of the cluster page, select the **Spark UI** tab.
+    4. Inside the Spark UI, select the **Stages** tab.
+
+    The list shows every stage the cluster has run, newest at the top. The ones with a **Submitted** time from a moment ago are from the `display(summary)` cell you just ran.
+    <!-- source: facts_extracted.md §13 -->
+
+    > **Note:** If you ran the aggregation on **serverless** compute, you will not be able to see this—serverless has no Spark UI and exposes a query profile instead. Go back to step 1, attach the classic cluster, re-run the `display(summary)` cell, and then open the Spark UI.
     <!-- source: facts_extracted.md §13 -->
 
 13. **Record what you see**
