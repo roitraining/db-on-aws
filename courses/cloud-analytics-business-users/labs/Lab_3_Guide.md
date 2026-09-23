@@ -18,7 +18,7 @@ You are being asked to sign off that the migrated data matches the source. This 
 - [ ] Labs 1 and 2 completed
 - [ ] A running serverless SQL warehouse selected
 - [ ] Access to `training_nic.legacy_onprem` (verify: `SELECT COUNT(*) FROM training_nic.legacy_onprem.institutions` returns 5,000)
-- [ ] A shared notebook created for your findings
+- [ ] A findings notebook created: in the left sidebar click **+ New**, then **Notebook**; rename it `lab3_findings_<id>`. No compute needed—you are writing notes, not running code, so use **%md** (Markdown) cells. Click **Share** at the top right and give your instructor **Can View**—this is the shared notebook the class findings review draws from.
 - [ ] Your `LENGTH()` observation from Lab 2, step 5
 
 ---
@@ -245,7 +245,9 @@ Run these in order. Each answers a different question, and each has a blind spot
 
     Record the naive figure and the normalized figure side by side. The gap between them is the noise you were about to report as a defect.
 
-20. **Apply the same normalization to a date column**
+20. **Compare a date column the same way**
+
+    The name column failed on formatting—padding and empty strings. Dates fail differently: there is nothing to trim, but the null-safe `IS DISTINCT FROM` comparison still applies. Run it against `D_DT_START` and look at the `day_difference` column.
 
     ```sql
     SELECT c.`#ID_RSSD`, c.D_DT_START AS cloud_date, s.D_DT_START AS source_date,
@@ -289,7 +291,7 @@ Run these in order. Each answers a different question, and each has a blind spot
 
 23. **Query an earlier version**
 
-    Substitute a version number from the history output.
+    From the history output, pick the **most recent version before the current one**—check its `timestamp` column and choose one from the last few days, not version 0.
 
     ```sql
     SELECT COUNT(*) AS rows_at_version
@@ -298,6 +300,11 @@ Run these in order. Each answers a different question, and each has a blind spot
     <!-- source: facts_extracted.md §8 -->
 
     > **Note:** History retention is governed by `logRetentionDuration`, 30 days by default, but data files are retained for 7 days by default. In Databricks Runtime 18.0 and above, a time travel query is blocked if it requests a version older than the deleted-file retention period. Use time travel for recent comparisons, not as an archive.
+    <!-- source: facts_extracted.md §8 -->
+
+    > **What Just Happened?** If you see
+    > `[DELTA_UNSUPPORTED_TIME_TRAVEL_BEYOND_DELETED_FILE_RETENTION_DURATION] Cannot time travel beyond delta.deletedFileRetentionDuration (168 HOURS) set on the table.`
+    > you chose a version older than 7 days. The table's history still *lists* that version, but the data files behind it have aged out, so Databricks blocks the query rather than return incomplete results. This is the retention limit from the note above showing up in practice—re-run with a more recent version number.
     <!-- source: facts_extracted.md §8 -->
 
 ### Task 7: Document Your Findings

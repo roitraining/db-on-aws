@@ -38,11 +38,13 @@ The last step is the one stakeholders actually see. You will build a dashboard o
 
 1. **Create a new dashboard**
 
-    In the left navigation, select **Dashboards**, then create a new dashboard. Name it with your attendee ID.
+    In the left navigation, select **Dashboards**, then click **Create dashboard**. Click the title to rename it `lab6_dashboard_<id>`.
+
+    The editor has two tabs at the top: **Canvas**, where widgets are laid out, and **Data**, where the datasets behind them are defined.
 
 2. **Add a dataset**
 
-    Point the dashboard's dataset at the view you published in Lab 5.
+    Open the **Data** tab, choose **Create from SQL**, and paste the query below so the dataset reads from the view you published in Lab 5. Run it to confirm it returns rows.
 
     ```sql
     SELECT CHTR_TYPE_CD, start_year, institution_count, distinct_cities
@@ -58,11 +60,11 @@ The last step is the one stakeholders actually see. You will build a dashboard o
 
 4. **Add a bar chart**
 
-    Create a bar chart with `CHTR_TYPE_CD` on one axis and `institution_count` on the other.
+    Back on the **Canvas** tab, pick the **visualization widget** from the toolbar at the bottom of the canvas and drag a rectangle where the chart should sit. In the configuration panel on the right, select your dataset, set the visualization type to **Bar**, and put `CHTR_TYPE_CD` on one axis and `institution_count` on the other.
 
 5. **Add a line chart**
 
-    Create a line chart with `start_year` on the horizontal axis and `institution_count` on the vertical.
+    Add a second visualization widget the same way. Set the type to **Line**, with `start_year` on the horizontal axis and `institution_count` on the vertical.
 
 6. **Give both charts titles a stakeholder would understand**
 
@@ -78,7 +80,7 @@ The last step is the one stakeholders actually see. You will build a dashboard o
 
 7. **Add a date-range filter**
 
-    Add a filter widget on `start_year`. Dashboards support global, page-level, and widget-level filters.
+    Pick the **filter widget** from the same canvas toolbar, place it above the charts, and set its field to `start_year` in the right-hand panel. Dashboards support global, page-level, and widget-level filters.
     <!-- source: facts_extracted.md §16 -->
 
 8. **Scope the filter to both charts**
@@ -107,14 +109,14 @@ The last step is the one stakeholders actually see. You will build a dashboard o
 
 11. **Publish the dashboard**
 
-    Publish it, choosing the shared-credentials option. Dashboards can be published with shared or individual data permissions.
+    Click **Publish** at the top right of the editor. In the publish dialog, keep credentials **embedded**—that is the shared-credentials option. Dashboards can be published with shared or individual data permissions.
     <!-- source: facts_extracted.md §16 -->
 
     > **Key Insight:** With shared credentials, viewers see the data through your access rather than their own, so everyone sees consistent figures. With individual permissions, each viewer sees only what their own grants allow—which can mean two people looking at the same dashboard and seeing different numbers. Choose deliberately.
 
 12. **Share with your partner**
 
-    Share the published dashboard with the partner from Lab 5, granting view access only.
+    Click **Share** at the top right, search for the partner from Lab 5, and grant **Can View** only.
     <!-- source: facts_extracted.md §16 -->
 
 13. **Have your partner open it**
@@ -138,9 +140,9 @@ The last step is the one stakeholders actually see. You will build a dashboard o
 
 ### Task 5: Two Questions and a Verification
 
-16. **Open a Genie space on the same data**
+16. **Create a Genie space on the same data**
 
-    Open Genie against a space scoped to the published view.
+    In the left sidebar, click **+ New**, then **Genie space**. Name it `lab6_genie_<id>`, select your published view `training_nic.analyst_<id>.institution_summary_published` as its data, and choose the serverless SQL warehouse when prompted. The space opens with a chat box—this is where you ask your questions.
 
 17. **Ask your first business question**
 

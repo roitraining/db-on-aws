@@ -107,6 +107,13 @@ SELECT COUNT(*) FROM training_nic.migrated.institutions;
 
 Two paths. Both produce the same environment; pick on whether you want local tooling.
 
+> **Timing — build (or refresh) within 7 days of class.** Lab 3's time travel step queries an
+> earlier version of `training_nic.migrated.institutions`. Delta retains deleted data files for
+> 7 days (`delta.deletedFileRetentionDuration`, 168 hours), and Runtime 18+ **blocks** time
+> travel past that with `[DELTA_UNSUPPORTED_TIME_TRAVEL_BEYOND_DELETED_FILE_RETENTION_DURATION]`.
+> If the environment was built more than a week before delivery, re-run `build_environment.py`
+> (either path) so the table has at least one prior version inside the retention window.
+
 ### Path A · Entirely inside Databricks — no CLI
 
 Best when you are setting up from a browser, or on a locked-down machine.

@@ -225,12 +225,15 @@ You already write SQL. This lab is not SQL instruction—it is a translation exe
 
 18. **Open the Git folder**
 
-    In the left navigation, select **Workspace**, then open the Git folder your instructor linked to the GitLab repository. Databricks Git folders is a visual Git client that integrates Git repositories directly in the workspace.
+    In the left navigation, select **Workspace**, then browse to the Git folder your instructor linked to the GitLab repository — your instructor will tell you where it lives (usually under **Shared**). Git folders are marked with a branch icon in the file list. Databricks Git folders is a visual Git client that integrates Git repositories directly in the workspace.
     <!-- source: facts_extracted.md §7 -->
 
 19. **Add your query to the folder and commit**
 
-    Create a new file in the Git folder named `lab2_state_summary_<id>.sql`, paste your query text into it, and save. Then use **Commit and Push**. Write a commit message that says what the query answers, not what you changed.
+    1. Open the Git folder, click **Create** at the top right, and choose **File**. Name it `lab2_state_summary_<id>.sql`.
+    2. Paste your query text into the file. It saves automatically.
+    3. Go back to the folder list, **hover over the Git folder's row**, and click the **Git** button that appears (it is hidden until you hover — this catches everyone). The Git dialog opens.
+    4. Confirm your new file is listed as a change, write a commit message that says what the query answers — not what you changed — and click **Commit & Push**.
 
     > **Note:** A saved query in the SQL editor and a file in a Git folder are two different objects. The saved query is convenient for you; the `.sql` file in the repository is what a colleague can pull, review, and change. Version control needs the file.
 
@@ -284,6 +287,7 @@ For attendees who finish early.
 | Table not found in the join | Error naming one side | Cross-schema joins need at least one side fully qualified, or `USE SCHEMA` on both. |
 | Parameter widget does not appear | No widget above the editor | The marker must be a colon immediately followed by the name, with no space. |
 | Parameter returns no rows | Empty result | Check the date range is the right way round and that the type is set to Date, not String. |
+| Cannot find the commit controls | No Git buttons visible anywhere | The **Git** button only appears when you hover over the Git folder's row in the workspace file list. Hover the row, then click it to open the Git dialog. |
 | Commit rejected | Push fails | Confirm your Git credentials are configured and that you are on a branch you may write to. |
 
 ---

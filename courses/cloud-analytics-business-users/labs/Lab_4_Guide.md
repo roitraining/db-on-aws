@@ -16,9 +16,8 @@ Everything so far has been reading someone else's data. This lab is the first th
 ## Prerequisites
 
 - [ ] Labs 1–3 completed
-- [ ] A **classic cluster** attached to your notebook, not a serverless SQL warehouse
+- [ ] The **classic cluster** named by your instructor is running
 - [ ] Your attendee ID and personal schema `training_nic.analyst_<id>`
-- [ ] A new notebook created in your workspace folder
 
 > **Note:** This lab requires a classic cluster because the Spark UI is not available on serverless compute. Everything else in this course runs on a serverless SQL warehouse; this session is the exception.
 <!-- source: facts_extracted.md §13 -->
@@ -38,11 +37,18 @@ Everything so far has been reading someone else's data. This lab is the first th
 
 ## Part 1: Read and Explore
 
-### Task 1: Attach and Read
+### Task 1: Create a Notebook, Attach and Read
 
-1. **Confirm your compute**
+1. **Create a notebook and attach it to the classic cluster**
 
-    Attach the notebook to the classic cluster—named **`db-on-aws · lab cluster`** (with a `[target]` prefix) in the standard deploy. Check the cluster selector at the top of the notebook; if no classic cluster exists, see `SETUP.md`.
+    In Lab 3 you created a notebook just to hold notes. This time the notebook is where the work happens, and it needs compute:
+
+    1. In the left sidebar, click **+ New**, then **Notebook**.
+    2. Rename it from **Untitled Notebook** to `Lab 4 - DataFrames` by clicking the title.
+    3. In the language selector next to the title, choose **Python**.
+    4. Open the compute selector at the top right of the notebook and attach the classic cluster—named **`db-on-aws · lab cluster`** (with a `[target]` prefix) in the standard deploy. Not a SQL warehouse and not serverless.
+
+    > **Common Pitfall:** If the compute selector only offers serverless or a SQL warehouse, the classic cluster is not running yet—ask your instructor, or see `SETUP.md`. Part 3 of this lab reads the Spark UI, which only a classic cluster provides.
 
 2. **Read the migrated table into a DataFrame**
 
