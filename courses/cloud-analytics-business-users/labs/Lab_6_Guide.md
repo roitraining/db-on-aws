@@ -136,11 +136,11 @@ The last step is the one stakeholders actually see. You will build a dashboard o
     On the **Data** tab, **Create from SQL** twice. First, the run history—every validation attempt from your Lab 3 runbook:
 
     ```sql
-    SELECT date_trunc('minute', run_ts) AS run_attempt,
+    SELECT run_ts AS run_attempt,
            SUM(CASE WHEN passed THEN 1 ELSE 0 END)     AS checks_passed,
            SUM(CASE WHEN NOT passed THEN 1 ELSE 0 END) AS checks_failed
     FROM training_nic.analyst.validation_runs
-    GROUP BY date_trunc('minute', run_ts);
+    GROUP BY run_ts;
     ```
 
     Second, the latest attempt's failure count—the same logic your Lab 5 alert watches:
@@ -149,8 +149,7 @@ The last step is the one stakeholders actually see. You will build a dashboard o
     SELECT COUNT(*) AS failed_checks
     FROM training_nic.analyst.validation_runs
     WHERE NOT passed
-      AND run_ts >= (SELECT MAX(run_ts) FROM training_nic.analyst.validation_runs)
-                    - INTERVAL 5 MINUTES;
+      AND run_ts = (SELECT MAX(run_ts) FROM training_nic.analyst.validation_runs);
     ```
 
 15. **Chart the run history**

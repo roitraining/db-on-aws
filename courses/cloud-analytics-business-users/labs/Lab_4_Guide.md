@@ -222,6 +222,7 @@ Official documentation, if you want the full detail behind any row:
     ```python
     (summary.write
         .mode("overwrite")
+        .option("overwriteSchema", "true")
         .saveAsTable("training_nic.analyst.institution_summary"))
     ```
     <!-- source: facts_extracted.md §13 -->

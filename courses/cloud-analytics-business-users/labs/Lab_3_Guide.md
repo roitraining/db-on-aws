@@ -65,7 +65,11 @@ You are being asked to sign off that the migrated data matches the source. This 
       source_value DECIMAL(18,2),
       passed       BOOLEAN,
       note         STRING);
+
+    DECLARE OR REPLACE VARIABLE run_started TIMESTAMP DEFAULT current_timestamp();
     ```
+
+    > **Note:** `run_started` is a session variable, set once when this cell runs. Every check stamps its verdict with the **same** timestamp, so one **Run all** is one attempt—without it, inserts that straddle a clock boundary would split a single run into ragged pieces.
     <!-- source: facts_extracted.md §10 -->
 
 3. **Confirm the cloud side**
@@ -123,7 +127,7 @@ Run these in order. Each answers a different question, and each has a blind spot
 
     ```sql
     INSERT INTO training_nic.analyst.validation_runs
-    SELECT current_timestamp(), 'check_1_row_count',
+    SELECT run_started, 'check_1_row_count',
            (SELECT COUNT(*) FROM training_nic.migrated.institutions),
            (SELECT COUNT(*) FROM training_nic.legacy_onprem.institutions),
            (SELECT COUNT(*) FROM training_nic.migrated.institutions) =
@@ -189,7 +193,7 @@ Run these in order. Each answers a different question, and each has a blind spot
 
     ```sql
     INSERT INTO training_nic.analyst.validation_runs
-    SELECT current_timestamp(), 'check_2_key_parity',
+    SELECT run_started, 'check_2_key_parity',
            (SELECT COUNT(*) FROM training_nic.legacy_onprem.institutions s
               LEFT ANTI JOIN training_nic.migrated.institutions c
               ON s.`#ID_RSSD` = c.`#ID_RSSD`),
@@ -267,7 +271,7 @@ Run these in order. Each answers a different question, and each has a blind spot
 
     ```sql
     INSERT INTO training_nic.analyst.validation_runs
-    SELECT current_timestamp(), 'check_3_aggregate',
+    SELECT run_started, 'check_3_aggregate',
            SUM(c.TOT_ASSETS), SUM(s.TOT_ASSETS),
            SUM(c.TOT_ASSETS) = SUM(s.TOT_ASSETS),
            'SUM(TOT_ASSETS) over keys present on both sides'
@@ -336,7 +340,7 @@ Run these in order. Each answers a different question, and each has a blind spot
 
     ```sql
     INSERT INTO training_nic.analyst.validation_runs
-    SELECT current_timestamp(), 'check_4_row_level',
+    SELECT run_started, 'check_4_row_level',
            (SELECT COUNT(*) FROM training_nic.migrated.institutions c
               JOIN training_nic.legacy_onprem.institutions s ON c.`#ID_RSSD` = s.`#ID_RSSD`
               WHERE NULLIF(TRIM(c.NM_LGL), '') IS DISTINCT FROM NULLIF(TRIM(s.NM_LGL), '')),
@@ -396,7 +400,7 @@ Run these in order. Each answers a different question, and each has a blind spot
     ```
     <!-- source: facts_extracted.md §8 -->
 
-    > **Expected Result:** Not one entry—a story. Read the `operation` column bottom-up: a `CREATE OR REPLACE TABLE AS SELECT` (the initial load), then a `DELETE`, three `UPDATE`s, and metadata commits for the table and column comments. Every write to a Delta table lands in this log, with who ran it, when, and how.
+    > **Expected Result:** Not one entry—a story. Read the `operation` column bottom-up: a `CREATE TABLE AS SELECT` (the initial load), then a `DELETE`, three `UPDATE`s, and metadata commits for the table and column comments. Every write to a Delta table lands in this log, with who ran it, when, and how.
 
     > **What Just Happened?** Expand `operationParameters` on the `DELETE` row. The predicate is recorded verbatim: `CHTR_TYPE_CD = '250'`—the migration's own audit log stating what Check 2 made you discover the hard way. On a real migration, reading the target table's history is one of the first things worth doing.
 
@@ -441,12 +445,12 @@ Run these in order. Each answers a different question, and each has a blind spot
     A migration gets fixed and re-attempted, and your validation has to be one click—not an afternoon of pasting. Click **Run all**, then read the history grouped by attempt:
 
     ```sql
-    SELECT date_trunc('minute', run_ts) AS run_attempt,
-           COUNT(*)                     AS checks_run,
+    SELECT run_ts AS run_attempt,
+           COUNT(*) AS checks_run,
            SUM(CASE WHEN passed THEN 1 ELSE 0 END) AS checks_passed
     FROM training_nic.analyst.validation_runs
-    GROUP BY 1
-    ORDER BY 1;
+    GROUP BY run_ts
+    ORDER BY run_ts;
     ```
 
     > **Expected Result:** Two attempts, each running 4 checks with the same pass count: **1 of 4**. Check 4 passes—the name defects were formatting, and normalization proved the data itself matches. Checks 1–3 fail because the migration genuinely dropped rows, truncated cents, and shifted dates. The migration is still broken—but now you can prove it, repeatably, and every attempt stays on the record. When engineering ships a fixed migration, this notebook is how you verify the fix.

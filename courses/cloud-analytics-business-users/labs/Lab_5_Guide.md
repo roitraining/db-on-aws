@@ -281,8 +281,7 @@ You have a summary table. A colleague needs it. The old answer was to email a sp
     SELECT COUNT(*) AS failed_checks
     FROM training_nic.analyst.validation_runs
     WHERE NOT passed
-      AND run_ts >= (SELECT MAX(run_ts) FROM training_nic.analyst.validation_runs)
-                    - INTERVAL 5 MINUTES;
+      AND run_ts = (SELECT MAX(run_ts) FROM training_nic.analyst.validation_runs);
     ```
     <!-- source: facts_extracted.md §15 -->
 
