@@ -1,5 +1,5 @@
 # Lab 3: UAT—Comparing Cloud Data to On-Premises
-re
+
 **Course:** Databricks on AWS: Cloud Analytics for Business Users
 **Duration:** 60 minutes
 
@@ -394,7 +394,7 @@ For attendees who finish early.
 7. Why is the row-level comparison last rather than first?
 8. What is the practical limit on how far back a time travel query can reach, and why?
 
-Answers are held in the Knowledge Check Bank.
+Answers — including worked stretch task answers — are in [`answers/Lab_3_Answers.md`](../answers/Lab_3_Answers.md). Attempt the questions before opening it.
 
 ---
 
