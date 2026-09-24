@@ -306,8 +306,7 @@ check("history — staged build produced the audit trail", len(hist_ops) >= 8,
       f"{len(hist_ops)} entries: {hist_ops[::-1]}")
 check("history — DELETE commit present (defect 1's fingerprint)", "DELETE" in hist_ops)
 
-print("
-=== Lab 5 alert figure ===")
+print("\n=== Lab 5 alert figure ===")
 summary_rows = spark.sql(f"""
     SELECT COUNT(*) AS n FROM (
       SELECT CHTR_TYPE_CD, date_trunc('month', CAST(D_DT_START AS DATE))
