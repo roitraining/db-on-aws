@@ -56,8 +56,8 @@ Answers to the stretch tasks in Labs 1–6. For instructor use — attendees get
 2. The failure returns because `SELECT` alone is not enough — the missing grant is `USE SCHEMA`. Reading needs all three: `USE CATALOG`, `USE SCHEMA`, `SELECT`.
 3. ```sql
     SHOW GRANTS ON CATALOG training_nic;
-    SHOW GRANTS ON SCHEMA training_nic.analyst_<id>;
-    SHOW GRANTS ON VIEW training_nic.analyst_<id>.<view>;
+    SHOW GRANTS ON SCHEMA training_nic.analyst;
+    SHOW GRANTS ON VIEW training_nic.analyst.<view>;
     ```
     A permission gap is a principal holding a lower-level grant (`SELECT`) with no matching `USE` grant above it — visible only by reading the three outputs together.
 

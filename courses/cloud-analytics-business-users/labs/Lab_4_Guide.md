@@ -17,7 +17,7 @@ Everything so far has been reading someone else's data. This lab is the first th
 
 - [ ] Labs 1–3 completed
 - [ ] For **Part 4 only**: access to the classic cluster named by your instructor (possibly in the shared class workspace)
-- [ ] Your attendee ID (your personal schema `training_nic.analyst_<id>` is created in this lab)
+- [ ] Nothing to prepare for storage — your personal schema `training_nic.analyst` is created in this lab
 
 > **Note:** Parts 1–3 run on serverless compute in your own account. Only Part 4 needs a classic cluster, because the Spark UI is not available on serverless compute—and that part may run in a different, shared workspace. The lab keeps it last so you switch environments once, at a clean boundary.
 <!-- source: facts_extracted.md §13 -->
@@ -212,16 +212,16 @@ Official documentation, if you want the full detail behind any row:
 
 12. **Create your personal schema, then write the summary as a managed Delta table**
 
-    Nothing so far has created your personal schema—tables need a schema to live in, so create it first. Substitute your attendee ID in both cells.
+    Nothing so far has created your personal schema—tables need a schema to live in, so create it first.
 
     ```python
-    spark.sql("CREATE SCHEMA IF NOT EXISTS training_nic.analyst_<id>")
+    spark.sql("CREATE SCHEMA IF NOT EXISTS training_nic.analyst")
     ```
 
     ```python
     (summary.write
         .mode("overwrite")
-        .saveAsTable("training_nic.analyst_<id>.institution_summary"))
+        .saveAsTable("training_nic.analyst.institution_summary"))
     ```
     <!-- source: facts_extracted.md §13 -->
 
@@ -229,7 +229,7 @@ Official documentation, if you want the full detail behind any row:
 
     ```sql
     %sql
-    SELECT * FROM training_nic.analyst_<id>.institution_summary
+    SELECT * FROM training_nic.analyst.institution_summary
     ORDER BY start_year DESC
     LIMIT 20;
     ```
@@ -247,7 +247,7 @@ Official documentation, if you want the full detail behind any row:
 
 15. **Find your table in Catalog Explorer**
 
-    In the left sidebar, click **Catalog**, then expand **training_nic → analyst_<id>** and select **institution_summary**. The **Overview** tab shows the columns and types you defined in Python—now visible to anyone with access, without opening a notebook.
+    In the left sidebar, click **Catalog**, then expand **training_nic → analyst** and select **institution_summary**. The **Overview** tab shows the columns and types you defined in Python—now visible to anyone with access, without opening a notebook.
 
 16. **Add a description**
 
@@ -374,7 +374,7 @@ For attendees who finish early.
 |---|---|---|
 | No Spark UI available | No Spark UI link on the compute | You are on serverless. Attach to the classic cluster; serverless exposes a query profile instead. |
 | Column not found on the key | Error naming the `#`-prefixed column | In SQL wrap it in backticks. In Python pass it as a plain string. |
-| Write fails | Schema-not-found or permission error on `saveAsTable` | Run the `CREATE SCHEMA` cell in step 16 first, and check you replaced `<id>` with your attendee ID in both cells. |
+| Write fails | Schema-not-found or permission error on `saveAsTable` | Run the `CREATE SCHEMA` cell in step 12 first. |
 | Error appears at the wrong line | Failure reported on a `display()` | Lazy evaluation. The fault is in an earlier transformation; the action merely triggered it. |
 | Aggregation very slow | Long-running stage | Check partition count in the Spark UI. Very many small partitions or very few large ones both hurt. |
 | `%sql` cell cannot see the table | Table not found | Fully qualify with catalog and schema, or set `USE CATALOG` and `USE SCHEMA` in that cell. |

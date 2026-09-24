@@ -49,7 +49,7 @@ The first run reads from the source table, executes the chain, and populates the
 **3. The whole pipeline as one SQL statement.**
 
 ```sql
-CREATE OR REPLACE TABLE training_nic.analyst_<id>.institution_summary AS
+CREATE OR REPLACE TABLE training_nic.analyst.institution_summary AS
 SELECT CHTR_TYPE_CD,
        YEAR(CAST(D_DT_START AS DATE))  AS start_year,
        COUNT(*)                        AS institution_count,

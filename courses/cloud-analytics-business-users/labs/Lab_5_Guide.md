@@ -15,7 +15,7 @@ You have a summary table. A colleague needs it. The old answer was to email a sp
 
 ## Prerequisites
 
-- [ ] Lab 4 completed—`training_nic.analyst_<id>.institution_summary` exists
+- [ ] Lab 4 completed—`training_nic.analyst.institution_summary` exists
 - [ ] A running serverless SQL warehouse selected in the SQL editor
 - [ ] The attendee ID of a **partner** in the room, who will verify your grant
 - [ ] Your own email address for the alert notification
@@ -40,7 +40,7 @@ You have a summary table. A colleague needs it. The old answer was to email a sp
 
     ```sql
     USE CATALOG training_nic;
-    USE SCHEMA analyst_<id>;
+    USE SCHEMA analyst;
     ```
     <!-- source: facts_extracted.md §2 -->
 
@@ -51,7 +51,7 @@ You have a summary table. A colleague needs it. The old answer was to email a sp
     ```sql
     CREATE OR REPLACE VIEW institution_summary_published AS
     SELECT CHTR_TYPE_CD, start_year, institution_count, distinct_cities
-    FROM training_nic.analyst_<id>.institution_summary
+    FROM training_nic.analyst.institution_summary
     WHERE institution_count > 0;
     ```
     <!-- source: facts_extracted.md §12 -->
@@ -83,7 +83,7 @@ You have a summary table. A colleague needs it. The old answer was to email a sp
     Have your partner run the query below. It will fail.
 
     ```sql
-    SELECT * FROM training_nic.analyst_<id>.institution_summary_published LIMIT 5;
+    SELECT * FROM training_nic.analyst.institution_summary_published LIMIT 5;
     ```
     <!-- source: facts_extracted.md §3 -->
 
@@ -96,7 +96,7 @@ You have a summary table. A colleague needs it. The old answer was to email a sp
 
     ```sql
     GRANT USE CATALOG ON CATALOG training_nic TO `<partner>`;
-    GRANT USE SCHEMA  ON SCHEMA  training_nic.analyst_<id> TO `<partner>`;
+    GRANT USE SCHEMA  ON SCHEMA  training_nic.analyst TO `<partner>`;
     ```
     <!-- source: facts_extracted.md §3 -->
 
@@ -129,7 +129,7 @@ You have a summary table. A colleague needs it. The old answer was to email a sp
     ```sql
     CREATE OR REPLACE MATERIALIZED VIEW institution_summary_mv AS
     SELECT CHTR_TYPE_CD, start_year, institution_count, distinct_cities
-    FROM training_nic.analyst_<id>.institution_summary
+    FROM training_nic.analyst.institution_summary
     WHERE institution_count > 0;
     ```
     <!-- source: facts_extracted.md §14 -->
@@ -178,7 +178,7 @@ You have a summary table. A colleague needs it. The old answer was to email a sp
 
     ```sql
     SELECT COUNT(*) AS row_count
-    FROM training_nic.analyst_<id>.institution_summary;
+    FROM training_nic.analyst.institution_summary;
     ```
     <!-- source: facts_extracted.md §15 -->
 

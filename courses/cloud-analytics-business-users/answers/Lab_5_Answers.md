@@ -12,7 +12,7 @@ Attempt the questions before opening this file.
 
 **2. Your partner has `SELECT` and still gets access denied. What do you check, and in what order?**
 
-Walk the namespace top-down: `SHOW GRANTS ON CATALOG training_nic` (is `USE CATALOG` there?), then `SHOW GRANTS ON SCHEMA training_nic.analyst_<id>` (is `USE SCHEMA` there?), then `SHOW GRANTS ON VIEW …` (is `SELECT` really there, on the right principal spelling?). The gap is whichever level does not list the partner.
+Walk the namespace top-down: `SHOW GRANTS ON CATALOG training_nic` (is `USE CATALOG` there?), then `SHOW GRANTS ON SCHEMA training_nic.analyst` (is `USE SCHEMA` there?), then `SHOW GRANTS ON VIEW …` (is `SELECT` really there, on the right principal spelling?). The gap is whichever level does not list the partner.
 
 **3. When is a materialized view worth its refresh cost, and when is a plain view the better answer?**
 
@@ -45,7 +45,7 @@ Raise the threshold above the current row count and let the schedule run: status
 **2. Revoke `USE SCHEMA`, leave `SELECT`.**
 
 ```sql
-REVOKE USE SCHEMA ON SCHEMA training_nic.analyst_<id> FROM `<partner>`;
+REVOKE USE SCHEMA ON SCHEMA training_nic.analyst FROM `<partner>`;
 ```
 
 The partner's query fails with access denied again even though `SELECT` is intact — demonstrating that `SELECT` is necessary but not sufficient. The missing grant is `USE SCHEMA`, the traversal privilege that lets them walk through the namespace to reach the object.
@@ -54,8 +54,8 @@ The partner's query fails with access denied again even though `SELECT` is intac
 
 ```sql
 SHOW GRANTS ON CATALOG training_nic;
-SHOW GRANTS ON SCHEMA  training_nic.analyst_<id>;
-SHOW GRANTS ON VIEW    training_nic.analyst_<id>.institution_summary_published;
+SHOW GRANTS ON SCHEMA  training_nic.analyst;
+SHOW GRANTS ON VIEW    training_nic.analyst.institution_summary_published;
 ```
 
 To find a permission gap, check that the principal appears at **every** level with the right privilege: `USE CATALOG` in the first output, `USE SCHEMA` in the second, `SELECT` in the third. Any level where the principal is absent is the gap — access requires all three simultaneously.

@@ -48,7 +48,7 @@ The last step is the one stakeholders actually see. You will build a dashboard o
 
     ```sql
     SELECT CHTR_TYPE_CD, start_year, institution_count, distinct_cities
-    FROM training_nic.analyst_<id>.institution_summary_published;
+    FROM training_nic.analyst.institution_summary_published;
     ```
     <!-- source: facts_extracted.md §12 -->
 
@@ -142,7 +142,7 @@ The last step is the one stakeholders actually see. You will build a dashboard o
 
 16. **Create a Genie space on the same data**
 
-    In the left sidebar, click **Genie**, then click the **New** button on the Genie page. Name the space `lab6_genie_<id>`, select your published view `training_nic.analyst_<id>.institution_summary_published` as its data, and choose the serverless SQL warehouse when prompted. The space opens with a chat box—this is where you ask your questions.
+    In the left sidebar, click **Genie**, then click the **New** button on the Genie page. Name the space `lab6_genie_<id>`, select your published view `training_nic.analyst.institution_summary_published` as its data, and choose the serverless SQL warehouse when prompted. The space opens with a chat box—this is where you ask your questions.
 
 17. **Ask your first business question**
 
