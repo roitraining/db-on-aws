@@ -15,6 +15,7 @@ You have a summary table. A colleague needs it. The old answer was to email a sp
 
 ## Prerequisites
 
+- [ ] Lab 3 completed—`training_nic.analyst.validation_runs` holds at least one run
 - [ ] Lab 4 completed—`training_nic.analyst.institution_summary` exists
 - [ ] The serverless SQL warehouse available—this lab's notebook runs on it
 - [ ] Your own email address for the alert notification
@@ -29,6 +30,7 @@ You have a summary table. A colleague needs it. The old answer was to email a sp
 - Audit a complete access chain across catalog, schema, and view with `SHOW GRANTS`
 - Explain when a materialized view is worth its refresh cost
 - Create an alert that fires on a row-count threshold
+- Create a second alert that watches the latest validation run for failures
 
 ---
 
@@ -268,6 +270,29 @@ You have a summary table. A colleague needs it. The old answer was to email a sp
 
     > **Expected Result:** A saved alert with your query, a threshold condition, yourself as recipient, a schedule, and a current status.
 
+### Task 5: A Second Alert—Watch the Validation Itself
+
+25. **Create the validation-failure alert**
+
+    The row-count alert guards one table. The higher-value watch is on the validation: fire whenever the latest run has failing checks. Create a second alert (**Alerts → Create Alert**), rename it `lab5_validation_failures_alert`, and author its query:
+
+    ```sql
+    SELECT COUNT(*) AS failed_checks
+    FROM training_nic.analyst.validation_runs
+    WHERE NOT passed
+      AND run_ts >= (SELECT MAX(run_ts) FROM training_nic.analyst.validation_runs)
+                    - INTERVAL 5 MINUTES;
+    ```
+    <!-- source: facts_extracted.md §15 -->
+
+26. **Set its condition and watch it fire**
+
+    Same mechanics as before: condition = **First row** of `failed_checks`, operator **>** (greater than), threshold **0**. Select the serverless SQL warehouse, add yourself under **Notifications**, set a schedule, and save.
+
+    > **Expected Result:** Unlike the row-count alert, this one goes **TRIGGERED** on its first evaluation—your latest Lab 3 run has failing checks because the migration is genuinely broken. That is the alert doing its job. When engineering ships a fixed migration and your runbook passes, this alert goes quiet on its own.
+
+---
+
 ---
 
 ## Stretch Task
@@ -296,6 +321,7 @@ For attendees who finish early.
 - [ ] I configured a threshold condition and tested it
 - [ ] I added myself as a notification recipient and set a schedule
 - [ ] I recorded the alert's current status
+- [ ] I created `lab5_validation_failures_alert` and saw it go `TRIGGERED` on the broken migration
 
 ---
 
