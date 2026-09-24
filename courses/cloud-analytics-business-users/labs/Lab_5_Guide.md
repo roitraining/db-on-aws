@@ -154,7 +154,7 @@ You have a summary table. A colleague needs it. The old answer was to email a sp
     USE SCHEMA analyst;
     ```
 
-> **Note:** A scratch notebook is not the only defensible surface for one-off work like this. A saved query in the SQL editor fits too—especially if the result is headed for a dashboard, since dashboard datasets are authored as queries (Lab 6 does exactly that). The working taxonomy: **repeatable process → notebook runbook; quick exploration → scratch notebook or editor query; dashboard feed → dataset query.** Choosing the surface on purpose is the skill.
+    > **Note:** A scratch notebook is not the only defensible surface for one-off work like this. A saved query in the SQL editor fits too—especially if the result is headed for a dashboard, since dashboard datasets are authored as queries (Lab 6 does exactly that). The working taxonomy: **repeatable process → notebook runbook; quick exploration → scratch notebook or editor query; dashboard feed → dataset query.** Choosing the surface on purpose is the skill.
 
 11. **Create a materialized view over the same query**
 
