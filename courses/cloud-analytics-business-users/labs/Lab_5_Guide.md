@@ -201,7 +201,7 @@ You have a summary table. A colleague needs it. The old answer was to email a sp
 
 15. **Open the alert editor**
 
-    Leave your notebook—alerts cannot live in it, because each alert owns its own query definition (next step). In the left sidebar, click **Alerts**, then select **Create Alert**.
+    Leave your notebook—alerts cannot live in it, because each alert owns its own query definition (next step). In the left sidebar, click **Alerts**, then select **Create Alert**. The new alert opens with a placeholder title—click it and rename the alert `lab5_row_count_alert`, the same name-it-for-what-it-does rule as your notebooks.
     <!-- source: facts_extracted.md §15 -->
 
 16. **Author the query inside the alert**
@@ -284,7 +284,7 @@ For attendees who finish early.
 - [ ] I refreshed the materialized view explicitly
 - [ ] I recorded which of the two I would publish, and why
 - [ ] I ran the publish notebook top to bottom and every cell succeeded
-- [ ] I authored an alert query inside the alert editor
+- [ ] I named the alert `lab5_row_count_alert` and authored its query inside the alert editor
 - [ ] I configured a threshold condition and tested it
 - [ ] I added myself as a notification recipient and set a schedule
 - [ ] I recorded the alert's current status
