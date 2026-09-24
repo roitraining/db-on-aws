@@ -399,3 +399,55 @@ else:
         else:
             print("  Your account may restrict cluster creation. Create it by hand if you")
             print("  can (SETUP.md Part 3 step 6), or ask your admin.")
+
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Part 7 · Performance tables — Lab 4's performance section (and Advanced Lab 8)
+# MAGIC
+# MAGIC 2M-row versions of the migrated tables, same columns including the `#` key, with
+# MAGIC deliberate skew (~60% CA). The 4,900-row tables are too small for performance
+# MAGIC differences to be visible; these are big enough that the query profile has a story.
+# MAGIC
+# MAGIC Inline mirror of `bundles/20-perf-data` Part 1 — keep the two in sync. That bundle's
+# MAGIC RDD-based partition-ratio verify stays there (the RDD API is unavailable on serverless).
+
+# COMMAND ----------
+
+PERF_ROWS = 2_000_000
+SKEW_PCT = 60
+
+spark.sql(f"CREATE SCHEMA IF NOT EXISTS {CATALOG}.perf")
+
+spark.sql(f"""
+CREATE OR REPLACE TABLE {CATALOG}.perf.institutions_large AS
+SELECT
+  id AS `#ID_RSSD`,
+  CASE
+    WHEN id % 100 < {SKEW_PCT} THEN 'CA'
+    ELSE element_at(array('TX','NY','FL','IL','OH','WA'), CAST(id % 6 AS INT) + 1)
+  END AS STATE_ABBR_NM,
+  element_at(array('200','300','400','500'), CAST(id % 4 AS INT) + 1) AS CHTR_TYPE_CD
+FROM range(1, {PERF_ROWS + 1}) AS t(id)
+""")
+
+spark.sql(f"""
+CREATE OR REPLACE TABLE {CATALOG}.perf.financials_large AS
+SELECT
+  id AS `#ID_RSSD`,
+  CAST(id % 900000 AS DECIMAL(18,2)) AS TOT_ASSETS
+FROM range(1, {PERF_ROWS + 1}) AS t(id)
+""")
+
+print("\n=== Perf tables (Lab 4 performance section) ===")
+n = spark.table(f"{CATALOG}.perf.institutions_large").count()
+check("perf — institutions_large row count", n == PERF_ROWS, f"{n:,}")
+ca = spark.sql(f"SELECT COUNT(*) AS n FROM {CATALOG}.perf.institutions_large "
+               f"WHERE STATE_ABBR_NM = 'CA'").collect()[0]["n"]
+check(f"perf — CA skew ~{SKEW_PCT}%", abs(100 * ca / n - SKEW_PCT) <= 5, f"{100 * ca / n:.0f}%")
+
+print("\n" + "=" * 55)
+if failures:
+    raise Exception(f"SETUP INCOMPLETE — {len(failures)} check(s) failed: {failures}")
+print("Everything built. Labs 1-6 can run against this environment.")

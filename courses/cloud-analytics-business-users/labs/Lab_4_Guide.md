@@ -30,6 +30,7 @@ Everything so far has been reading someone else's data. This lab is the first th
 - Apply `filter`, `select`, `withColumn`, `groupBy` and `agg`
 - Explain why nothing executes until an action is called
 - Write a result back to Unity Catalog as a managed Delta table
+- Verify a query's performance on serverless with the query profile
 - Read partition count and shuffle volume in the Spark UI
 - State, for each stage, whether SQL or PySpark was the right tool
 
@@ -261,11 +262,62 @@ Official documentation, if you want the full detail behind any row:
 
 ---
 
-## Part 4: Read the Spark UI
+## Part 4: Verify Performance on Serverless
 
-### Task 6: Find the Shuffle
+### Task 6: Read the Query Profile
 
-18. **Attach the classic cluster and re-run the pipeline**
+18. **Run the same shape of query at 2 million rows**
+
+    Your 4,900-row pipeline finishes before performance can matter. Setup built 2-million-row versions of the same tables—`training_nic.perf.institutions_large` and `training_nic.perf.financials_large`—where slow is visible. Run the join-and-aggregate in a `%sql` cell and note the wall time:
+
+    ```sql
+    %sql
+    SELECT i.CHTR_TYPE_CD,
+           COUNT(*)          AS institution_count,
+           SUM(f.TOT_ASSETS) AS total_assets
+    FROM training_nic.perf.institutions_large AS i
+    JOIN training_nic.perf.financials_large  AS f
+      ON i.`#ID_RSSD` = f.`#ID_RSSD`
+    GROUP BY i.CHTR_TYPE_CD;
+    ```
+
+19. **Open its query profile**
+
+    On serverless there is no Spark UI—the **query profile** is how you verify a query performs well:
+
+    1. In the left sidebar, click **Query History**.
+    2. Your aggregation is at the top of the list—click it.
+    3. Click **See query profile**.
+
+    Read the operator graph top to bottom: the scans (note **rows read** and **bytes read** on each), the join, and between them and the aggregate an **Exchange** operator. The Exchange **is** the shuffle—the same thing the Spark UI reports as shuffle write and read, here shown as rows and bytes on one node.
+
+20. **Compare against a narrow query**
+
+    ```sql
+    %sql
+    SELECT `#ID_RSSD`, STATE_ABBR_NM
+    FROM training_nic.perf.institutions_large
+    WHERE STATE_ABBR_NM = 'WA'
+    LIMIT 100;
+    ```
+
+    Open this query's profile the same way.
+
+    > **Expected Result:** No Exchange operator, a fraction of the bytes read, and a fraction of the duration. A filter is narrow—every part of the data can be processed independently and the `LIMIT` stops the scan early. The aggregation is wide—rows sharing a key must be brought together, and that movement is what you pay for.
+
+21. **Write the one factual sentence**
+
+    In a Markdown cell, describe the aggregation the way you would to an engineer: which operator dominated the time, how many rows and bytes crossed the Exchange, and how long the query took. "It was slow" is not actionable; "the join shuffled N rows and the Exchange dominated a M-second query" is.
+
+    > **Key Insight:** This is the serverless answer to "does my query perform well?"—run it, open the profile, find the Exchange and the bytes read. Task counts, partition counts, and straggler diagnosis need the Spark UI, which is where Part 5 goes.
+
+---
+
+## Part 5: Read the Spark UI
+
+### Task 7: Find the Shuffle
+
+22. **Attach the classic cluster and re-run the pipeline**
 
     The Spark UI belongs to classic compute, so this part runs on the classic cluster named by your instructor—and if your own account cannot create classic compute (Free Edition), it happens in the **shared class workspace** your instructor provides. The login steps for that workspace are covered separately; everything below assumes you are in a workspace where the classic cluster exists.
 
@@ -273,7 +325,7 @@ Official documentation, if you want the full detail behind any row:
 
     > **Note:** The Spark UI shows work done by *that cluster only*. Your serverless runs from Parts 1–3 are not in it—the re-run is what puts stages there.
 
-19. **Open the Spark UI**
+23. **Open the Spark UI**
 
     1. In the left sidebar, click **Compute**. (Open it in a new browser tab if you want to keep the notebook visible—right-click, **Open link in new tab**.)
     2. In the cluster list, click the name of the classic cluster your notebook is attached to—**`db-on-aws · lab cluster`** in the standard deploy.
@@ -286,50 +338,27 @@ Official documentation, if you want the full detail behind any row:
     > **Note:** If you ran the aggregation on **serverless** compute, you will not be able to see this—serverless has no Spark UI and exposes a query profile instead. Go back to step 1, attach the classic cluster, re-run the `display(summary)` cell, and then open the Spark UI.
     <!-- source: facts_extracted.md §13 -->
 
-20. **Record what you see**
+24. **Record what you see**
 
     Note three figures for the aggregation stage: the number of tasks, the shuffle write volume, and the shuffle read volume.
 
     > **Key Insight:** The task count reflects how many partitions the data was split into. The shuffle figures show how much data moved across the cluster to bring matching keys together. A `groupBy` cannot avoid a shuffle—that is what it is.
     <!-- source: facts_extracted.md §13 -->
 
-21. **Compare against a query that does not shuffle**
+25. **Compare against a query that does not shuffle**
 
     ```python
     display(slim.filter(F.col("start_year") > 2000).limit(50))
     ```
     <!-- source: facts_extracted.md §13 -->
 
-22. **Look at the stages for that cell**
+26. **Look at the stages for that cell**
 
     > **What Just Happened?** A filter is narrow—each partition can be processed independently, so there is no shuffle. An aggregation is wide—rows with the same key must end up together, which means moving data. When a query is slow, this distinction is the first thing to check.
 
-### No classic cluster? The serverless alternative
+### No classic cluster?
 
-If your workspace cannot create classic compute (Databricks Free Edition is serverless-only), the Spark UI is not available—but the same lesson is visible in the **query profile**:
-<!-- source: facts_extracted.md §13 -->
-
-- **Run the aggregation as SQL.** Open the **SQL Editor**, select the serverless SQL warehouse, and run the aggregation as SQL:
-
-    ```sql
-    SELECT CHTR_TYPE_CD, YEAR(CAST(D_DT_START AS DATE)) AS start_year,
-           COUNT(*) AS institution_count
-    FROM training_nic.migrated.institutions
-    WHERE STATE_ABBR_NM = 'CA'
-    GROUP BY CHTR_TYPE_CD, YEAR(CAST(D_DT_START AS DATE));
-    ```
-
-- **Open the query profile.** In the left sidebar, click **Query History**. Your query is at the top of the list—click it, then click **See query profile**.
-- **Find the shuffle.** Read the operator graph: the **Exchange** node sitting between the scan and the aggregate *is* the shuffle. Its rows and bytes are the same figures the Spark UI reports as shuffle write and read.
-- **Compare against a narrow query.** Now run the query again without the `GROUP BY` (keep the `WHERE`, select plain columns with a `LIMIT`) and open its profile: **no Exchange node**. A narrow query moves no data between machines.
-
-| Spark UI (steps 19–22) | Query profile equivalent |
-|---|---|
-| Stages tab; a stage boundary | Operator graph; the **Exchange** node |
-| Shuffle write / shuffle read | Bytes and rows on the Exchange |
-| Filter-only query adds no stage | Filter-only profile has no Exchange |
-
-> **Note:** The trade: the query profile teaches narrow-versus-wide just as well, but task counts, partition counts, and straggler diagnosis are Spark UI-only—which is why the Advanced course's performance lab requires a classic cluster.
+You have already done the serverless version of this lesson—Part 4's query profile. The Spark UI adds what the profile cannot show: task counts, partition counts, and straggler diagnosis. If your account cannot create classic compute (Free Edition), this part runs in the shared class workspace your instructor provides.
 
 ---
 
@@ -358,6 +387,9 @@ For attendees who finish early.
 - [ ] I recorded a language choice and reason for each stage
 - [ ] I found my table in Catalog Explorer and added a description
 - [ ] I read the table's History tab and found my write
+- [ ] I ran the 2M-row aggregation and read its query profile
+- [ ] I found the Exchange operator and recorded its rows and bytes
+- [ ] I compared a narrow query's profile and saw no Exchange
 - [ ] I attached the classic cluster and re-ran the pipeline
 - [ ] I opened the Spark UI and found the Stages tab
 - [ ] I recorded task count, shuffle read and shuffle write for the aggregation
