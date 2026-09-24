@@ -41,7 +41,7 @@ You have a summary table. A colleague needs it. The old answer was to email a sp
     Lab 4's pipeline lived in a notebook so it could be re-run. Publishing deserves the same: the view and its grants are something you will want to recreate on demand—after an environment rebuild, a permissions drift, or for the next colleague—so this lab builds them as a saveable, re-runnable notebook rather than one-off statements in the SQL editor.
 
     1. In the left sidebar, click **Workspace**, open **Users → your.email**, click **Create** at the top right, and choose **Notebook**.
-    2. Rename it `Lab 5 - Publish` by clicking the title.
+    2. Rename it `Lab 5 - Publish Institution Summary View` by clicking the title. Name notebooks for what they do—a colleague finding this in your folder should know its job without opening it.
     3. In the language selector next to the title, choose **SQL**.
     4. In the compute selector at the top right, attach the **serverless SQL warehouse**—a notebook can run on a warehouse when every cell is SQL, and it is the same warehouse Labs 1–3 used.
 
