@@ -228,7 +228,15 @@ You have a summary table. A colleague needs it. The old answer was to email a sp
 
 19. **Configure the condition**
 
-    In the **Condition** field, set the alert to trigger when the row count falls below a threshold you choose—pick a number just under the current count so you can see it work.
+    Your summary table holds **276** rows—every attendee's does, because the training data is generated deterministically. In the **Condition** section, set exactly:
+
+    | Setting | Value |
+    |---|---|
+    | Trigger when | value of `row_count` |
+    | Operator | `<` (less than) |
+    | Threshold value | `250` |
+
+    Read back: *trigger the alert when `row_count` < 250*. That is safely under the real count, so the alert stays quiet until something actually removes rows.
     <!-- source: facts_extracted.md §15 -->
 
 20. **Test the condition**
@@ -266,7 +274,7 @@ You have a summary table. A colleague needs it. The old answer was to email a sp
 
 For attendees who finish early.
 
-1. Set the threshold deliberately so the alert fires, and observe the state change to `TRIGGERED`. What would a stakeholder have seen instead if you had no alert?
+1. Raise the threshold above 276 so the alert fires, and observe the state change to `TRIGGERED`. What would a stakeholder have seen instead if you had no alert?
 2. Revoke `USE SCHEMA` from `account users` while leaving `SELECT` in place. Re-run the three-level audit and state exactly which grant a reader now lacks and what error they would see.
 3. Write the `SHOW GRANTS` statements needed to audit all three levels—catalog, schema, and view—and describe how you would find a permission gap using only their output.
 
