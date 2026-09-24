@@ -17,7 +17,7 @@ Everything so far has been reading someone else's data. This lab is the first th
 
 - [ ] Labs 1–3 completed
 - [ ] The **classic cluster** named by your instructor is running
-- [ ] Your attendee ID and personal schema `training_nic.analyst_<id>`
+- [ ] Your attendee ID (your personal schema `training_nic.analyst_<id>` is created in this lab)
 
 > **Note:** This lab requires a classic cluster because the Spark UI is not available on serverless compute. Everything else in this course runs on a serverless SQL warehouse; this session is the exception.
 <!-- source: facts_extracted.md §13 -->
@@ -276,9 +276,13 @@ If your workspace cannot create classic compute (Databricks Free Edition is serv
 
 ### Task 5: Publish to Unity Catalog
 
-16. **Write the summary as a managed Delta table**
+16. **Create your personal schema, then write the summary as a managed Delta table**
 
-    Substitute your attendee ID.
+    Nothing so far has created your personal schema—tables need a schema to live in, so create it first. Substitute your attendee ID in both cells.
+
+    ```python
+    spark.sql("CREATE SCHEMA IF NOT EXISTS training_nic.analyst_<id>")
+    ```
 
     ```python
     (summary.write
@@ -363,7 +367,7 @@ For attendees who finish early.
 |---|---|---|
 | No Spark UI available | No Spark UI link on the compute | You are on serverless. Attach to the classic cluster; serverless exposes a query profile instead. |
 | Column not found on the key | Error naming the `#`-prefixed column | In SQL wrap it in backticks. In Python pass it as a plain string. |
-| Write fails | Permission or path error on `saveAsTable` | You have not replaced `<id>` with your attendee ID, or your schema was not created. |
+| Write fails | Schema-not-found or permission error on `saveAsTable` | Run the `CREATE SCHEMA` cell in step 16 first, and check you replaced `<id>` with your attendee ID in both cells. |
 | Error appears at the wrong line | Failure reported on a `display()` | Lazy evaluation. The fault is in an earlier transformation; the action merely triggered it. |
 | Aggregation very slow | Long-running stage | Check partition count in the Spark UI. Very many small partitions or very few large ones both hurt. |
 | `%sql` cell cannot see the table | Table not found | Fully qualify with catalog and schema, or set `USE CATALOG` and `USE SCHEMA` in that cell. |
