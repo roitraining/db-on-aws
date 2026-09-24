@@ -368,9 +368,22 @@ else:
         "data_security_mode": "SINGLE_USER",
         "single_user_name": w.current_user.me().user_name,
     }
-    created = w.api_client.do("POST", "/api/2.1/clusters/create", body=body)
-    cid = created["cluster_id"]
-    # create also starts the cluster — terminate right away so it costs nothing until class.
-    w.api_client.do("POST", "/api/2.1/clusters/delete", body={"cluster_id": cid})
-    print(f"Classic cluster created and left terminated: '{CLUSTER_NAME}' ({cid})")
-    print("It will appear under Compute as Terminated; starting it takes ~6 minutes.")
+    try:
+        created = w.api_client.do("POST", "/api/2.1/clusters/create", body=body)
+        cid = created["cluster_id"]
+        # create also starts the cluster — terminate right away so it costs nothing until class.
+        w.api_client.do("POST", "/api/2.1/clusters/delete", body={"cluster_id": cid})
+        print(f"Classic cluster created and left terminated: '{CLUSTER_NAME}' ({cid})")
+        print("It will appear under Compute as Terminated; starting it takes ~6 minutes.")
+    except Exception as e:
+        # Deliberately NON-FATAL: everything Labs 1-3, 5-7, 10-12 need is already built.
+        msg = str(e)
+        print("WARNING: could not create the classic cluster — Labs 4, 8 and 9 need one")
+        print(f"  API said: {msg[:300]}")
+        if "worker environments" in msg:
+            print("  This is Databricks FREE EDITION, which is serverless-only: classic")
+            print("  compute cannot be created on this account by anyone. The Spark UI")
+            print("  sections of Labs 4, 8 and 9 require a standard (paid/trial) workspace.")
+        else:
+            print("  Your account may restrict cluster creation. Create it by hand if you")
+            print("  can (SETUP.md Part 3 step 6), or ask your admin.")

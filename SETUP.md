@@ -114,6 +114,11 @@ Two paths. Both produce the same environment; pick on whether you want local too
 > If the environment was built more than a week before delivery, re-run `build_environment.py`
 > (either path) so the table has at least one prior version inside the retention window.
 
+> **Free Edition cannot run these labs' Spark UI sections.** Databricks Free Edition is
+> serverless-only — cluster creation fails with *"organization does not have any associated
+> worker environments"*, for admins too. Labs 4, 8 and 9's Spark UI work needs a standard
+> (paid or trial) workspace. Everything else in both courses runs fine on Free Edition.
+
 ### Path A · Entirely inside Databricks — no CLI
 
 Best when you are setting up from a browser, or on a locked-down machine.
