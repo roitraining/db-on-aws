@@ -16,10 +16,10 @@ Everything so far has been reading someone else's data. This lab is the first th
 ## Prerequisites
 
 - [ ] Labs 1–3 completed
-- [ ] The **classic cluster** named by your instructor is running
+- [ ] For **Part 4 only**: access to the classic cluster named by your instructor (possibly in the shared class workspace)
 - [ ] Your attendee ID (your personal schema `training_nic.analyst_<id>` is created in this lab)
 
-> **Note:** This lab requires a classic cluster because the Spark UI is not available on serverless compute. Everything else in this course runs on a serverless SQL warehouse; this session is the exception.
+> **Note:** Parts 1–3 run on serverless compute in your own account. Only Part 4 needs a classic cluster, because the Spark UI is not available on serverless compute—and that part may run in a different, shared workspace. The lab keeps it last so you switch environments once, at a clean boundary.
 <!-- source: facts_extracted.md §13 -->
 
 ---
@@ -66,7 +66,7 @@ Official documentation, if you want the full detail behind any row:
 
 ### Task 1: Create a Notebook, Attach and Read
 
-1. **Create a notebook and attach it to the classic cluster**
+1. **Create a notebook and attach compute**
 
     In Lab 3 you created a notebook just to hold notes. This time the notebook is where the work happens, and it needs compute:
 
@@ -74,9 +74,7 @@ Official documentation, if you want the full detail behind any row:
     2. Click **Create** at the top right and choose **Notebook**.
     3. Rename it from **Untitled Notebook** to `Lab 4 - DataFrames` by clicking the title.
     4. In the language selector next to the title, choose **Python**.
-    5. Open the compute selector at the top right of the notebook and attach the classic cluster—named **`db-on-aws · lab cluster`** (with a `[target]` prefix) in the standard deploy. Not a SQL warehouse and not serverless.
-
-    > **Common Pitfall:** If the compute selector only offers serverless or a SQL warehouse, the classic cluster is not running yet—ask your instructor, or see `SETUP.md`. Part 3 of this lab reads the Spark UI, which only a classic cluster provides.
+    5. Open the compute selector at the top right of the notebook and attach **serverless** compute. Parts 1–3 all run on serverless; only Part 4 (the Spark UI) switches to the classic cluster.
 
 2. **Read the migrated table into a DataFrame**
 
@@ -208,11 +206,74 @@ Official documentation, if you want the full detail behind any row:
 
 ---
 
-## Part 3: Read the Spark UI
+## Part 3: Write It Back
 
-### Task 4: Find the Shuffle
+### Task 4: Publish to Unity Catalog
 
-12. **Open the Spark UI**
+12. **Create your personal schema, then write the summary as a managed Delta table**
+
+    Nothing so far has created your personal schema—tables need a schema to live in, so create it first. Substitute your attendee ID in both cells.
+
+    ```python
+    spark.sql("CREATE SCHEMA IF NOT EXISTS training_nic.analyst_<id>")
+    ```
+
+    ```python
+    (summary.write
+        .mode("overwrite")
+        .saveAsTable("training_nic.analyst_<id>.institution_summary"))
+    ```
+    <!-- source: facts_extracted.md §13 -->
+
+13. **Verify it with SQL, not Python**
+
+    ```sql
+    %sql
+    SELECT * FROM training_nic.analyst_<id>.institution_summary
+    ORDER BY start_year DESC
+    LIMIT 20;
+    ```
+    <!-- source: facts_extracted.md §2 -->
+
+    > **Key Insight:** You just switched languages mid-notebook and it cost nothing. Verification queries are read-only and ad hoc, which is exactly what SQL is best at. The read-clean-aggregate chain above was PySpark because each step needed to be inspectable and rerunnable.
+
+14. **Record which language you would use for each stage**
+
+    Write down, for each of read, clean, aggregate and verify, whether you would reach for PySpark or SQL and why. There is no single right answer, but there is a defensible one.
+
+    > **Expected Result:** A table in your personal schema with one row per charter type per year, queryable by SQL, ready to publish in Lab 5.
+
+### Task 5: See Your Table in the Catalog
+
+15. **Find your table in Catalog Explorer**
+
+    In the left sidebar, click **Catalog**, then expand **training_nic → analyst_<id>** and select **institution_summary**. The **Overview** tab shows the columns and types you defined in Python—now visible to anyone with access, without opening a notebook.
+
+16. **Add a description**
+
+    Click the edit (pencil) control next to the table description and write one sentence a colleague would understand: what the table holds and where it came from. Catalog Explorer can draft this with AI (**AI generate**)—if you use it, read the draft critically and correct it before saving. It is a suggestion based on names and sample values, not knowledge of your intent.
+
+    > **Key Insight:** Descriptions are not decoration. They are what Catalog Explorer search matches on, and what Genie reads for context in Lab 6. An undescribed table is invisible to both.
+
+17. **Read the History and Permissions tabs**
+
+    Open the **History** tab: your `saveAsTable` write is there as the table's first commit—the same audit log you read on the migrated table in Lab 3, and every Delta table carries one from its first write. Then glance at the **Permissions** tab: empty apart from your own ownership. Lab 5 is where you fill it in.
+
+---
+
+## Part 4: Read the Spark UI
+
+### Task 6: Find the Shuffle
+
+18. **Attach the classic cluster and re-run the pipeline**
+
+    The Spark UI belongs to classic compute, so this part runs on the classic cluster named by your instructor—and if your own account cannot create classic compute (Free Edition), it happens in the **shared class workspace** your instructor provides. The login steps for that workspace are covered separately; everything below assumes you are in a workspace where the classic cluster exists.
+
+    Open the compute selector, attach the **classic cluster**, and click **Run All** so the whole pipeline executes on compute whose Spark UI you can open.
+
+    > **Note:** The Spark UI shows work done by *that cluster only*. Your serverless runs from Parts 1–3 are not in it—the re-run is what puts stages there.
+
+19. **Open the Spark UI**
 
     1. In the left sidebar, click **Compute**. (Open it in a new browser tab if you want to keep the notebook visible—right-click, **Open link in new tab**.)
     2. In the cluster list, click the name of the classic cluster your notebook is attached to—**`db-on-aws · lab cluster`** in the standard deploy.
@@ -225,21 +286,21 @@ Official documentation, if you want the full detail behind any row:
     > **Note:** If you ran the aggregation on **serverless** compute, you will not be able to see this—serverless has no Spark UI and exposes a query profile instead. Go back to step 1, attach the classic cluster, re-run the `display(summary)` cell, and then open the Spark UI.
     <!-- source: facts_extracted.md §13 -->
 
-13. **Record what you see**
+20. **Record what you see**
 
     Note three figures for the aggregation stage: the number of tasks, the shuffle write volume, and the shuffle read volume.
 
     > **Key Insight:** The task count reflects how many partitions the data was split into. The shuffle figures show how much data moved across the cluster to bring matching keys together. A `groupBy` cannot avoid a shuffle—that is what it is.
     <!-- source: facts_extracted.md §13 -->
 
-14. **Compare against a query that does not shuffle**
+21. **Compare against a query that does not shuffle**
 
     ```python
     display(slim.filter(F.col("start_year") > 2000).limit(50))
     ```
     <!-- source: facts_extracted.md §13 -->
 
-15. **Look at the stages for that cell**
+22. **Look at the stages for that cell**
 
     > **What Just Happened?** A filter is narrow—each partition can be processed independently, so there is no shuffle. An aggregation is wide—rows with the same key must end up together, which means moving data. When a query is slow, this distinction is the first thing to check.
 
@@ -262,68 +323,13 @@ If your workspace cannot create classic compute (Databricks Free Edition is serv
 - **Find the shuffle.** Read the operator graph: the **Exchange** node sitting between the scan and the aggregate *is* the shuffle. Its rows and bytes are the same figures the Spark UI reports as shuffle write and read.
 - **Compare against a narrow query.** Now run the query again without the `GROUP BY` (keep the `WHERE`, select plain columns with a `LIMIT`) and open its profile: **no Exchange node**. A narrow query moves no data between machines.
 
-| Spark UI (steps 12–15) | Query profile equivalent |
+| Spark UI (steps 19–22) | Query profile equivalent |
 |---|---|
 | Stages tab; a stage boundary | Operator graph; the **Exchange** node |
 | Shuffle write / shuffle read | Bytes and rows on the Exchange |
 | Filter-only query adds no stage | Filter-only profile has no Exchange |
 
 > **Note:** The trade: the query profile teaches narrow-versus-wide just as well, but task counts, partition counts, and straggler diagnosis are Spark UI-only—which is why the Advanced course's performance lab requires a classic cluster.
-
----
-
-## Part 4: Write It Back
-
-### Task 5: Publish to Unity Catalog
-
-16. **Create your personal schema, then write the summary as a managed Delta table**
-
-    Nothing so far has created your personal schema—tables need a schema to live in, so create it first. Substitute your attendee ID in both cells.
-
-    ```python
-    spark.sql("CREATE SCHEMA IF NOT EXISTS training_nic.analyst_<id>")
-    ```
-
-    ```python
-    (summary.write
-        .mode("overwrite")
-        .saveAsTable("training_nic.analyst_<id>.institution_summary"))
-    ```
-    <!-- source: facts_extracted.md §13 -->
-
-17. **Verify it with SQL, not Python**
-
-    ```sql
-    %sql
-    SELECT * FROM training_nic.analyst_<id>.institution_summary
-    ORDER BY start_year DESC
-    LIMIT 20;
-    ```
-    <!-- source: facts_extracted.md §2 -->
-
-    > **Key Insight:** You just switched languages mid-notebook and it cost nothing. Verification queries are read-only and ad hoc, which is exactly what SQL is best at. The read-clean-aggregate chain above was PySpark because each step needed to be inspectable and rerunnable.
-
-18. **Record which language you would use for each stage**
-
-    Write down, for each of read, clean, aggregate and verify, whether you would reach for PySpark or SQL and why. There is no single right answer, but there is a defensible one.
-
-    > **Expected Result:** A table in your personal schema with one row per charter type per year, queryable by SQL, ready to publish in Lab 5.
-
-### Task 6: See Your Table in the Catalog
-
-19. **Find your table in Catalog Explorer**
-
-    In the left sidebar, click **Catalog**, then expand **training_nic → analyst_<id>** and select **institution_summary**. The **Overview** tab shows the columns and types you defined in Python—now visible to anyone with access, without opening a notebook.
-
-20. **Add a description**
-
-    Click the edit (pencil) control next to the table description and write one sentence a colleague would understand: what the table holds and where it came from. Catalog Explorer can draft this with AI (**AI generate**)—if you use it, read the draft critically and correct it before saving. It is a suggestion based on names and sample values, not knowledge of your intent.
-
-    > **Key Insight:** Descriptions are not decoration. They are what Catalog Explorer search matches on, and what Genie reads for context in Lab 6. An undescribed table is invisible to both.
-
-21. **Read the History and Permissions tabs**
-
-    Open the **History** tab: your `saveAsTable` write is there as the table's first commit—the same audit log you read on the migrated table in Lab 3, and every Delta table carries one from its first write. Then glance at the **Permissions** tab: empty apart from your own ownership. Lab 5 is where you fill it in.
 
 ---
 
@@ -339,7 +345,7 @@ For attendees who finish early.
 
 ## Checkpoint: Verify Your Progress
 
-- [ ] My notebook is attached to a classic cluster, not a serverless warehouse
+- [ ] I created a notebook and attached serverless compute
 - [ ] I read a Unity Catalog table into a DataFrame
 - [ ] I can explain why the read cell finished instantly
 - [ ] I identified the hash-prefixed key column in the output of `df.columns`
@@ -347,14 +353,15 @@ For attendees who finish early.
 - [ ] I selected a narrowed set of columns
 - [ ] I ran `explain()` and saw a plan rather than data
 - [ ] I produced an aggregation by charter type and year
-- [ ] I opened the Spark UI and found the Stages tab
-- [ ] I recorded task count, shuffle read and shuffle write for the aggregation
-- [ ] I compared those against a filter-only query and saw no shuffle
 - [ ] I wrote a managed Delta table into my own schema
 - [ ] I verified the table using SQL in the same notebook
 - [ ] I recorded a language choice and reason for each stage
 - [ ] I found my table in Catalog Explorer and added a description
 - [ ] I read the table's History tab and found my write
+- [ ] I attached the classic cluster and re-ran the pipeline
+- [ ] I opened the Spark UI and found the Stages tab
+- [ ] I recorded task count, shuffle read and shuffle write for the aggregation
+- [ ] I compared those against a filter-only query and saw no shuffle
 
 ---
 
