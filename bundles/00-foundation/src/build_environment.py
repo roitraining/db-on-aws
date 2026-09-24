@@ -157,30 +157,72 @@ print("reference.state_population built")
 # MAGIC %md
 # MAGIC ## Part 4 · The cloud copy and its five defects
 # MAGIC
-# MAGIC **Do not show this cell to attendees before Lab 3.** It is the answer key.
+# MAGIC This is the Lab 3 answer key (also published as `answers/Lab_3_Answers.md`).
 # MAGIC
 # MAGIC | # | Defect | Planted how | Magnitude |
 # MAGIC |---|---|---|---|
-# MAGIC | 1 | Rows dropped | `CHTR_TYPE_CD = '250'` filtered out | 100 rows (2%) |
+# MAGIC | 1 | Rows dropped | `DELETE WHERE CHTR_TYPE_CD = '250'` | 100 rows (2%) |
 # MAGIC | 2 | Decimals truncated | `TOT_ASSETS` cast to integer | ~$2,443 across 4,900 rows |
-# MAGIC | 3 | Dates shifted | +1 day on a hash-selected subset | ~705 rows |
-# MAGIC | 4 | Empty string became NULL | `''` mapped to NULL on migration | ~212 null vs ~217 empty |
-# MAGIC | 5 | Padding stripped | `TRIM` applied on migration | all 5,000 source rows padded |
+# MAGIC | 3 | Dates shifted | `UPDATE` +1 day on a hash-selected subset | ~705 rows |
+# MAGIC | 4 | Empty string became NULL | `UPDATE` mapping `''` to NULL | ~212 null vs ~217 empty |
+# MAGIC | 5 | Padding stripped | `UPDATE` applying `TRIM` | all 5,000 source rows padded |
+# MAGIC
+# MAGIC **The build is deliberately staged, one commit per defect,** so `DESCRIBE HISTORY` on
+# MAGIC `migrated.institutions` reads as the migration's audit log and Lab 3 Task 6 can time
+# MAGIC travel to **version 0 — the faithful 5,000-row copy** — to explain the Check 1 gap.
+# MAGIC Do not collapse these statements back into a single CTAS: the history IS the lesson.
+# MAGIC Table and column comments at the end add metadata entries to the history and give
+# MAGIC Catalog Explorer (and Genie) real descriptions to work with.
 
 # COMMAND ----------
 
+# Version 0 — the faithful copy. Lab 3 Task 6 time-travels here: 5,000 rows, no defects.
 spark.sql(f"""
 CREATE OR REPLACE TABLE {CATALOG}.migrated.institutions AS
-SELECT
-  `#ID_RSSD`,
-  TRIM(NM_LGL) AS NM_LGL,                                    -- defect 5
-  CASE WHEN CITY = '' THEN NULL ELSE CITY END AS CITY,        -- defect 4
-  STATE_ABBR_NM,
-  CHTR_TYPE_CD,
-  CASE WHEN crc32(CAST(`#ID_RSSD` AS STRING)) % 7 = 0
-       THEN DATE_ADD(D_DT_START, 1) ELSE D_DT_START END AS D_DT_START   -- defect 3
+SELECT `#ID_RSSD`, NM_LGL, CITY, STATE_ABBR_NM, CHTR_TYPE_CD, D_DT_START
 FROM {CATALOG}.legacy_onprem.institutions
-WHERE CHTR_TYPE_CD <> '250'                                   -- defect 1
+""")
+
+# Version 1 — defect 1: rows dropped. The DELETE predicate lands in the history's
+# operationParameters, so DESCRIBE HISTORY names the filter Check 2 discovers.
+spark.sql(f"""
+DELETE FROM {CATALOG}.migrated.institutions WHERE CHTR_TYPE_CD = '250'
+""")
+
+# Version 2 — defect 5: padding stripped.
+spark.sql(f"""
+UPDATE {CATALOG}.migrated.institutions SET NM_LGL = TRIM(NM_LGL)
+""")
+
+# Version 3 — defect 4: empty string became NULL.
+spark.sql(f"""
+UPDATE {CATALOG}.migrated.institutions SET CITY = NULL WHERE CITY = ''
+""")
+
+# Version 4 — defect 3: dates shifted +1 day on a hash-selected subset.
+spark.sql(f"""
+UPDATE {CATALOG}.migrated.institutions
+SET D_DT_START = DATE_ADD(D_DT_START, 1)
+WHERE crc32(CAST(`#ID_RSSD` AS STRING)) % 7 = 0
+""")
+
+# Metadata commits — more history entries, and real descriptions for Catalog Explorer.
+spark.sql(f"""
+COMMENT ON TABLE {CATALOG}.migrated.institutions IS
+'Cloud copy of the on-premises NIC institutions table, loaded during the SQL Server
+migration. Validated against legacy_onprem in Lab 3; carries deliberate training defects.'
+""")
+spark.sql(f"""
+ALTER TABLE {CATALOG}.migrated.institutions
+ALTER COLUMN `#ID_RSSD` COMMENT 'RSSD identifier assigned by the Federal Reserve. Primary key; native NIC name with the leading # preserved.'
+""")
+spark.sql(f"""
+ALTER TABLE {CATALOG}.migrated.institutions
+ALTER COLUMN NM_LGL COMMENT 'Legal name of the institution.'
+""")
+spark.sql(f"""
+ALTER TABLE {CATALOG}.migrated.institutions
+ALTER COLUMN D_DT_START COMMENT 'Date the institution record became effective.'
 """)
 
 spark.sql(f"""
@@ -192,13 +234,7 @@ FROM {CATALOG}.legacy_onprem.financials f
 JOIN {CATALOG}.migrated.institutions i ON f.`#ID_RSSD` = i.`#ID_RSSD`
 """)
 
-# Lab 3 time-travels to version 0, which needs more than one version to exist.
-spark.sql(f"""
-INSERT INTO {CATALOG}.migrated.institutions
-SELECT * FROM {CATALOG}.migrated.institutions WHERE 1 = 0
-""")
-
-print("migrated built with five defects planted")
+print("migrated built with five defects planted across a staged, readable history")
 
 # COMMAND ----------
 
@@ -254,6 +290,16 @@ padded = spark.sql(f"""
     WHERE LENGTH(NM_LGL) <> LENGTH(TRIM(NM_LGL))
 """).collect()[0]["n"]
 check("defect 5 — all source rows padded", padded == ROWS, f"{padded:,} of {ROWS:,}")
+
+print("\n=== Table history (Lab 3 Task 6) ===")
+v0 = spark.sql(f"SELECT COUNT(*) AS n FROM {CATALOG}.migrated.institutions VERSION AS OF 0"
+               ).collect()[0]["n"]
+check("history — version 0 is the faithful 5,000-row copy", v0 == ROWS, f"{v0:,} rows at v0")
+hist_ops = [r["operation"] for r in
+            spark.sql(f"DESCRIBE HISTORY {CATALOG}.migrated.institutions").collect()]
+check("history — staged build produced the audit trail", len(hist_ops) >= 8,
+      f"{len(hist_ops)} entries: {hist_ops[::-1]}")
+check("history — DELETE commit present (defect 1's fingerprint)", "DELETE" in hist_ops)
 
 print("\n=== Lab 2 date range ===")
 in_range = spark.sql(f"""

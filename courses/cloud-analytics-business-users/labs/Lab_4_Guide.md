@@ -249,6 +249,22 @@ Everything so far has been reading someone else's data. This lab is the first th
 
     > **Expected Result:** A table in your personal schema with one row per charter type per year, queryable by SQL, ready to publish in Lab 5.
 
+### Task 6: See Your Table in the Catalog
+
+19. **Find your table in Catalog Explorer**
+
+    In the left sidebar, click **Catalog**, then expand **training_nic → analyst_<id>** and select **institution_summary**. The **Overview** tab shows the columns and types you defined in Python—now visible to anyone with access, without opening a notebook.
+
+20. **Add a description**
+
+    Click the edit (pencil) control next to the table description and write one sentence a colleague would understand: what the table holds and where it came from. Catalog Explorer can draft this with AI (**AI generate**)—if you use it, read the draft critically and correct it before saving. It is a suggestion based on names and sample values, not knowledge of your intent.
+
+    > **Key Insight:** Descriptions are not decoration. They are what Catalog Explorer search matches on, and what Genie reads for context in Lab 6. An undescribed table is invisible to both.
+
+21. **Read the History and Permissions tabs**
+
+    Open the **History** tab: your `saveAsTable` write is there as the table's first commit—the same audit log you read on the migrated table in Lab 3, and every Delta table carries one from its first write. Then glance at the **Permissions** tab: empty apart from your own ownership. Lab 5 is where you fill it in.
+
 ---
 
 ## Stretch Task
@@ -277,6 +293,8 @@ For attendees who finish early.
 - [ ] I wrote a managed Delta table into my own schema
 - [ ] I verified the table using SQL in the same notebook
 - [ ] I recorded a language choice and reason for each stage
+- [ ] I found my table in Catalog Explorer and added a description
+- [ ] I read the table's History tab and found my write
 
 ---
 

@@ -289,22 +289,28 @@ Run these in order. Each answers a different question, and each has a blind spot
     ```
     <!-- source: facts_extracted.md §8 -->
 
-23. **Query an earlier version**
+    > **Expected Result:** Not one entry—a story. Read the `operation` column bottom-up: a `CREATE OR REPLACE TABLE AS SELECT` (the initial load), then a `DELETE`, three `UPDATE`s, and metadata commits for the table and column comments. Every write to a Delta table lands in this log, with who ran it, when, and how.
 
-    From the history output, pick the **most recent version before the current one**—check its `timestamp` column and choose one from the last few days, not version 0.
+    > **What Just Happened?** Expand `operationParameters` on the `DELETE` row. The predicate is recorded verbatim: `CHTR_TYPE_CD = '250'`—the migration's own audit log stating what Check 2 made you discover the hard way. On a real migration, reading the target table's history is one of the first things worth doing.
+
+23. **Query the faithful copy at version 0**
+
+    Version 0 is the table as first loaded, before any of the writes that introduced defects.
 
     ```sql
     SELECT COUNT(*) AS rows_at_version
-    FROM training_nic.migrated.institutions VERSION AS OF <version>;
+    FROM training_nic.migrated.institutions VERSION AS OF 0;
     ```
     <!-- source: facts_extracted.md §8 -->
+
+    > **Expected Result:** **5,000**—the on-premises count. The 100-row gap from Check 1 did not happen in transit. It happened inside this table's own lifetime, at the `DELETE` you can see in the history.
 
     > **Note:** History retention is governed by `logRetentionDuration`, 30 days by default, but data files are retained for 7 days by default. In Databricks Runtime 18.0 and above, a time travel query is blocked if it requests a version older than the deleted-file retention period. Use time travel for recent comparisons, not as an archive.
     <!-- source: facts_extracted.md §8 -->
 
     > **What Just Happened?** If you see
     > `[DELTA_UNSUPPORTED_TIME_TRAVEL_BEYOND_DELETED_FILE_RETENTION_DURATION] Cannot time travel beyond delta.deletedFileRetentionDuration (168 HOURS) set on the table.`
-    > you chose a version older than 7 days. The table's history still *lists* that version, but the data files behind it have aged out, so Databricks blocks the query rather than return incomplete results. This is the retention limit from the note above showing up in practice—re-run with a more recent version number.
+    > the environment was built more than 7 days ago: the history still *lists* version 0, but the data files behind it have aged out, so Databricks blocks the query rather than return incomplete results. Ask your instructor to re-run the setup notebook—`SETUP.md` Part 3 carries the timing rule.
     <!-- source: facts_extracted.md §8 -->
 
 ### Task 7: Document Your Findings

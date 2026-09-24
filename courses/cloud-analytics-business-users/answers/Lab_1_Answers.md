@@ -38,4 +38,4 @@ Any two of: you are counting a different table than you think (wrong catalog or 
 
 **Which schema holds reference data?** `reference` — it carries `state_population`, the US Census lookup table used for joins in Lab 2.
 
-**How many versions does the institutions table have, and what does that suggest?** At least two — a table creation followed by a further write. That tells you the table was built by a scripted, multi-step process rather than a single manual load, and it demonstrates that Delta keeps a queryable version history. Lab 3 uses that history directly with time travel.
+**How many versions does the institutions table have, and what does that suggest?** Around nine — an initial `CREATE OR REPLACE TABLE AS SELECT`, a `DELETE`, several `UPDATE`s, and metadata commits for table and column comments. That tells you the table was built by a scripted, multi-step process rather than a single manual load, and that Delta records every one of those writes in a queryable history. Lab 3 reads this history directly: the operations you can see here are, in fact, the migration steps you will be validating.

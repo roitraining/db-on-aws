@@ -16,6 +16,8 @@ Attempt the lab before opening this file — the point of Lab 3 is the investiga
 
 Defects 4 and 5 are **comparison artifacts turned real**: they change representation, not meaning, but they make the naive row-level comparison explode until you normalize with `TRIM` and `NULLIF`. Defects 1–3 are genuine data problems: 1 blocks cutover (rows are gone), 2 and 3 need an engineering decision on whether the transformation was intended.
 
+The build stages these defects as **separate commits**, so `DESCRIBE HISTORY` on `migrated.institutions` is the migration's audit log: version 0 is the faithful 5,000-row copy (what Task 6 time-travels to), the `DELETE` commit carries defect 1's predicate in `operationParameters`, and the `UPDATE` commits are defects 5, 4, and 3 in order.
+
 ---
 
 ## Knowledge Check Answers
