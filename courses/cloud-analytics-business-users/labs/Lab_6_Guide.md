@@ -17,7 +17,7 @@ The last step is the one stakeholders actually see. You will build a dashboard o
 
 - [ ] Lab 5 completed—`institution_summary_published` exists and your partner can query it
 - [ ] A running serverless SQL warehouse
-- [ ] The same partner from Lab 5, to receive the shared dashboard
+- [ ] Lab 3 completed—`training_nic.analyst.validation_runs` holds at least two run attempts
 - [ ] Genie enabled on the workspace
 
 ---
@@ -26,8 +26,9 @@ The last step is the one stakeholders actually see. You will build a dashboard o
 
 - Build an AI/BI Dashboard with two charts over a published view
 - Add a filter that cross-filters both charts
+- Build a migration-health page over the Lab 3 validation runs, with a KPI counter
 - Publish with shared credentials and explain what that means for viewers
-- Share the dashboard and verify view-only access from the other side
+- Schedule an email delivery of the published dashboard
 - Ask Genie two business questions and verify the SQL behind one answer
 
 ---
@@ -72,29 +73,48 @@ The last step is the one stakeholders actually see. You will build a dashboard o
 
     > **Key Insight:** This is the moment the native NIC column names stop being an academic point. They were correct to preserve through raw and Bronze, but nobody outside this room knows what `CHTR_TYPE_CD` is. Presentation is where you translate.
 
+7. **Reuse your Lab 2 report as a second dataset**
+
+    Dashboards are where the queries you have been saving all course pay off. Open your saved query `lab2_state_summary` in another browser tab, copy its SQL (without the parameters), and on the **Data** tab choose **Create from SQL** again:
+
+    ```sql
+    SELECT i.STATE_ABBR_NM,
+           COUNT(*)          AS institution_count,
+           MAX(c.population) AS state_population
+    FROM training_nic.migrated.institutions AS i
+    JOIN training_nic.reference.state_population AS c
+      ON i.STATE_ABBR_NM = c.state_abbr
+    GROUP BY i.STATE_ABBR_NM;
+    ```
+
+8. **Chart it**
+
+    Back on the **Canvas**, add a third visualization widget on this dataset: a bar chart of `institution_count` by `STATE_ABBR_NM`, renamed into business language. The recurring report you rebuilt from SQL Server in Lab 2 is now a live dashboard tile instead of an emailed result set.
+
+
 ---
 
 ## Part 2: Make It Interactive
 
 ### Task 3: Add a Cross-Filter
 
-7. **Add a date-range filter**
+9. **Add a date-range filter**
 
     Pick the **filter widget** from the same canvas toolbar, place it above the charts, and set its field to `start_year` in the right-hand panel. Dashboards support global, page-level, and widget-level filters.
     <!-- source: facts_extracted.md §16 -->
 
-8. **Scope the filter to both charts**
+10. **Scope the filter to both charts**
 
     Configure the filter so it applies to both widgets rather than one.
     <!-- source: facts_extracted.md §16 -->
 
-9. **Test the interaction**
+11. **Test the interaction**
 
     Change the filter range and confirm both charts respond together.
 
     > **Expected Result:** Both charts update from a single filter change, with no editing and no SQL.
 
-10. **Try cross-filtering from a chart**
+12. **Try cross-filtering from a chart**
 
     Select a bar in the bar chart and observe the effect on the line chart.
     <!-- source: facts_extracted.md §16 -->
@@ -103,31 +123,70 @@ The last step is the one stakeholders actually see. You will build a dashboard o
 
 ---
 
-## Part 3: Publish and Share
+## Part 3: The Migration Health Page
 
-### Task 4: Publish with Shared Credentials
+### Task 4: Chart the Validation Runs
 
-11. **Publish the dashboard**
+13. **Add a page**
+
+    At the bottom of the canvas, click the **+** next to the page tab and rename the new page **Migration Health**. One dashboard, two audiences: page one answers business questions, this page answers "can we trust the migration yet?"
+
+14. **Add the validation datasets**
+
+    On the **Data** tab, **Create from SQL** twice. First, the run history—every validation attempt from your Lab 3 runbook:
+
+    ```sql
+    SELECT date_trunc('minute', run_ts) AS run_attempt,
+           SUM(CASE WHEN passed THEN 1 ELSE 0 END)     AS checks_passed,
+           SUM(CASE WHEN NOT passed THEN 1 ELSE 0 END) AS checks_failed
+    FROM training_nic.analyst.validation_runs
+    GROUP BY date_trunc('minute', run_ts);
+    ```
+
+    Second, the latest attempt's failure count—the same logic your Lab 5 alert watches:
+
+    ```sql
+    SELECT COUNT(*) AS failed_checks
+    FROM training_nic.analyst.validation_runs
+    WHERE NOT passed
+      AND run_ts >= (SELECT MAX(run_ts) FROM training_nic.analyst.validation_runs)
+                    - INTERVAL 5 MINUTES;
+    ```
+
+15. **Chart the run history**
+
+    On the **Migration Health** page, add a bar chart on the run-history dataset: `run_attempt` on the horizontal axis, with `checks_passed` and `checks_failed` as two measures. Every Lab 3 **Run all** shows up as one bar group.
+
+16. **Add the failure counter**
+
+    Add a **counter** widget on the latest-failures dataset showing `failed_checks`, titled **Failing checks (latest run)**.
+
+    > **Key Insight:** The alert and this page read the same `validation_runs` table—the alert interrupts you when it breaks, the dashboard shows stakeholders the history. One validation runbook now feeds monitoring and reporting, which is what "repeatable" buys you.
+
+---
+
+## Part 4: Publish, Schedule, and Share
+
+### Task 5: Publish with Shared Credentials
+
+17. **Publish the dashboard**
 
     Click **Publish** at the top right of the editor. In the publish dialog, keep credentials **embedded**—that is the shared-credentials option. Dashboards can be published with shared or individual data permissions.
     <!-- source: facts_extracted.md §16 -->
 
     > **Key Insight:** With shared credentials, viewers see the data through your access rather than their own, so everyone sees consistent figures. With individual permissions, each viewer sees only what their own grants allow—which can mean two people looking at the same dashboard and seeing different numbers. Choose deliberately.
 
-12. **Share with your partner**
+18. **Open the published version as a viewer**
 
-    Click **Share** at the top right, search for the partner from Lab 5, and grant **Can View** only.
-    <!-- source: facts_extracted.md §16 -->
+    Use the dropdown next to the dashboard title to switch from **Draft** to the **published** version. The filters still work; the editing controls are gone. This is what consumers see.
 
-13. **Have your partner open it**
+    > **Note:** Verifying view-only access from a genuinely different user needs a second person in the same workspace—everyone here runs an isolated account, so your instructor may demonstrate it in the shared class workspace.
 
-    > **Expected Result:** Your partner can view the dashboard and use the filter, but cannot edit it.
+19. **Schedule an email delivery**
 
-14. **Have your partner confirm they cannot edit**
+    On the published dashboard, click **Schedule**, then **Add schedule**. Pick a daily cadence, and on the **Subscribers** tab add yourself. Each scheduled run refreshes the dashboard and emails a snapshot to every subscriber—the live replacement for mailing a spreadsheet every Monday. In a shared workspace you would subscribe colleagues; the mechanics are identical.
 
-    Ask them to try. Confirming the limit is as important as confirming the access.
-
-15. **Note the reach of publishing**
+20. **Note the reach of publishing**
 
     A published dashboard can be shared with anyone registered to your Databricks account, even if they do not have access to the workspace.
     <!-- source: facts_extracted.md §16 -->
@@ -136,35 +195,35 @@ The last step is the one stakeholders actually see. You will build a dashboard o
 
 ---
 
-## Part 4: Ask Genie
+## Part 5: Ask Genie
 
-### Task 5: Two Questions and a Verification
+### Task 6: Two Questions and a Verification
 
-16. **Create a Genie space on the same data**
+21. **Create a Genie space on the same data**
 
     In the left sidebar, click **Genie**, then click the **New** button on the Genie page. Name the space `lab6_genie_<id>`, select your published view `training_nic.analyst.institution_summary_published` as its data, and choose the serverless SQL warehouse when prompted. The space opens with a chat box—this is where you ask your questions.
 
-17. **Ask your first business question**
+22. **Ask your first business question**
 
     Ask something a stakeholder would genuinely ask, in plain English—for example, which charter type has grown the most in the last twenty years.
     <!-- source: facts_extracted.md §16 -->
 
-18. **Read the generated SQL, not just the answer**
+23. **Read the generated SQL, not just the answer**
 
     Expand the SQL Genie produced. Check that it queries the columns you expect and applies the filter you meant.
 
-19. **Ask a second question that is harder to answer**
+24. **Ask a second question that is harder to answer**
 
     Ask something ambiguous or requiring a judgement—for example, which states are underserved relative to population.
 
-20. **Verify that answer against your own query**
+25. **Verify that answer against your own query**
 
     Write the SQL yourself and compare results.
     <!-- source: facts_extracted.md §16 -->
 
     > **What Just Happened?** If the two disagree, Genie is not broken and neither are you. It answered the question it understood, which may not be the question you asked. "Underserved" has no definition in the data—Genie had to invent one.
 
-21. **Record when you would and would not trust it**
+26. **Record when you would and would not trust it**
 
     Write two sentences: one describing a question you would let Genie answer unsupervised, and one describing a question you would always verify.
 
@@ -176,7 +235,7 @@ The last step is the one stakeholders actually see. You will build a dashboard o
 
 For attendees who finish early.
 
-1. Republish the dashboard using individual rather than shared permissions and have your partner open it again. Do they see the same numbers? Explain why.
+1. Republish the dashboard using individual rather than shared permissions and open the published version again. You still see data—explain why, and describe exactly what a viewer holding none of your grants would see on each page.
 2. Add a KPI tile showing total institutions, and make it respond to the same filter as the charts.
 3. Ask Genie a question you already know the answer to but phrase it ambiguously. Record what it assumed, and how you would rewrite the underlying dataset description so it assumes better next time.
 
@@ -190,10 +249,13 @@ For attendees who finish early.
 - [ ] I added a filter on `start_year`
 - [ ] The filter applies to both charts, not just one
 - [ ] I tested cross-filtering by selecting a value in one chart
+- [ ] I added a Migration Health page charting every validation attempt
+- [ ] The failing-checks counter shows the latest run's failures
+- [ ] I charted my Lab 2 report as a dashboard tile
 - [ ] I published the dashboard with shared credentials
 - [ ] I can explain what shared credentials mean for what a viewer sees
-- [ ] I shared it with my partner with view-only access
-- [ ] My partner opened it and confirmed they cannot edit
+- [ ] I scheduled an email delivery and subscribed myself
+- [ ] I opened the published version and confirmed the edit controls are gone
 - [ ] I asked Genie two business questions
 - [ ] I read the SQL Genie generated for at least one answer
 - [ ] I verified one Genie answer against my own query
@@ -209,8 +271,8 @@ For attendees who finish early.
 | Issue | Symptom | Solution |
 |---|---|---|
 | Dashboard shows no data | Empty charts | The dataset query returned nothing. Run it in the SQL editor first. |
-| Partner cannot open the dashboard | Access denied | Publishing and sharing are separate steps. Confirm you did both. |
-| Partner sees different numbers | Figures disagree between viewers | You published with individual rather than shared permissions, so each viewer sees only their own grants. |
+| A viewer cannot open the dashboard | Access denied | Publishing and sharing are separate steps. Confirm you did both. |
+| A viewer sees different numbers | Figures disagree between viewers | You published with individual rather than shared permissions, so each viewer sees only their own grants. |
 | Filter only affects one chart | One chart responds, the other does not | The filter is scoped to a single widget. Change its scope to both. |
 | Genie gives a confidently wrong answer | Plausible answer, wrong figures | Working as intended for this lab. Read the generated SQL—it answered a different question from the one you asked. |
 | Genie cannot find a column | Question returns nothing useful | The space may not be scoped to your view, or the column names are opaque. Native NIC names are hard for it too. |

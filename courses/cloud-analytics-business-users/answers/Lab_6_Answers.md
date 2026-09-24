@@ -38,9 +38,9 @@ Back it with a materialized view instead of a plain view, refreshed on a schedul
 
 ## Stretch Task Answers
 
-**1. Republish with individual permissions — does your partner see the same numbers?**
+**1. Republish with individual permissions — you still see data. Why?**
 
-In this class, yes — your partner holds `USE CATALOG`, `USE SCHEMA`, and `SELECT` on the published view from Lab 5, so their own grants reproduce your view of the data. The point generalizes differently: a viewer **without** those grants would see errors or empty charts. Individual permissions make the dashboard honest about each viewer's access; shared credentials make it consistent. Revoke the Lab 5 grants and reload to see the failure mode.
+You hold every grant on your own catalog, schema, and views, so your own permissions reproduce the shared-credential view exactly. The point generalizes the other way: a viewer holding none of your grants would see errors or empty tiles on both pages — individual permissions make the dashboard honest about each viewer's access, shared credentials make it consistent. In a shared workspace, revoking a viewer's `USE SCHEMA` and having them reload shows the failure mode live.
 
 **2. Add a KPI tile responding to the same filter.**
 
