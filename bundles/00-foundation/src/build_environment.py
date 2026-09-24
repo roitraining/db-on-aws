@@ -176,9 +176,14 @@ print("reference.state_population built")
 
 # COMMAND ----------
 
+# Drop first: CREATE OR REPLACE continues an existing table's version numbering, and
+# Lab 3 Task 6 depends on VERSION AS OF 0 being the faithful copy. A fresh table also
+# restarts the deleted-file retention clock, so time travel works for the next 7 days.
+spark.sql(f"DROP TABLE IF EXISTS {CATALOG}.migrated.institutions")
+
 # Version 0 — the faithful copy. Lab 3 Task 6 time-travels here: 5,000 rows, no defects.
 spark.sql(f"""
-CREATE OR REPLACE TABLE {CATALOG}.migrated.institutions AS
+CREATE TABLE {CATALOG}.migrated.institutions AS
 SELECT `#ID_RSSD`, NM_LGL, CITY, STATE_ABBR_NM, CHTR_TYPE_CD, D_DT_START
 FROM {CATALOG}.legacy_onprem.institutions
 """)
