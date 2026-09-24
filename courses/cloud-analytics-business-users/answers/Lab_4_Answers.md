@@ -51,12 +51,12 @@ The first run reads from the source table, executes the chain, and populates the
 ```sql
 CREATE OR REPLACE TABLE training_nic.analyst.institution_summary AS
 SELECT CHTR_TYPE_CD,
-       YEAR(CAST(D_DT_START AS DATE))  AS start_year,
+       date_trunc('month', CAST(D_DT_START AS DATE)) AS start_month,
        COUNT(*)                        AS institution_count,
        COUNT(DISTINCT CITY)            AS distinct_cities
 FROM training_nic.migrated.institutions
 WHERE STATE_ABBR_NM = 'CA'
-GROUP BY CHTR_TYPE_CD, YEAR(CAST(D_DT_START AS DATE));
+GROUP BY CHTR_TYPE_CD, date_trunc('month', CAST(D_DT_START AS DATE));
 ```
 
 Hand the **SQL version** to a colleague — one statement, no session state, runs anywhere. Maintain the **PySpark version** as a scheduled job — the chain is stepwise, each stage is testable, and intermediate results can be inspected when a run goes wrong. Either answer is defensible; the trade-off is hand-off simplicity versus maintainability.

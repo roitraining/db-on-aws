@@ -44,7 +44,7 @@ You hold every grant on your own catalog, schema, and views, so your own permiss
 
 **2. Add a KPI tile responding to the same filter.**
 
-Add a counter visualization widget on the same dataset, aggregating `SUM(institution_count)` (or a `COUNT`), and confirm the filter's scope includes it. Because it draws from the same dataset as the charts, the `start_year` filter drives all three widgets together.
+Add a counter visualization widget on the same dataset, aggregating `SUM(institution_count)` (or a `COUNT`), and confirm the filter's scope includes it. Because it draws from the same dataset as the charts, the `start_month` filter drives all three widgets together.
 
 **3. Ask Genie an ambiguous question you know the answer to.**
 

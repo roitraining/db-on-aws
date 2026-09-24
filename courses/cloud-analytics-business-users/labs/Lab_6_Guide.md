@@ -48,7 +48,7 @@ The last step is the one stakeholders actually see. You will build a dashboard o
     Open the **Data** tab, choose **Create from SQL**, and paste the query below so the dataset reads from the view you published in Lab 5. Run it to confirm it returns rows.
 
     ```sql
-    SELECT CHTR_TYPE_CD, start_year, institution_count, distinct_cities
+    SELECT CHTR_TYPE_CD, start_month, institution_count, distinct_cities
     FROM training_nic.analyst.institution_summary_published;
     ```
     <!-- source: facts_extracted.md §12 -->
@@ -65,7 +65,7 @@ The last step is the one stakeholders actually see. You will build a dashboard o
 
 5. **Add a line chart**
 
-    Add a second visualization widget the same way. Set the type to **Line**, with `start_year` on the horizontal axis and `institution_count` on the vertical.
+    Add a second visualization widget the same way. Set the type to **Line**, with `start_month` on the horizontal axis and `institution_count` on the vertical.
 
 6. **Give both charts titles a stakeholder would understand**
 
@@ -100,7 +100,7 @@ The last step is the one stakeholders actually see. You will build a dashboard o
 
 9. **Add a date-range filter**
 
-    Pick the **filter widget** from the same canvas toolbar, place it above the charts, and set its field to `start_year` in the right-hand panel. Dashboards support global, page-level, and widget-level filters.
+    Pick the **filter widget** from the same canvas toolbar, place it above the charts, and set its field to `start_month` in the right-hand panel. Dashboards support global, page-level, and widget-level filters.
     <!-- source: facts_extracted.md §16 -->
 
 10. **Scope the filter to both charts**
@@ -246,7 +246,7 @@ For attendees who finish early.
 - [ ] I created a dashboard connected to my published view
 - [ ] I built a bar chart and a line chart
 - [ ] I renamed both charts into business language
-- [ ] I added a filter on `start_year`
+- [ ] I added a filter on `start_month`
 - [ ] The filter applies to both charts, not just one
 - [ ] I tested cross-filtering by selecting a value in one chart
 - [ ] I added a Migration Health page charting every validation attempt

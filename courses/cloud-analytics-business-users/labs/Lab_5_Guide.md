@@ -31,6 +31,7 @@ You have a summary table. A colleague needs it. The old answer was to email a sp
 - Explain when a materialized view is worth its refresh cost
 - Create an alert that fires on a row-count threshold
 - Create a second alert that watches the latest validation run for failures
+- Schedule the validation runbook as a daily Lakeflow Job from the notebook's Schedule button
 
 ---
 
@@ -64,7 +65,7 @@ You have a summary table. A colleague needs it. The old answer was to email a sp
 
     ```sql
     CREATE OR REPLACE VIEW institution_summary_published AS
-    SELECT CHTR_TYPE_CD, start_year, institution_count, distinct_cities
+    SELECT CHTR_TYPE_CD, start_month, institution_count, distinct_cities
     FROM training_nic.analyst.institution_summary
     WHERE institution_count > 0;
     ```
@@ -74,7 +75,7 @@ You have a summary table. A colleague needs it. The old answer was to email a sp
 
     ```sql
     SELECT * FROM institution_summary_published
-    ORDER BY start_year DESC
+    ORDER BY start_month DESC
     LIMIT 20;
     ```
     <!-- source: facts_extracted.md §2 -->
@@ -162,7 +163,7 @@ You have a summary table. A colleague needs it. The old answer was to email a sp
 
     ```sql
     CREATE OR REPLACE MATERIALIZED VIEW institution_summary_mv AS
-    SELECT CHTR_TYPE_CD, start_year, institution_count, distinct_cities
+    SELECT CHTR_TYPE_CD, start_month, institution_count, distinct_cities
     FROM training_nic.analyst.institution_summary
     WHERE institution_count > 0;
     ```
@@ -171,7 +172,7 @@ You have a summary table. A colleague needs it. The old answer was to email a sp
 12. **Query it and compare response time against the plain view**
 
     ```sql
-    SELECT * FROM institution_summary_mv ORDER BY start_year DESC LIMIT 20;
+    SELECT * FROM institution_summary_mv ORDER BY start_month DESC LIMIT 20;
     ```
     <!-- source: facts_extracted.md §14 -->
 
@@ -230,15 +231,15 @@ You have a summary table. A colleague needs it. The old answer was to email a sp
 
 19. **Configure the condition**
 
-    Your summary table holds **276** rows—every attendee's does, because the training data is generated deterministically. In the **Condition** section, set exactly:
+    Your summary table holds **2,000** rows—every attendee's does, because the training data is generated deterministically. In the **Condition** section, set exactly:
 
     | Setting | Value |
     |---|---|
     | Trigger when | **First row** of `row_count` |
     | Operator | `<` (less than) |
-    | Threshold value | `250` |
+    | Threshold value | `1900` |
 
-    The aggregation dropdown (**Count**, **Sum**, **First row**, **Count distinct**, ...) exists because an alert query can return many rows. Yours returns exactly one, so **First row** is the value itself. Read back: *trigger the alert when the first row of `row_count` < 250*. That is safely under the real count, so the alert stays quiet until something actually removes rows.
+    The aggregation dropdown (**Count**, **Sum**, **First row**, **Count distinct**, ...) exists because an alert query can return many rows. Yours returns exactly one, so **First row** is the value itself. Read back: *trigger the alert when the first row of `row_count` < 1,900*. That is safely under the real count, so the alert stays quiet until something actually removes rows.
     <!-- source: facts_extracted.md §15 -->
 
 20. **Test the condition**
@@ -293,13 +294,29 @@ You have a summary table. A colleague needs it. The old answer was to email a sp
 
 ---
 
+### Task 6: Schedule the Validation—Lakeflow Jobs Without Writing One
+
+27. **Schedule the Lab 3 runbook**
+
+    A published dataset stays trustworthy only if the thing that checks it keeps running. Open your **Lab 3 - Migration Validation Runbook** notebook, click **Schedule** at the top right, then **Add schedule**: name it `daily_migration_validation`, pick a daily cadence, leave the compute serverless, and click **Create**.
+
+    > **What Just Happened?** That button created a **Lakeflow Job**—the same orchestration engineers build pipelines with, wrapped in one click. Every scheduled run executes the whole runbook: four checks, four new verdict rows in `validation_runs`.
+
+28. **Connect the chain**
+
+    Tomorrow, without you touching anything: the job runs, a new attempt lands in `validation_runs`, the migration-health page you will build in Lab 6 grows a bar, and this lab's validation alert re-evaluates. Runbook → schedule → table → alert → dashboard: a monitored, self-refreshing publication chain, and you built every link of it.
+
+    > **Note:** Leave the schedule running during the course—one run a day costs little. After the course, **pause** it from the same Schedule dialog.
+
+---
+
 ---
 
 ## Stretch Task
 
 For attendees who finish early.
 
-1. Raise the threshold above 276 so the alert fires, and observe the state change to `TRIGGERED`. What would a stakeholder have seen instead if you had no alert?
+1. Raise the threshold above 2,000 so the alert fires, and observe the state change to `TRIGGERED`. What would a stakeholder have seen instead if you had no alert?
 2. Revoke `USE SCHEMA` from `account users` while leaving `SELECT` in place. Re-run the three-level audit and state exactly which grant a reader now lacks and what error they would see.
 3. Write the `SHOW GRANTS` statements needed to audit all three levels—catalog, schema, and view—and describe how you would find a permission gap using only their output.
 
@@ -322,6 +339,7 @@ For attendees who finish early.
 - [ ] I added myself as a notification recipient and set a schedule
 - [ ] I recorded the alert's current status
 - [ ] I created `lab5_validation_failures_alert` and saw it go `TRIGGERED` on the broken migration
+- [ ] I scheduled the Lab 3 runbook as a daily Lakeflow Job
 
 ---
 
@@ -353,7 +371,7 @@ For attendees who finish early.
 | Materialized view refresh | Runs a serverless pipeline; cost scales with **data volume**, not warehouse size | Refresh on a schedule matched to how often the data actually changes, not as often as possible. |
 | Alert schedule | Runs its query on every interval | The lab uses a short interval to demonstrate. In production, match the interval to how quickly you need to know. |
 
-**Cleanup:** Keep the view—Lab 6 builds a dashboard on it. **Delete the materialized view and set the alert to a long interval or pause it**, so neither keeps consuming after class.
+**Cleanup:** Keep the view—Lab 6 builds a dashboard on it. **Delete the materialized view, set the alerts to a long interval or pause them, and pause the runbook schedule after the course**, so neither keeps consuming after class.
 
 ---
 

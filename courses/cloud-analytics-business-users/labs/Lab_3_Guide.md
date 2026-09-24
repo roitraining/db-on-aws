@@ -46,7 +46,8 @@ You are being asked to sign off that the migrated data matches the source. This 
     2. Rename it `Lab 3 - Migration Validation Runbook`.
     3. In the language selector next to the title, choose **SQL**.
     4. In the compute selector at the top right, attach the **serverless SQL warehouse**.
-    5. Click **Share** at the top right and give your instructor **Can View**—this is the shared notebook the class findings review draws from.
+
+    > **Note:** In a shared workspace you would also click **Share** and give your instructor **Can View**. Everyone here runs an isolated account, so the findings review happens over screen-share instead—and once GitLab is wired into the course, this runbook is the first thing you will push.
 
     Each numbered step below is a **new cell**, added in order.
 
@@ -448,7 +449,7 @@ Run these in order. Each answers a different question, and each has a blind spot
     ORDER BY 1;
     ```
 
-    > **Expected Result:** Two attempts, each running 4 checks with the same pass count. The migration is still broken—but now you can prove it, repeatably, and every attempt stays on the record. When engineering ships a fixed migration, this notebook is how you verify the fix.
+    > **Expected Result:** Two attempts, each running 4 checks with the same pass count: **1 of 4**. Check 4 passes—the name defects were formatting, and normalization proved the data itself matches. Checks 1–3 fail because the migration genuinely dropped rows, truncated cents, and shifted dates. The migration is still broken—but now you can prove it, repeatably, and every attempt stays on the record. When engineering ships a fixed migration, this notebook is how you verify the fix.
 
 ---
 

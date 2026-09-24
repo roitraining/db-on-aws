@@ -50,7 +50,7 @@ Every command this lab uses, mapped to the SQL you already know. Refer back here
 | `.select("a", "b")` | the `SELECT` list | Keeps only the named columns |
 | `.groupBy(...).agg(...)` | `GROUP BY` + aggregates | Groups rows and computes aggregates |
 | `.orderBy(...)` | `ORDER BY` | Sorts the result |
-| `F.trim`, `F.year`, `F.count`, `F.countDistinct` | `TRIM`, `YEAR`, `COUNT`, `COUNT(DISTINCT ...)` | Column functions—same names, Python syntax |
+| `F.trim`, `F.trunc`, `F.count`, `F.countDistinct` | `TRIM`, `DATE_TRUNC`, `COUNT`, `COUNT(DISTINCT ...)` | Column functions—same names, Python syntax |
 | `.explain()` | `EXPLAIN` | Prints the query plan without running it |
 | `.write.mode("overwrite").saveAsTable(...)` | `CREATE OR REPLACE TABLE ... AS SELECT` | Saves the DataFrame as a managed table |
 | `%sql` at the top of a cell | — | Switches that one notebook cell to SQL |
@@ -137,29 +137,29 @@ Official documentation, if you want the full detail behind any row:
 
 7. **Add a calculated column**
 
-    Derive a clean name and a name-length flag, so the padding you met in Lab 3 is handled once rather than in every downstream query.
+    Derive a clean name and the month each record starts in—the padding you met in Lab 3 gets handled once, and the approved report grain is business unit by month.
 
     ```python
     cleaned = (filtered
                .withColumn("NM_LGL_CLEAN", F.trim(F.col("NM_LGL")))
-               .withColumn("start_year", F.year(F.col("D_DT_START").cast("date"))))
+               .withColumn("start_month", F.trunc(F.col("D_DT_START").cast("date"), "month")))
     ```
     <!-- source: facts_extracted.md §12 -->
 
     Compare the raw and derived columns side by side:
 
     ```python
-    display(cleaned.select("NM_LGL", "NM_LGL_CLEAN", "D_DT_START", "start_year").limit(10))
+    display(cleaned.select("NM_LGL", "NM_LGL_CLEAN", "D_DT_START", "start_month").limit(10))
     ```
     <!-- source: facts_extracted.md §13 -->
 
-    > **Expected Result:** `NM_LGL_CLEAN` shows the same names without the trailing padding, and `start_year` holds just the year pulled out of `D_DT_START`.
+    > **Expected Result:** `NM_LGL_CLEAN` shows the same names without the trailing padding, and `start_month` holds the first day of the month `D_DT_START` falls in.
 
 8. **Select only what you need**
 
     ```python
     slim = cleaned.select("`#ID_RSSD`", "NM_LGL_CLEAN", "CITY",
-                          "STATE_ABBR_NM", "CHTR_TYPE_CD", "start_year")
+                          "STATE_ABBR_NM", "CHTR_TYPE_CD", "start_month")
     ```
     <!-- source: facts_extracted.md §12 -->
 
@@ -189,10 +189,10 @@ Official documentation, if you want the full detail behind any row:
 
     ```python
     summary = (slim
-               .groupBy("CHTR_TYPE_CD", "start_year")
+               .groupBy("CHTR_TYPE_CD", "start_month")
                .agg(F.count("*").alias("institution_count"),
                     F.countDistinct("CITY").alias("distinct_cities"))
-               .orderBy("start_year", "CHTR_TYPE_CD"))
+               .orderBy("start_month", "CHTR_TYPE_CD"))
     ```
     <!-- source: facts_extracted.md §13 -->
 
@@ -203,7 +203,7 @@ Official documentation, if you want the full detail behind any row:
     ```
     <!-- source: facts_extracted.md §13 -->
 
-    > **Expected Result:** One row per charter type per year, with a count and a distinct-city count.
+    > **Expected Result:** One row per charter type per month, with a count and a distinct-city count.
 
 ---
 
@@ -231,7 +231,7 @@ Official documentation, if you want the full detail behind any row:
     ```sql
     %sql
     SELECT * FROM training_nic.analyst.institution_summary
-    ORDER BY start_year DESC
+    ORDER BY start_month DESC
     LIMIT 20;
     ```
     <!-- source: facts_extracted.md §2 -->
@@ -242,7 +242,7 @@ Official documentation, if you want the full detail behind any row:
 
     Write down, for each of read, clean, aggregate and verify, whether you would reach for PySpark or SQL and why. There is no single right answer, but there is a defensible one.
 
-    > **Expected Result:** A table in your personal schema with one row per charter type per year, queryable by SQL, ready to publish in Lab 5.
+    > **Expected Result:** A table in your personal schema with one row per charter type per month, queryable by SQL, ready to publish in Lab 5.
 
 ### Task 5: See Your Table in the Catalog
 
@@ -381,7 +381,7 @@ For attendees who finish early.
 - [ ] I applied a filter and added two calculated columns
 - [ ] I selected a narrowed set of columns
 - [ ] I ran `explain()` and saw a plan rather than data
-- [ ] I produced an aggregation by charter type and year
+- [ ] I produced an aggregation by charter type and month
 - [ ] I wrote a managed Delta table into my own schema
 - [ ] I verified the table using SQL in the same notebook
 - [ ] I recorded a language choice and reason for each stage
