@@ -35,6 +35,33 @@ Everything so far has been reading someone else's data. This lab is the first th
 
 ---
 
+## PySpark Quick Reference
+
+Every command this lab uses, mapped to the SQL you already know. Refer back here whenever a step introduces something new.
+
+| Command | SQL equivalent | What it does |
+|---|---|---|
+| `spark.table("cat.schema.tbl")` | `FROM cat.schema.tbl` | Loads a table as a **DataFrame**—a query plan, not data |
+| `display(df)` | running the query | Databricks notebook function: executes the plan and renders the result as an interactive, sortable table. This is an **action** |
+| `F.col("name")` | a column reference | Names a column inside an expression |
+| `.filter(...)` | `WHERE` | Keeps rows matching a condition |
+| `.withColumn("new", expr)` | a computed column in `SELECT` | Adds or replaces one column |
+| `.select("a", "b")` | the `SELECT` list | Keeps only the named columns |
+| `.groupBy(...).agg(...)` | `GROUP BY` + aggregates | Groups rows and computes aggregates |
+| `.orderBy(...)` | `ORDER BY` | Sorts the result |
+| `F.trim`, `F.year`, `F.count`, `F.countDistinct` | `TRIM`, `YEAR`, `COUNT`, `COUNT(DISTINCT ...)` | Column functions—same names, Python syntax |
+| `.explain()` | `EXPLAIN` | Prints the query plan without running it |
+| `.write.mode("overwrite").saveAsTable(...)` | `CREATE OR REPLACE TABLE ... AS SELECT` | Saves the DataFrame as a managed table |
+| `%sql` at the top of a cell | — | Switches that one notebook cell to SQL |
+
+Official documentation, if you want the full detail behind any row:
+
+- PySpark basics on Databricks: https://docs.databricks.com/aws/en/pyspark/basics
+- PySpark SQL functions reference: https://spark.apache.org/docs/latest/api/python/reference/pyspark.sql/functions.html
+- The `display()` function and visualizations: https://docs.databricks.com/aws/en/visualizations/
+
+---
+
 ## Part 1: Read and Explore
 
 ### Task 1: Create a Notebook, Attach and Read
@@ -66,6 +93,8 @@ Everything so far has been reading someone else's data. This lab is the first th
     <!-- source: facts_extracted.md §13 -->
 
 4. **Trigger an action**
+
+    `display()` is a Databricks notebook function: it executes the plan and renders the result as an interactive table you can sort, filter, and turn into a chart. `.limit(20)` caps how many rows it asks for—the equivalent of `LIMIT 20`.
 
     ```python
     display(df.limit(20))
@@ -348,6 +377,9 @@ Lab 5 takes the table you just created and publishes it: a view over it, a grant
 
 ## Resources
 
+- PySpark basics on Databricks: https://docs.databricks.com/aws/en/pyspark/basics
+- PySpark SQL functions reference: https://spark.apache.org/docs/latest/api/python/reference/pyspark.sql/functions.html
+- Visualizations and `display()`: https://docs.databricks.com/aws/en/visualizations/
 - Serverless compute limitations: https://docs.databricks.com/aws/en/compute/serverless/limitations
 - Databricks on AWS documentation: https://docs.databricks.com/aws/en/
 - Technical terminology glossary: https://docs.databricks.com/aws/en/resources/glossary
