@@ -131,13 +131,32 @@ You have a summary table. A colleague needs it. The old answer was to email a sp
 
     > **Note:** In a shared workspace you would prove this from the other side—a colleague runs the query, watches it fail on `SELECT` alone, and succeed after the traversal grants. Everyone here runs an isolated account, so that cross-check is not possible; your instructor may demonstrate it in the shared class workspace.
 
+9. **Prove the runbook: run it top to bottom**
+
+    Click **Run all** at the top of the notebook. Every cell should succeed in order with no edits—including the grants, which are idempotent: granting a privilege a principal already holds is a no-op, not an error.
+
+    > **Key Insight:** This is what the notebook buys you over pasting statements into the SQL editor one at a time: the publish sequence is now an artifact. If the view is dropped, permissions drift, or a new colleague needs the same access, **Run all** rebuilds everything. And like the query in Lab 2, this notebook can be committed to a Git folder.
+
 ---
 
 ## Part 2: When a View Is Not Enough
 
-### Task 3: Consider a Materialized View
+### Task 3: Build and Compare a Materialized View
 
-9. **Create a materialized view over the same query**
+10. **Create a separate scratch notebook for the comparison**
+
+    This comparison does not belong in your publish runbook—the runbook is a durable artifact that rebuilds the view and its grants, while this is an experiment whose output you will delete at the end of the lab. Keeping experiments out of runbooks is what keeps runbooks trustworthy.
+
+    Create a second SQL notebook the same way as step 1, name it `Lab 5 - Compare Materialized View`, attach the same serverless SQL warehouse, and set the context in its first cell:
+
+    ```sql
+    USE CATALOG training_nic;
+    USE SCHEMA analyst;
+    ```
+
+> **Note:** A scratch notebook is not the only defensible surface for one-off work like this. A saved query in the SQL editor fits too—especially if the result is headed for a dashboard, since dashboard datasets are authored as queries (Lab 6 does exactly that). The working taxonomy: **repeatable process → notebook runbook; quick exploration → scratch notebook or editor query; dashboard feed → dataset query.** Choosing the surface on purpose is the skill.
+
+11. **Create a materialized view over the same query**
 
     ```sql
     CREATE OR REPLACE MATERIALIZED VIEW institution_summary_mv AS
@@ -147,14 +166,14 @@ You have a summary table. A colleague needs it. The old answer was to email a sp
     ```
     <!-- source: facts_extracted.md §14 -->
 
-10. **Query it and compare response time against the plain view**
+12. **Query it and compare response time against the plain view**
 
     ```sql
     SELECT * FROM institution_summary_mv ORDER BY start_year DESC LIMIT 20;
     ```
     <!-- source: facts_extracted.md §14 -->
 
-11. **Refresh it explicitly**
+13. **Refresh it explicitly**
 
     ```sql
     REFRESH MATERIALIZED VIEW institution_summary_mv;
@@ -164,7 +183,7 @@ You have a summary table. A colleague needs it. The old answer was to email a sp
     > **Note:** A materialized view is a Unity Catalog managed table that physically stores query results. Databricks automatically creates and runs a serverless pipeline to process the refresh, and the size of your warehouse does not limit that compute—cost scales with data volume, not warehouse size.
     <!-- source: facts_extracted.md §14 -->
 
-12. **Decide which one you would publish**
+14. **Decide which one you would publish**
 
     Write down which you would give a colleague and why.
 
@@ -174,24 +193,18 @@ You have a summary table. A colleague needs it. The old answer was to email a sp
     > **Common Pitfall:** Materialized views do not support time travel. If someone needs to query the published dataset as it looked last Tuesday, a materialized view cannot answer that.
     <!-- source: facts_extracted.md §14 -->
 
-13. **Prove the runbook: run it top to bottom**
-
-    Click **Run all** at the top of the notebook. Every cell should succeed in order with no edits—including the grants, which are idempotent: granting a privilege a principal already holds is a no-op, not an error.
-
-    > **Key Insight:** This is what the notebook buys you over pasting statements into the SQL editor one at a time: the publish sequence is now an artifact. If the view is dropped, permissions drift, or a new colleague needs the same access, **Run all** rebuilds everything. And like the query in Lab 2, this notebook can be committed to a Git folder.
-
 ---
 
 ## Part 3: Know Before Your Stakeholders Do
 
 ### Task 4: Create a Row-Count Alert
 
-14. **Open the alert editor**
+15. **Open the alert editor**
 
     Leave your notebook—alerts cannot live in it, because each alert owns its own query definition (next step). In the left sidebar, click **Alerts**, then select **Create Alert**.
     <!-- source: facts_extracted.md §15 -->
 
-15. **Author the query inside the alert**
+16. **Author the query inside the alert**
 
     You cannot point an alert at a query you saved earlier—each alert owns its own query definition, authored in the alert editor.
 
@@ -203,44 +216,44 @@ You have a summary table. A colleague needs it. The old answer was to email a sp
 
     > **Common Pitfall:** Attendees routinely try to reuse the saved query from Lab 2 or the view from Task 1. The alert editor will not let you. Write the query here.
 
-16. **Test the query**
+17. **Test the query**
 
     Click **Run all (1000)** and confirm a single row returns.
     <!-- source: facts_extracted.md §15 -->
 
-17. **Select a warehouse**
+18. **Select a warehouse**
 
     Use the compute selector to choose the serverless SQL warehouse that will run the alert on schedule.
     <!-- source: facts_extracted.md §15 -->
 
-18. **Configure the condition**
+19. **Configure the condition**
 
     In the **Condition** field, set the alert to trigger when the row count falls below a threshold you choose—pick a number just under the current count so you can see it work.
     <!-- source: facts_extracted.md §15 -->
 
-19. **Test the condition**
+20. **Test the condition**
 
     Click **Test condition** and confirm the preview behaves as you expect.
     <!-- source: facts_extracted.md §15 -->
 
-20. **Add yourself as a recipient**
+21. **Add yourself as a recipient**
 
     In the **Notifications** section, search for and select your username.
     <!-- source: facts_extracted.md §15 -->
 
-21. **Set the schedule**
+22. **Set the schedule**
 
     Click the calendar icon and set a frequency. For the lab, choose the shortest interval available so you can observe a run.
     <!-- source: facts_extracted.md §15 -->
 
     > **Note:** Checking **Show cron syntax** in the schedule dialog lets you edit the schedule directly using Quartz Cron syntax, which is what you would use for anything more specific than a fixed interval.
 
-22. **Save the alert**
+23. **Save the alert**
 
     Click **View alert** to save and review it.
     <!-- source: facts_extracted.md §15 -->
 
-23. **Confirm the status**
+24. **Confirm the status**
 
     An alert reports one of three states: `OK`, `TRIGGERED`, or `ERROR`. Note which one yours shows and why.
     <!-- source: facts_extracted.md §15 -->
@@ -267,10 +280,10 @@ For attendees who finish early.
 - [ ] I can explain why that failure is expected rather than a bug
 - [ ] I granted `USE CATALOG` and `USE SCHEMA`
 - [ ] I granted the traversal privileges and re-audited all three levels
-- [ ] I created a materialized view over the same query
+- [ ] I built the materialized view in a separate scratch notebook, not in the runbook
 - [ ] I refreshed the materialized view explicitly
 - [ ] I recorded which of the two I would publish, and why
-- [ ] I ran the whole notebook top to bottom and every cell succeeded
+- [ ] I ran the publish notebook top to bottom and every cell succeeded
 - [ ] I authored an alert query inside the alert editor
 - [ ] I configured a threshold condition and tested it
 - [ ] I added myself as a notification recipient and set a schedule
