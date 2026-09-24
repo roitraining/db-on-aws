@@ -10,9 +10,9 @@ Attempt the questions before opening this file.
 
 `SELECT` on the view, `USE CATALOG` on the catalog, `USE SCHEMA` on the schema. The one people forget is `USE SCHEMA` — `SELECT` alone produces an access-denied error that looks like a bug and is not.
 
-**2. Your partner has `SELECT` and still gets access denied. What do you check, and in what order?**
+**2. A colleague has `SELECT` and still gets access denied. What do you check, and in what order?**
 
-Walk the namespace top-down: `SHOW GRANTS ON CATALOG training_nic` (is `USE CATALOG` there?), then `SHOW GRANTS ON SCHEMA training_nic.analyst` (is `USE SCHEMA` there?), then `SHOW GRANTS ON VIEW …` (is `SELECT` really there, on the right principal spelling?). The gap is whichever level does not list the partner.
+Walk the namespace top-down: `SHOW GRANTS ON CATALOG training_nic` (is `USE CATALOG` there?), then `SHOW GRANTS ON SCHEMA training_nic.analyst` (is `USE SCHEMA` there?), then `SHOW GRANTS ON VIEW …` (is `SELECT` really there, on the right principal spelling?). The gap is whichever level does not list the principal.
 
 **3. When is a materialized view worth its refresh cost, and when is a plain view the better answer?**
 
@@ -45,10 +45,10 @@ Raise the threshold above the current row count and let the schedule run: status
 **2. Revoke `USE SCHEMA`, leave `SELECT`.**
 
 ```sql
-REVOKE USE SCHEMA ON SCHEMA training_nic.analyst FROM `<partner>`;
+REVOKE USE SCHEMA ON SCHEMA training_nic.analyst FROM `account users`;
 ```
 
-The partner's query fails with access denied again even though `SELECT` is intact — demonstrating that `SELECT` is necessary but not sufficient. The missing grant is `USE SCHEMA`, the traversal privilege that lets them walk through the namespace to reach the object.
+The three-level audit now shows `SELECT` at the view and `USE CATALOG` at the catalog, but nothing at the schema level — any reader would get access denied again even though `SELECT` is intact — demonstrating that `SELECT` is necessary but not sufficient. The missing grant is `USE SCHEMA`, the traversal privilege that lets them walk through the namespace to reach the object.
 
 **3. Audit all three levels with `SHOW GRANTS`.**
 

@@ -16,17 +16,17 @@ You have a summary table. A colleague needs it. The old answer was to email a sp
 ## Prerequisites
 
 - [ ] Lab 4 completed—`training_nic.analyst.institution_summary` exists
-- [ ] A running serverless SQL warehouse selected in the SQL editor
-- [ ] The attendee ID of a **partner** in the room, who will verify your grant
+- [ ] The serverless SQL warehouse available—this lab's notebook runs on it
 - [ ] Your own email address for the alert notification
 
 ---
 
 ## Objectives
 
+- Build the publish sequence as a re-runnable SQL notebook on a SQL warehouse
 - Create a view over a table you own
 - Grant the three privileges a colleague needs to read it
-- Verify access from the other side rather than assuming it works
+- Audit a complete access chain across catalog, schema, and view with `SHOW GRANTS`
 - Explain when a materialized view is worth its refresh cost
 - Create an alert that fires on a row-count threshold
 
@@ -36,13 +36,18 @@ You have a summary table. A colleague needs it. The old answer was to email a sp
 
 ### Task 1: Create the View
 
-1. **Open the SQL editor and set your session context**
+1. **Create a SQL notebook for this lab**
 
-    Yesterday's Lab 4 happened in a notebook. This lab is back in the **SQL editor**, where Labs 1–3 lived:
+    Lab 4's pipeline lived in a notebook so it could be re-run. Publishing deserves the same: the view and its grants are something you will want to recreate on demand—after an environment rebuild, a permissions drift, or for the next colleague—so this lab builds them as a saveable, re-runnable notebook rather than one-off statements in the SQL editor.
 
-    1. In the left sidebar, click **SQL Editor**.
-    2. In the compute selector at the top right, confirm the **serverless SQL warehouse** is selected. If it shows as stopped, running your first query starts it.
-    3. Set your working context to the schema you created in Lab 4:
+    1. In the left sidebar, click **Workspace**, open **Users → your.email**, click **Create** at the top right, and choose **Notebook**.
+    2. Rename it `Lab 5 - Publish` by clicking the title.
+    3. In the language selector next to the title, choose **SQL**.
+    4. In the compute selector at the top right, attach the **serverless SQL warehouse**—a notebook can run on a warehouse when every cell is SQL, and it is the same warehouse Labs 1–3 used.
+
+    Each numbered step below is a **new cell**. Add them in order, top to bottom—by the end of Part 2 the notebook is a runbook that rebuilds your published view and its permissions in one click.
+
+2. **Set your session context**
 
     ```sql
     USE CATALOG training_nic;
@@ -50,9 +55,8 @@ You have a summary table. A colleague needs it. The old answer was to email a sp
     ```
 
     > **Troubleshooting:** If `USE SCHEMA analyst` fails, the schema does not exist yet—it is created in Lab 4, Part 3 (the `CREATE SCHEMA` cell). Finish that step first; this whole lab builds on the `institution_summary` table that lives there.
-    <!-- source: facts_extracted.md §2 -->
 
-2. **Create a view over your Lab 4 table**
+3. **Create a view over your Lab 4 table**
 
     A view is a saved query. It stores no data and is always current.
 
@@ -64,7 +68,7 @@ You have a summary table. A colleague needs it. The old answer was to email a sp
     ```
     <!-- source: facts_extracted.md §12 -->
 
-3. **Query it to confirm**
+4. **Query it to confirm**
 
     ```sql
     SELECT * FROM institution_summary_published
@@ -75,56 +79,57 @@ You have a summary table. A colleague needs it. The old answer was to email a sp
 
     > **Key Insight:** The view gives colleagues a live window onto your logic. If you fix the underlying query, everyone sees the fix immediately—there is no copy to go stale, and no second version circulating by email.
 
-### Task 2: Grant Access—and Watch It Fail First
+### Task 2: Grant Access—and Audit Why SELECT Alone Fails
 
-4. **Grant SELECT on the view only**
+5. **Grant SELECT on the view**
 
-    Do this first, deliberately, even though it is not sufficient. Substitute your partner's identity.
+    You are the only person in this workspace, so the stand-in for a colleague is the built-in **`account users`** group—every user in the account. The grant mechanics are identical to granting one person.
 
     ```sql
-    GRANT SELECT ON VIEW institution_summary_published TO `<partner>`;
+    GRANT SELECT ON VIEW institution_summary_published TO `account users`;
     ```
     <!-- source: facts_extracted.md §3 -->
 
-5. **Ask your partner to query it**
+6. **Audit what that grant actually allows**
 
-    Have your partner run the query below. It will fail.
-
-    ```sql
-    SELECT * FROM training_nic.analyst.institution_summary_published LIMIT 5;
-    ```
-    <!-- source: facts_extracted.md §3 -->
-
-    > **What Just Happened?** Your partner has `SELECT` on the object and still cannot read it. This is the single most common Unity Catalog support ticket, and it looks like a bug. It is not.
-    <!-- source: facts_extracted.md §3 -->
-
-6. **Grant the traversal privileges**
-
-    Reading a table needs three privileges, not one: `SELECT` on the object, `USE CATALOG` on the catalog, and `USE SCHEMA` on the schema.
-
-    ```sql
-    GRANT USE CATALOG ON CATALOG training_nic TO `<partner>`;
-    GRANT USE SCHEMA  ON SCHEMA  training_nic.analyst TO `<partner>`;
-    ```
-    <!-- source: facts_extracted.md §3 -->
-
-7. **Have your partner retry**
-
-    > **Expected Result:** The same query now returns rows, with no change to the `SELECT` grant.
-
-8. **Inspect the grants**
+    Reading a table needs three privileges, not one: `SELECT` on the object, `USE CATALOG` on the catalog, and `USE SCHEMA` on the schema. Audit all three levels:
 
     ```sql
     SHOW GRANTS ON VIEW institution_summary_published;
     ```
+
+    ```sql
+    SHOW GRANTS ON SCHEMA training_nic.analyst;
+    ```
+
+    ```sql
+    SHOW GRANTS ON CATALOG training_nic;
+    ```
     <!-- source: facts_extracted.md §3 -->
 
-9. **Act as the partner for someone else**
+    > **Expected Result:** `account users` holds `SELECT` at the view level and appears **nowhere** at the schema or catalog level.
 
-    Swap roles and verify your partner's view from your own account. Confirming from the other side is the only way to know a grant actually worked.
+    > **What Just Happened?** A colleague holding that `SELECT` would still get access denied—the traversal privileges are missing. This is the single most common Unity Catalog support ticket, and it looks like a bug. It is not.
+    <!-- source: facts_extracted.md §3 -->
+
+7. **Grant the traversal privileges**
+
+    ```sql
+    GRANT USE CATALOG ON CATALOG training_nic TO `account users`;
+    GRANT USE SCHEMA  ON SCHEMA  training_nic.analyst TO `account users`;
+    ```
+    <!-- source: facts_extracted.md §3 -->
+
+8. **Re-audit all three levels**
+
+    Re-run the three `SHOW GRANTS` statements from step 6.
+
+    > **Expected Result:** `account users` now appears at every level—view, schema, and catalog. That is a complete access chain: a reader holding all three can query the view; a reader missing any one of them cannot.
 
     > **Key Insight:** `USE CATALOG` does not grant access to anything by itself. It is a traversal privilege—permission to walk through the namespace. That is why granting `SELECT` alone leaves a colleague stuck.
     <!-- source: facts_extracted.md §3 -->
+
+    > **Note:** In a shared workspace you would prove this from the other side—a colleague runs the query, watches it fail on `SELECT` alone, and succeed after the traversal grants. Everyone here runs an isolated account, so that cross-check is not possible; your instructor may demonstrate it in the shared class workspace.
 
 ---
 
@@ -132,7 +137,7 @@ You have a summary table. A colleague needs it. The old answer was to email a sp
 
 ### Task 3: Consider a Materialized View
 
-10. **Create a materialized view over the same query**
+9. **Create a materialized view over the same query**
 
     ```sql
     CREATE OR REPLACE MATERIALIZED VIEW institution_summary_mv AS
@@ -142,14 +147,14 @@ You have a summary table. A colleague needs it. The old answer was to email a sp
     ```
     <!-- source: facts_extracted.md §14 -->
 
-11. **Query it and compare response time against the plain view**
+10. **Query it and compare response time against the plain view**
 
     ```sql
     SELECT * FROM institution_summary_mv ORDER BY start_year DESC LIMIT 20;
     ```
     <!-- source: facts_extracted.md §14 -->
 
-12. **Refresh it explicitly**
+11. **Refresh it explicitly**
 
     ```sql
     REFRESH MATERIALIZED VIEW institution_summary_mv;
@@ -159,7 +164,7 @@ You have a summary table. A colleague needs it. The old answer was to email a sp
     > **Note:** A materialized view is a Unity Catalog managed table that physically stores query results. Databricks automatically creates and runs a serverless pipeline to process the refresh, and the size of your warehouse does not limit that compute—cost scales with data volume, not warehouse size.
     <!-- source: facts_extracted.md §14 -->
 
-13. **Decide which one you would publish**
+12. **Decide which one you would publish**
 
     Write down which you would give a colleague and why.
 
@@ -169,6 +174,12 @@ You have a summary table. A colleague needs it. The old answer was to email a sp
     > **Common Pitfall:** Materialized views do not support time travel. If someone needs to query the published dataset as it looked last Tuesday, a materialized view cannot answer that.
     <!-- source: facts_extracted.md §14 -->
 
+13. **Prove the runbook: run it top to bottom**
+
+    Click **Run all** at the top of the notebook. Every cell should succeed in order with no edits—including the grants, which are idempotent: granting a privilege a principal already holds is a no-op, not an error.
+
+    > **Key Insight:** This is what the notebook buys you over pasting statements into the SQL editor one at a time: the publish sequence is now an artifact. If the view is dropped, permissions drift, or a new colleague needs the same access, **Run all** rebuilds everything. And like the query in Lab 2, this notebook can be committed to a Git folder.
+
 ---
 
 ## Part 3: Know Before Your Stakeholders Do
@@ -177,7 +188,7 @@ You have a summary table. A colleague needs it. The old answer was to email a sp
 
 14. **Open the alert editor**
 
-    Click the **Alerts** icon in the sidebar and select **Create Alert**.
+    Leave your notebook—alerts cannot live in it, because each alert owns its own query definition (next step). In the left sidebar, click **Alerts**, then select **Create Alert**.
     <!-- source: facts_extracted.md §15 -->
 
 15. **Author the query inside the alert**
@@ -243,7 +254,7 @@ You have a summary table. A colleague needs it. The old answer was to email a sp
 For attendees who finish early.
 
 1. Set the threshold deliberately so the alert fires, and observe the state change to `TRIGGERED`. What would a stakeholder have seen instead if you had no alert?
-2. Revoke your partner's `USE SCHEMA` while leaving `SELECT` in place. Confirm the failure returns, then explain to them exactly which of the three grants is missing.
+2. Revoke `USE SCHEMA` from `account users` while leaving `SELECT` in place. Re-run the three-level audit and state exactly which grant a reader now lacks and what error they would see.
 3. Write the `SHOW GRANTS` statements needed to audit all three levels—catalog, schema, and view—and describe how you would find a permission gap using only their output.
 
 ---
@@ -252,15 +263,14 @@ For attendees who finish early.
 
 - [ ] I created a view over my Lab 4 summary table
 - [ ] I queried the view successfully myself
-- [ ] I granted `SELECT` alone and confirmed my partner still could not read it
+- [ ] I granted `SELECT` alone and audited why it is not sufficient
 - [ ] I can explain why that failure is expected rather than a bug
 - [ ] I granted `USE CATALOG` and `USE SCHEMA`
-- [ ] My partner successfully queried my view after the traversal grants
-- [ ] I verified a partner's view from my own account
-- [ ] I ran `SHOW GRANTS` and read the output
+- [ ] I granted the traversal privileges and re-audited all three levels
 - [ ] I created a materialized view over the same query
 - [ ] I refreshed the materialized view explicitly
 - [ ] I recorded which of the two I would publish, and why
+- [ ] I ran the whole notebook top to bottom and every cell succeeded
 - [ ] I authored an alert query inside the alert editor
 - [ ] I configured a threshold condition and tested it
 - [ ] I added myself as a notification recipient and set a schedule
@@ -277,7 +287,7 @@ For attendees who finish early.
 
 | Issue | Symptom | Solution |
 |---|---|---|
-| Partner cannot query the view | Access denied despite a `SELECT` grant | Missing `USE CATALOG` or `USE SCHEMA`. Run `SHOW GRANTS` at each level to find the gap. |
+| A reader cannot query the view | Access denied despite a `SELECT` grant | Missing `USE CATALOG` or `USE SCHEMA`. Run `SHOW GRANTS` at each level to find the gap. |
 | Grant statement fails | Error naming the principal | Check the exact identity spelling with your instructor; user and group names must match precisely. |
 | Materialized view creation is slow | Long-running statement | Expected. It creates and runs a serverless pipeline to populate results. |
 | Materialized view is stale | Figures do not match the base table | It stores results and updates on refresh. Run `REFRESH MATERIALIZED VIEW`, or use a plain view if you need live data. |
@@ -303,7 +313,7 @@ For attendees who finish early.
 ## Knowledge Check
 
 1. Name the three privileges required for a colleague to read your view, and state which one is most often forgotten.
-2. Your partner has `SELECT` and still gets access denied. What do you check, and in what order?
+2. A colleague has `SELECT` and still gets access denied. What do you check, and in what order?
 3. When is a materialized view worth its refresh cost, and when is a plain view the better answer?
 4. What can a plain view do that a materialized view cannot?
 5. Why can you not point an alert at a query you saved earlier?
