@@ -36,12 +36,20 @@ You have a summary table. A colleague needs it. The old answer was to email a sp
 
 ### Task 1: Create the View
 
-1. **Set your session context**
+1. **Open the SQL editor and set your session context**
+
+    Yesterday's Lab 4 happened in a notebook. This lab is back in the **SQL editor**, where Labs 1–3 lived:
+
+    1. In the left sidebar, click **SQL Editor**.
+    2. In the compute selector at the top right, confirm the **serverless SQL warehouse** is selected. If it shows as stopped, running your first query starts it.
+    3. Set your working context to the schema you created in Lab 4:
 
     ```sql
     USE CATALOG training_nic;
     USE SCHEMA analyst;
     ```
+
+    > **Troubleshooting:** If `USE SCHEMA analyst` fails, the schema does not exist yet—it is created in Lab 4, Part 3 (the `CREATE SCHEMA` cell). Finish that step first; this whole lab builds on the `institution_summary` table that lives there.
     <!-- source: facts_extracted.md §2 -->
 
 2. **Create a view over your Lab 4 table**
