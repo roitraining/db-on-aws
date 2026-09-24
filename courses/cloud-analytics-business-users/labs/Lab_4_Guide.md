@@ -212,7 +212,7 @@ Official documentation, if you want the full detail behind any row:
 
 12. **Create your personal schema, then write the summary as a managed Delta table**
 
-    Nothing so far has created your personal schema—tables need a schema to live in, so create it first.
+    Lab 3 already created your personal schema for the validation table; `IF NOT EXISTS` makes this cell safe to run either way.
 
     ```python
     spark.sql("CREATE SCHEMA IF NOT EXISTS training_nic.analyst")

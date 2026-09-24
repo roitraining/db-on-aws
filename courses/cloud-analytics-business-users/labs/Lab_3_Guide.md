@@ -9,7 +9,7 @@
 
 ## Overview
 
-You are being asked to sign off that the migrated data matches the source. This lab gives you a framework for answering that question properly rather than by spot-checking a few rows. Work through the four checks in order. The data does not agree, and part of the exercise is distinguishing a real defect from noise you created yourself.
+You are being asked to sign off that the migrated data matches the source. This lab gives you a framework for answering that question properly rather than by spot-checking a few rows. Work through the four checks in order. The data does not agree, and part of the exercise is distinguishing a real defect from noise you created yourself. By the end, the whole investigation is a **runbook**: a notebook that records every check's verdict in a table and re-runs against each migration attempt.
 
 ---
 
@@ -18,7 +18,6 @@ You are being asked to sign off that the migrated data matches the source. This 
 - [ ] Labs 1 and 2 completed
 - [ ] A running serverless SQL warehouse selected
 - [ ] Access to `training_nic.legacy_onprem` (verify: `SELECT COUNT(*) FROM training_nic.legacy_onprem.institutions` returns 5,000)
-- [ ] A findings notebook created: in the left sidebar click **Workspace**, open **Users → your.email** (your own user folder), click **Create** at the top right, and choose **Notebook**; rename it `lab3_findings_<id>`. No compute needed—you are writing notes, not running code, so use **%md** (Markdown) cells. Click **Share** at the top right and give your instructor **Can View**—this is the shared notebook the class findings review draws from.
 - [ ] Your `LENGTH()` observation from Lab 2, step 5
 
 ---
@@ -31,6 +30,7 @@ You are being asked to sign off that the migrated data matches the source. This 
 - Distinguish a genuine data defect from a comparison artifact
 - Query a Delta table as it existed at an earlier version
 - Document findings so an engineer can act on them
+- Record check verdicts in a `validation_runs` table and re-run the whole validation in one click
 
 ---
 
@@ -38,7 +38,36 @@ You are being asked to sign off that the migrated data matches the source. This 
 
 ### Task 1: Identify Both Sides
 
-1. **Confirm the cloud side**
+1. **Create the validation runbook notebook**
+
+    The approved deliverable for this lab is a shared notebook of findings. We go one better: the notebook **is** the validation. You will build the four checks as cells, and each check records its verdict in a table—so the validation can be re-run against every migration attempt, and Lab 6 charts those attempts on a dashboard.
+
+    1. In the left sidebar, click **Workspace**, open **Users → your.email**, click **Create** at the top right, and choose **Notebook**.
+    2. Rename it `Lab 3 - Migration Validation Runbook`.
+    3. In the language selector next to the title, choose **SQL**.
+    4. In the compute selector at the top right, attach the **serverless SQL warehouse**.
+    5. Click **Share** at the top right and give your instructor **Can View**—this is the shared notebook the class findings review draws from.
+
+    Each numbered step below is a **new cell**, added in order.
+
+2. **Create your schema and the validation results table**
+
+    Your personal schema holds everything you build in this course, and `validation_runs` is where every check records its verdict.
+
+    ```sql
+    CREATE SCHEMA IF NOT EXISTS training_nic.analyst;
+
+    CREATE TABLE IF NOT EXISTS training_nic.analyst.validation_runs (
+      run_ts       TIMESTAMP,
+      check_name   STRING,
+      cloud_value  DECIMAL(18,2),
+      source_value DECIMAL(18,2),
+      passed       BOOLEAN,
+      note         STRING);
+    ```
+    <!-- source: facts_extracted.md §10 -->
+
+3. **Confirm the cloud side**
 
     ```sql
     USE CATALOG training_nic;
@@ -47,14 +76,14 @@ You are being asked to sign off that the migrated data matches the source. This 
     ```
     <!-- source: facts_extracted.md §2 -->
 
-2. **Identify the source of truth**
+4. **Identify the source of truth**
 
     The on-premises source is **`training_nic.legacy_onprem`**—a snapshot schema holding the extract taken at cutover. Every query in this lab uses it.
 
     > **Note:** Some deliveries federate live over the on-premises SQL Server instead, via a foreign catalog (`CREATE FOREIGN CATALOG ... USING CONNECTION ...`—instructor-created, since it needs metastore privileges). In that variant, use `<foreign_catalog>.dbo` wherever this lab says `training_nic.legacy_onprem`. Everything else is identical.
     <!-- source: facts_extracted.md §9 -->
 
-3. **Count the source side**
+5. **Count the source side**
 
     ```sql
     SELECT COUNT(*) AS source_rows
@@ -66,7 +95,7 @@ You are being asked to sign off that the migrated data matches the source. This 
 
     > **Troubleshooting (federated variant only):** If a federated query fails immediately rather than returning rows, the cause is usually the connection rather than your SQL. Federated connections are always encrypted with SSL and the certificate hostname must match the endpoint requested, or the connection fails during the handshake.
 
-4. **Confirm the gap**
+6. **Confirm the gap**
 
     Source: **5,000**. Cloud: **4,900**. The four checks that follow find where the 100 rows went—and what else the migration broke.
 
@@ -78,7 +107,7 @@ Run these in order. Each answers a different question, and each has a blind spot
 
 ### Task 2: Check 1—Row Count Parity
 
-5. **Compare the totals**
+7. **Compare the totals**
 
     ```sql
     SELECT
@@ -87,16 +116,29 @@ Run these in order. Each answers a different question, and each has a blind spot
     ```
     <!-- source: facts_extracted.md §10 -->
 
-6. **Record the difference**
+8. **Record the difference**
 
-    Note the gap, if any, in your notebook.
+    Record the verdict as data, not as a note to yourself:
+
+    ```sql
+    INSERT INTO training_nic.analyst.validation_runs
+    SELECT current_timestamp(), 'check_1_row_count',
+           (SELECT COUNT(*) FROM training_nic.migrated.institutions),
+           (SELECT COUNT(*) FROM training_nic.legacy_onprem.institutions),
+           (SELECT COUNT(*) FROM training_nic.migrated.institutions) =
+           (SELECT COUNT(*) FROM training_nic.legacy_onprem.institutions),
+           'total row counts, cloud vs source';
+    ```
+    <!-- source: facts_extracted.md §10 -->
+
+    > **Expected Result:** One row added to `validation_runs` with `passed` = `false`—4,900 against 5,000.
 
     > **Key Insight:** Check 1 answers "did everything arrive?" and nothing else. It tells you nothing about whether the rows that *did* arrive are correct. A migration can pass this check and still be badly wrong.
     <!-- source: facts_extracted.md §10 -->
 
 ### Task 3: Check 2—Key Parity
 
-7. **Find keys present in the source but missing from the cloud**
+9. **Find keys present in the source but missing from the cloud**
 
     ```sql
     SELECT s.`#ID_RSSD`
@@ -108,7 +150,7 @@ Run these in order. Each answers a different question, and each has a blind spot
 
     > **Expected Result:** 100 keys—the missing rows from Check 1, now identified individually.
 
-8. **Now flip it—is there anything in the cloud that was never on-premises?**
+10. **Now flip it—is there anything in the cloud that was never on-premises?**
 
     ```sql
     SELECT c.`#ID_RSSD`
@@ -120,7 +162,7 @@ Run these in order. Each answers a different question, and each has a blind spot
 
     > **Expected Result:** Zero rows. The migration lost data; it did not invent any.
 
-9. **Look for a pattern in what is missing**
+11. **Look for a pattern in what is missing**
 
     A list of missing keys is a symptom. The useful finding is what they have in common. Join the missing keys back to the source and group by the categorical columns one at a time.
 
@@ -134,15 +176,41 @@ Run these in order. Each answers a different question, and each has a blind spot
     ```
     <!-- source: facts_extracted.md §10 -->
 
-10. **Read the pattern**
+12. **Read the pattern**
 
     > **Expected Result:** One row: charter type `250`, missing count **100**. Every single missing row shares one charter type.
 
     > **What Just Happened?** The missing rows cluster in one category rather than spreading evenly—that is not random loss, that is a filter in the migration job. A far more actionable finding than "100 rows are missing."
 
+13. **Record check 2**
+
+    Missing keys go in `cloud_value`, invented keys in `source_value`; the check passes only when both are zero.
+
+    ```sql
+    INSERT INTO training_nic.analyst.validation_runs
+    SELECT current_timestamp(), 'check_2_key_parity',
+           (SELECT COUNT(*) FROM training_nic.legacy_onprem.institutions s
+              LEFT ANTI JOIN training_nic.migrated.institutions c
+              ON s.`#ID_RSSD` = c.`#ID_RSSD`),
+           (SELECT COUNT(*) FROM training_nic.migrated.institutions c
+              LEFT ANTI JOIN training_nic.legacy_onprem.institutions s
+              ON c.`#ID_RSSD` = s.`#ID_RSSD`),
+           (SELECT COUNT(*) FROM training_nic.legacy_onprem.institutions s
+              LEFT ANTI JOIN training_nic.migrated.institutions c
+              ON s.`#ID_RSSD` = c.`#ID_RSSD`) = 0
+           AND
+           (SELECT COUNT(*) FROM training_nic.migrated.institutions c
+              LEFT ANTI JOIN training_nic.legacy_onprem.institutions s
+              ON c.`#ID_RSSD` = s.`#ID_RSSD`) = 0,
+           'cloud_value = keys missing from cloud; source_value = keys the cloud invented';
+    ```
+    <!-- source: facts_extracted.md §10 -->
+
+    > **Expected Result:** `cloud_value` = 100, `source_value` = 0, `passed` = `false`.
+
 ### Task 4: Check 3—Aggregate Parity
 
-11. **Compare sums on a numeric column**
+14. **Compare sums on a numeric column**
 
     Financial figures are not in the institution record. NIC's Attributes file holds identification, classification and structure only—no balance-sheet data. The amounts come from a separate reporting table keyed on the same `ID_RSSD`.
 
@@ -155,7 +223,7 @@ Run these in order. Each answers a different question, and each has a blind spot
 
     > **Note:** This is a normal shape for a migration. The dimension and the facts arrive as separate tables, and each has to be validated on its own. A clean institution table proves nothing about the amounts.
 
-12. **Compare the difference against the row-count gap**
+15. **Compare the difference against the row-count gap**
 
     If rows are missing, some difference is expected. Restrict the comparison to keys present on both sides so the two effects do not mask each other.
 
@@ -170,7 +238,7 @@ Run these in order. Each answers a different question, and each has a blind spot
     ```
     <!-- source: facts_extracted.md §12 -->
 
-13. **Compare null counts as a separate figure from empty strings**
+16. **Compare null counts as a separate figure from empty strings**
 
     These are not the same value, and a comparison that treats them as interchangeable will mislead you.
 
@@ -182,7 +250,7 @@ Run these in order. Each answers a different question, and each has a blind spot
     ```
     <!-- source: facts_extracted.md §10 -->
 
-14. **Run the same null and empty-string counts against the source**
+17. **Run the same null and empty-string counts against the source**
 
     ```sql
     SELECT
@@ -192,14 +260,30 @@ Run these in order. Each answers a different question, and each has a blind spot
     ```
     <!-- source: facts_extracted.md §10 -->
 
-15. **Record every figure**
+18. **Record every figure**
+
+    Record the sums restricted to shared keys—the pure value comparison, with the row-count effect removed:
+
+    ```sql
+    INSERT INTO training_nic.analyst.validation_runs
+    SELECT current_timestamp(), 'check_3_aggregate',
+           SUM(c.TOT_ASSETS), SUM(s.TOT_ASSETS),
+           SUM(c.TOT_ASSETS) = SUM(s.TOT_ASSETS),
+           'SUM(TOT_ASSETS) over keys present on both sides'
+    FROM training_nic.migrated.financials AS c
+    JOIN training_nic.legacy_onprem.financials AS s
+      ON c.`#ID_RSSD` = s.`#ID_RSSD`;
+    ```
+    <!-- source: facts_extracted.md §10 -->
+
+    > **Expected Result:** `passed` = `false`—the totals disagree by roughly $2,400 even over identical keys.
 
     > **Key Insight:** Check 3 catches errors that are invisible row by row. A value that is slightly wrong on every row looks fine in a spot check and only appears when you sum the column.
     <!-- source: facts_extracted.md §10 -->
 
 ### Task 5: Check 4—Row-Level Comparison
 
-16. **Run the naive comparison first**
+19. **Run the naive comparison first**
 
     Do this before normalizing anything. You are meant to see what it produces.
 
@@ -213,7 +297,7 @@ Run these in order. Each answers a different question, and each has a blind spot
     ```
     <!-- source: facts_extracted.md §10 -->
 
-17. **Count how many rows it reports**
+20. **Count how many rows it reports**
 
     ```sql
     SELECT COUNT(*) AS naive_mismatches
@@ -226,7 +310,7 @@ Run these in order. Each answers a different question, and each has a blind spot
 
     > **What Just Happened?** If that number is implausibly large, stop before reporting it. A result claiming almost every row is wrong is far more likely to be a problem with your comparison than with the migration. Look at the values returned in step 16 and compare them character by character. Your `LENGTH()` observation from Lab 2 is the clue.
 
-18. **Normalize both sides and rerun**
+21. **Normalize both sides and rerun**
 
     Apply `TRIM` to remove padding and `NULLIF` to collapse empty strings to null, on **both** sides of the comparison.
 
@@ -241,11 +325,33 @@ Run these in order. Each answers a different question, and each has a blind spot
 
     > **Note:** `IS DISTINCT FROM` treats two nulls as equal, which is what you want when comparing. Plain `<>` returns null when either side is null, so those rows silently drop out of your result.
 
-19. **Compare the two counts**
+22. **Compare the two counts**
 
     Record the naive figure and the normalized figure side by side. The gap between them is the noise you were about to report as a defect.
 
-20. **Compare a date column the same way**
+23. **Record check 4**
+
+    The normalized count is the real verdict; the naive count rides along in `source_value` as evidence of the noise you removed.
+
+    ```sql
+    INSERT INTO training_nic.analyst.validation_runs
+    SELECT current_timestamp(), 'check_4_row_level',
+           (SELECT COUNT(*) FROM training_nic.migrated.institutions c
+              JOIN training_nic.legacy_onprem.institutions s ON c.`#ID_RSSD` = s.`#ID_RSSD`
+              WHERE NULLIF(TRIM(c.NM_LGL), '') IS DISTINCT FROM NULLIF(TRIM(s.NM_LGL), '')),
+           (SELECT COUNT(*) FROM training_nic.migrated.institutions c
+              JOIN training_nic.legacy_onprem.institutions s ON c.`#ID_RSSD` = s.`#ID_RSSD`
+              WHERE c.NM_LGL <> s.NM_LGL),
+           (SELECT COUNT(*) FROM training_nic.migrated.institutions c
+              JOIN training_nic.legacy_onprem.institutions s ON c.`#ID_RSSD` = s.`#ID_RSSD`
+              WHERE NULLIF(TRIM(c.NM_LGL), '') IS DISTINCT FROM NULLIF(TRIM(s.NM_LGL), '')) = 0,
+           'cloud_value = normalized NM_LGL mismatches; source_value = naive count';
+    ```
+    <!-- source: facts_extracted.md §10 -->
+
+    > **Expected Result:** `cloud_value` = 0 for the name column, `source_value` in the thousands—the naive comparison was almost entirely noise.
+
+24. **Compare a date column the same way**
 
     The name column failed on formatting—padding and empty strings. Dates fail differently: there is nothing to trim, but the null-safe `IS DISTINCT FROM` comparison still applies. Run it against `D_DT_START` and look at the `day_difference` column.
 
@@ -260,7 +366,7 @@ Run these in order. Each answers a different question, and each has a blind spot
     ```
     <!-- source: facts_extracted.md §5 -->
 
-21. **Check whether any date difference is consistent**
+25. **Check whether any date difference is consistent**
 
     ```sql
     SELECT datediff(c.D_DT_START, s.D_DT_START) AS day_difference,
@@ -282,7 +388,7 @@ Run these in order. Each answers a different question, and each has a blind spot
 
 ### Task 6: Compare Against an Earlier Version
 
-22. **View the table's history**
+26. **View the table's history**
 
     ```sql
     DESCRIBE HISTORY training_nic.migrated.institutions;
@@ -293,7 +399,7 @@ Run these in order. Each answers a different question, and each has a blind spot
 
     > **What Just Happened?** Expand `operationParameters` on the `DELETE` row. The predicate is recorded verbatim: `CHTR_TYPE_CD = '250'`—the migration's own audit log stating what Check 2 made you discover the hard way. On a real migration, reading the target table's history is one of the first things worth doing.
 
-23. **Query the faithful copy at version 0**
+27. **Query the faithful copy at version 0**
 
     Version 0 is the table as first loaded, before any of the writes that introduced defects.
 
@@ -313,21 +419,36 @@ Run these in order. Each answers a different question, and each has a blind spot
     > the environment was built more than 7 days ago: the history still *lists* version 0, but the data files behind it have aged out, so Databricks blocks the query rather than return incomplete results. Ask your instructor to re-run the setup notebook—`SETUP.md` Part 3 carries the timing rule.
     <!-- source: facts_extracted.md §8 -->
 
-### Task 7: Document Your Findings
+### Task 7: Document and Re-Run
 
-24. **Record each finding in the shared notebook**
+28. **Read back the run history**
 
-    For every discrepancy, write four things: which check surfaced it, how many rows it affects, what the affected rows have in common, and what you believe caused it.
+    ```sql
+    SELECT run_ts, check_name, cloud_value, source_value, passed
+    FROM training_nic.analyst.validation_runs
+    ORDER BY run_ts, check_name;
+    ```
 
-25. **Separate findings from artifacts**
+    > **Expected Result:** Four verdict rows—one per check, all from this run. This table is the raw material for the migration-health page you will build on the Lab 6 dashboard, and the thing the Lab 5 validation alert will watch.
 
-    List separately anything that appeared to be a defect but resolved once you normalized. An engineer needs to know what you ruled out as well as what you found.
+29. **Document the findings as a Markdown cell**
 
-26. **State a recommendation**
+    Add a **%md** cell at the top of the notebook. For every failed check, write four things: which check surfaced it, how many rows it affects, what the affected rows have in common, and what you believe caused it. List separately anything that appeared to be a defect but resolved once you normalized—an engineer needs to know what you ruled out as well as what you found. Close with one sentence per finding saying whether it blocks cutover.
 
-    Write one sentence per finding saying whether it blocks cutover. Not every difference does.
+30. **Re-run the whole validation**
 
-    > **Expected Result:** A notebook containing your four check results, a numbered list of findings with row counts and suspected causes, a separate list of ruled-out artifacts, and a cutover recommendation.
+    A migration gets fixed and re-attempted, and your validation has to be one click—not an afternoon of pasting. Click **Run all**, then read the history grouped by attempt:
+
+    ```sql
+    SELECT date_trunc('minute', run_ts) AS run_attempt,
+           COUNT(*)                     AS checks_run,
+           SUM(CASE WHEN passed THEN 1 ELSE 0 END) AS checks_passed
+    FROM training_nic.analyst.validation_runs
+    GROUP BY 1
+    ORDER BY 1;
+    ```
+
+    > **Expected Result:** Two attempts, each running 4 checks with the same pass count. The migration is still broken—but now you can prove it, repeatably, and every attempt stays on the record. When engineering ships a fixed migration, this notebook is how you verify the fix.
 
 ---
 
@@ -354,9 +475,11 @@ For attendees who finish early.
 - [ ] I can explain the gap between the naive and normalized counts
 - [ ] I checked whether any date difference was consistent across rows
 - [ ] I viewed table history and queried an earlier version
-- [ ] My notebook separates confirmed findings from ruled-out artifacts
+- [ ] Each of the four checks recorded a verdict row in `validation_runs`
+- [ ] My runbook's Markdown cell separates confirmed findings from ruled-out artifacts
 - [ ] Each finding has a row count, a shared attribute, and a suspected cause
 - [ ] I stated whether each finding blocks cutover
+- [ ] I re-ran the whole notebook and saw a second attempt in the run history
 
 ---
 
@@ -370,7 +493,7 @@ For attendees who finish early.
 | Comparison returns nearly every row | Mismatch count close to total row count | Whitespace or null-versus-empty-string. Normalize both sides with `TRIM` and `NULLIF` before comparing. |
 | Rows silently missing from a comparison | Fewer rows than expected in the mismatch list | `<>` returns null when either side is null, dropping those rows. Use `IS DISTINCT FROM`. |
 | Federated query fails immediately | Error before any rows return | Connection rather than SQL. The connection is always SSL-encrypted and fails at handshake if the certificate hostname does not match the endpoint. |
-| Cannot see `training_nic` (or the foreign catalog, on the federated variant) | Absent from Catalog Explorer | Missing traversal grant—an instructor reruns the setup grants (setup notebook Part 7). |
+| Cannot see `training_nic` (or the foreign catalog, on the federated variant) | Absent from Catalog Explorer | Missing traversal grant—re-run the setup notebook (see `SETUP.md`). |
 | Time travel fails with a version error | Version-not-available error | The requested version is older than the retention window, or the table has only one version. Use a recent version from `DESCRIBE HISTORY`. |
 | Sums differ but row counts match | Totals disagree with no missing rows | Expected—this is what Check 3 exists to catch. Investigate the column type rather than the row set. |
 | Cast error mid-comparison | Statement fails on a value | Strict typing. Use `TRY_CAST` if null is the outcome you want for unparseable input. |
@@ -385,7 +508,7 @@ For attendees who finish early.
 | Federated queries | Each query reaches the source system over JDBC | The source is shared by the whole class. Avoid `SELECT *` without `LIMIT` against it. |
 | Row-level comparison | Most expensive of the four checks | Run it last, and only after the cheaper checks have narrowed the question. |
 
-**Cleanup:** No tables created. Keep your findings notebook—it is referenced in the Day 2 wrap-up.
+**Cleanup:** Keep everything. `validation_runs` and the runbook are consumed by Lab 5 (the validation alert) and Lab 6 (the migration-health dashboard page).
 
 ---
 
