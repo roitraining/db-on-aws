@@ -16,7 +16,7 @@ Your analysts ran a four-check comparison in Intro Lab 3. This lab builds the ma
 ## Prerequisites
 
 - [ ] Labs 7–8 completed
-- [ ] **A classic cluster attached**—file-level inspection needs it
+- [ ] Notebook compute attached—serverless is fine. Every inspection in this lab uses `DESCRIBE DETAIL` and `DESCRIBE HISTORY`, which need no classic cluster
 - [ ] `eng_<id>.work` schema from Lab 7
 - [ ] Intro Lab 3 completed—the four-check framework is assumed
 
@@ -256,7 +256,7 @@ Your analysts ran a four-check comparison in Intro Lab 3. This lab builds the ma
 
 | Resource | Driver | Control |
 |---|---|---|
-| Classic cluster | Billed while running | Auto-terminate at session end. |
+| Notebook compute | Billed while running | Serverless or classic both work here; detach when finished. |
 | `OPTIMIZE` | Rewrites data; cost scales with table size | Schedule it, do not run it after every write. |
 | Version accumulation | Each write retains prior files for the retention window | Understand `VACUUM` before using it — it is irreversible. |
 

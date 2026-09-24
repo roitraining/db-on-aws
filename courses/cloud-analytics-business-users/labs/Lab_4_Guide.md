@@ -243,6 +243,33 @@ Official documentation, if you want the full detail behind any row:
 
     > **What Just Happened?** A filter is narrow—each partition can be processed independently, so there is no shuffle. An aggregation is wide—rows with the same key must end up together, which means moving data. When a query is slow, this distinction is the first thing to check.
 
+### No classic cluster? The serverless alternative
+
+If your workspace cannot create classic compute (Databricks Free Edition is serverless-only), the Spark UI is not available—but the same lesson is visible in the **query profile**:
+<!-- source: facts_extracted.md §13 -->
+
+- **Run the aggregation as SQL.** Open the **SQL Editor**, select the serverless SQL warehouse, and run the aggregation as SQL:
+
+    ```sql
+    SELECT CHTR_TYPE_CD, YEAR(CAST(D_DT_START AS DATE)) AS start_year,
+           COUNT(*) AS institution_count
+    FROM training_nic.migrated.institutions
+    WHERE STATE_ABBR_NM = 'CA'
+    GROUP BY CHTR_TYPE_CD, YEAR(CAST(D_DT_START AS DATE));
+    ```
+
+- **Open the query profile.** In the left sidebar, click **Query History**. Your query is at the top of the list—click it, then click **See query profile**.
+- **Find the shuffle.** Read the operator graph: the **Exchange** node sitting between the scan and the aggregate *is* the shuffle. Its rows and bytes are the same figures the Spark UI reports as shuffle write and read.
+- **Compare against a narrow query.** Now run the query again without the `GROUP BY` (keep the `WHERE`, select plain columns with a `LIMIT`) and open its profile: **no Exchange node**. A narrow query moves no data between machines.
+
+| Spark UI (steps 12–15) | Query profile equivalent |
+|---|---|
+| Stages tab; a stage boundary | Operator graph; the **Exchange** node |
+| Shuffle write / shuffle read | Bytes and rows on the Exchange |
+| Filter-only query adds no stage | Filter-only profile has no Exchange |
+
+> **Note:** The trade: the query profile teaches narrow-versus-wide just as well, but task counts, partition counts, and straggler diagnosis are Spark UI-only—which is why the Advanced course's performance lab requires a classic cluster.
+
 ---
 
 ## Part 4: Write It Back
@@ -380,6 +407,7 @@ Lab 5 takes the table you just created and publishes it: a view over it, a grant
 - PySpark basics on Databricks: https://docs.databricks.com/aws/en/pyspark/basics
 - PySpark SQL functions reference: https://spark.apache.org/docs/latest/api/python/reference/pyspark.sql/functions.html
 - Visualizations and `display()`: https://docs.databricks.com/aws/en/visualizations/
+- Query profile: https://docs.databricks.com/aws/en/sql/user/queries/query-profile
 - Serverless compute limitations: https://docs.databricks.com/aws/en/compute/serverless/limitations
 - Databricks on AWS documentation: https://docs.databricks.com/aws/en/
 - Technical terminology glossary: https://docs.databricks.com/aws/en/resources/glossary

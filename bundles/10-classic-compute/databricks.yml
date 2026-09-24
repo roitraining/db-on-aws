@@ -1,13 +1,24 @@
-# Classic compute — the cluster Labs 4, 8 and 9 need.
+# Classic compute — the cluster Labs 4 and 8 need for the Spark UI.
 #
 # Separate from the foundation on purpose: this is the expensive resource, and it is the one
 # you want to deploy the morning of a class and destroy the moment it ends.
 #
-#   databricks bundle deploy -t dev
-#   databricks bundle destroy -t dev
+#   databricks bundle deploy -t dev    # solo testing: single node, single user
+#   databricks bundle deploy -t prod   # shared class: multi-node, multi-user (standard access)
+#   databricks bundle destroy -t <target>
+#
+# Requires Databricks CLI v1.0+ (the 0.x line fails with "openpgp: key expired" and does not
+# know cluster resources — see SETUP.md Part 3 Path B).
 #
 # Why classic and not serverless: the Spark UI is not available on serverless compute, and
-# Labs 4, 8 and 9 read it directly. That is a platform constraint, not a preference.
+# Labs 4 and 8 read it directly. That is a platform constraint, not a preference.
+# NOTE: Free Edition cannot create classic compute at all ("no associated worker
+# environments") — deploy this to a standard (paid/trial) workspace.
+#
+# Delivery model (2026-09): attendees run most labs in their own accounts, then log into the
+# instructor's workspace and SHARE this one cluster for the Spark UI portions. That is why
+# prod uses standard access mode (USER_ISOLATION) — SINGLE_USER would block everyone but the
+# deployer from attaching.
 #
 # A cold start takes about six minutes. Start it before the break preceding Lab 4.
 
@@ -32,27 +43,38 @@ resources:
       cluster_name: "[${bundle.target}] db-on-aws · lab cluster"
       spark_version: ${var.spark_version}
       node_type_id: ${var.node_type}
-      # Single node: no workers, Spark runs locally on the driver. Enough for the data
-      # volumes these labs use, and the Spark UI behaves identically.
       num_workers: 0
-      spark_conf:
-        spark.databricks.cluster.profile: singleNode
-        spark.master: "local[*]"
       custom_tags:
-        ResourceClass: SingleNode
         course: db-on-aws
       autotermination_minutes: ${var.autotermination_minutes}
       data_security_mode: SINGLE_USER
 
 targets:
+  # Solo testing: single node, single user. The single-node spark_conf lives here rather
+  # than in the base resource because target overrides MERGE maps — prod could not remove
+  # these keys, and a multi-worker cluster with the singleNode profile is invalid.
   dev:
     default: true
     mode: development
+    resources:
+      clusters:
+        lab_cluster:
+          spark_conf:
+            spark.databricks.cluster.profile: singleNode
+            spark.master: "local[*]"
+          custom_tags:
+            ResourceClass: SingleNode
 
-  # A shared class wants a longer idle timeout and room to actually distribute work,
-  # so attendees see more than one task in Summary Metrics.
+  # The shared-class cluster: every attendee attaches to this one cluster with their own
+  # login, so it needs standard access mode (USER_ISOLATION), real workers so Summary
+  # Metrics show parallelism, and a longer idle timeout.
   prod:
     mode: production
     variables:
       autotermination_minutes: 60
       node_type: m5d.xlarge
+    resources:
+      clusters:
+        lab_cluster:
+          num_workers: 2
+          data_security_mode: USER_ISOLATION
