@@ -130,7 +130,7 @@ You already write SQL. This lab is not SQL instruction—it is a translation exe
     ```
     <!-- source: facts_extracted.md §5 -->
 
-    > **Key Insight:** SQL Server would silently coerce or truncate. Databricks refuses. During a migration this is a feature, not an obstacle—silent coercion is exactly how bad data reaches a report unnoticed.
+    > **Key Insight:** Databricks SQL runs in ANSI mode: an invalid cast raises a runtime error, where SQL Server's implicit conversion rules would convert or truncate the value and keep going. `CAST` fails loudly on bad data; `TRY_CAST` returns `NULL` for values that do not convert. During migration validation, prefer `CAST` — the error tells you which rows carry values that no longer convert cleanly, instead of letting them pass through as wrong numbers.
 
 ---
 
