@@ -323,7 +323,54 @@ if failures:
 print("Foundation ready. Labs 1-7, 9 can run against this.")
 print()
 print("Next, as needed:")
-print("  bundles/10-classic-compute  cluster for Labs 4, 8, 9 (Spark UI)")
+print("  (classic cluster for Labs 4, 8, 9 is created below in Part 6 — or via bundles/10-classic-compute)")
 print("  bundles/20-perf-data        2M-row tables for Lab 8")
 print("  bundles/30-landing-data     Auto Loader source files for Lab 10")
 print("  bundles/40-attendees        per-attendee schemas and grants")
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Part 6 · Classic cluster for Labs 4, 8 and 9 — created, NOT started
+# MAGIC
+# MAGIC Mirrors `bundles/10-classic-compute/databricks.yml` so browser-only (Path A) setup
+# MAGIC produces the cluster too — no CLI needed. The cluster is created and immediately
+# MAGIC terminated, so it sits in **Compute** as a Terminated definition costing nothing.
+# MAGIC The first attendee attach (or instructor start) cold-starts it in ~6 minutes.
+# MAGIC
+# MAGIC If a cluster named `db-on-aws · lab cluster` already exists (from a bundle deploy or
+# MAGIC an earlier run), this cell leaves it alone.
+
+# COMMAND ----------
+
+from databricks.sdk import WorkspaceClient
+
+w = WorkspaceClient()
+CLUSTER_NAME = "db-on-aws · lab cluster"
+
+existing = [c for c in w.clusters.list() if CLUSTER_NAME in (c.cluster_name or "")]
+if existing:
+    print(f"Classic cluster already exists: '{existing[0].cluster_name}' "
+          f"(state: {existing[0].state}) — leaving it alone.")
+else:
+    # Spec mirrors bundles/10-classic-compute/databricks.yml — keep the two in sync.
+    body = {
+        "cluster_name": CLUSTER_NAME,
+        "spark_version": "16.4.x-scala2.12",
+        "node_type_id": "m5d.large",   # plain m5.large is rejected (needs an EBS volume)
+        "num_workers": 0,
+        "spark_conf": {
+            "spark.databricks.cluster.profile": "singleNode",
+            "spark.master": "local[*]",
+        },
+        "custom_tags": {"ResourceClass": "SingleNode", "course": "db-on-aws"},
+        "autotermination_minutes": 30,
+        "data_security_mode": "SINGLE_USER",
+        "single_user_name": w.current_user.me().user_name,
+    }
+    created = w.api_client.do("POST", "/api/2.1/clusters/create", body=body)
+    cid = created["cluster_id"]
+    # create also starts the cluster — terminate right away so it costs nothing until class.
+    w.api_client.do("POST", "/api/2.1/clusters/delete", body={"cluster_id": cid})
+    print(f"Classic cluster created and left terminated: '{CLUSTER_NAME}' ({cid})")
+    print("It will appear under Compute as Terminated; starting it takes ~6 minutes.")

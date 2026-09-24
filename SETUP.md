@@ -136,8 +136,11 @@ Best when you are setting up from a browser, or on a locked-down machine.
     | `bundles/20-perf-data/src/build_perf_tables.py` | 2M-row skewed tables | Lab 8 |
     | `bundles/40-attendees/src/grant_attendee_access.py` | Attendee grants | Labs 4–7 |
 
-6. Create the classic cluster for Labs 4, 8 and 9 by hand — **Compute → Create compute**,
-   single node, `m5d.large`, Databricks Runtime 16.4 LTS.
+6. The notebook's **Part 6 creates the classic cluster** for Labs 4, 8 and 9 automatically
+   and leaves it **Terminated**, so it costs nothing until class. Confirm `db-on-aws · lab
+   cluster` appears under **Compute**; start it at the break before Lab 4 (cold start ~6
+   minutes). If it is missing — some workspaces restrict cluster creation — create it by
+   hand: **Compute → Create compute**, single node, `m5d.large`, Databricks Runtime 16.4 LTS.
 
     > **Common Pitfall:** Plain `m5.large` is rejected with *"At least one EBS volume must be
     > attached"*. Use `m5d.large`, which carries instance storage.
