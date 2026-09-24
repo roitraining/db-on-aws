@@ -348,7 +348,7 @@ Official documentation, if you want the full detail behind any row:
 25. **Compare against a query that does not shuffle**
 
     ```python
-    display(slim.filter(F.col("start_year") > 2000).limit(50))
+    display(slim.filter(F.col("start_month") >= "2000-01-01").limit(50))
     ```
     <!-- source: facts_extracted.md §13 -->
 
