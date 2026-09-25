@@ -46,7 +46,7 @@ You have queried this data in SQL Server for years. It now lives in Databricks. 
 
 2. **Open the SQL editor**
 
-    In the left navigation, select **SQL Editor**. This is the closest equivalent to a query window in SSMS.
+    In the left navigation, select **SQL Editor**.
 
 3. **Select a SQL warehouse**
 
