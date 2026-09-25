@@ -239,15 +239,15 @@ You have a summary table. A colleague needs it. The old answer was to email a sp
 
 19. **Configure the condition**
 
-    Your summary table holds **2,000** rows—every attendee's does, because the training data is generated deterministically. In the **Condition** section, set exactly:
+    Your summary table holds **1,309** rows—every attendee's does, because the training data is generated deterministically. In the **Condition** section, set exactly:
 
     | Setting | Value |
     |---|---|
     | Trigger when | **First row** of `row_count` |
     | Operator | `<` (less than) |
-    | Threshold value | `1900` |
+    | Threshold value | `1200` |
 
-    The aggregation dropdown (**Count**, **Sum**, **First row**, **Count distinct**, ...) exists because an alert query can return many rows. Yours returns exactly one, so **First row** is the value itself. Read back: *trigger the alert when the first row of `row_count` < 1,900*. That is safely under the real count, so the alert stays quiet until something actually removes rows.
+    The aggregation dropdown (**Count**, **Sum**, **First row**, **Count distinct**, ...) exists because an alert query can return many rows. Yours returns exactly one, so **First row** is the value itself. Read back: *trigger the alert when the first row of `row_count` < 1,200*. That is safely under the real count, so the alert stays quiet until something actually removes rows.
     <!-- source: facts_extracted.md §15 -->
 
 20. **Test the condition**
@@ -324,7 +324,7 @@ You have a summary table. A colleague needs it. The old answer was to email a sp
 
 For attendees who finish early.
 
-1. Raise the threshold above 2,000 so the alert fires, and observe the state change to `TRIGGERED`. What would a stakeholder have seen instead if you had no alert?
+1. Raise the threshold above 1,309 so the alert fires, and observe the state change to `TRIGGERED`. What would a stakeholder have seen instead if you had no alert?
 2. Revoke `USE SCHEMA` from `account users` while leaving `SELECT` in place. Re-run the three-level audit and state exactly which grant a reader now lacks and what error they would see.
 3. Write the `SHOW GRANTS` statements needed to audit all three levels—catalog, schema, and view—and describe how you would find a permission gap using only their output.
 

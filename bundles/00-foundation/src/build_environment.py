@@ -117,8 +117,11 @@ SELECT
   CASE WHEN id % 23 = 0 THEN '' ELSE CONCAT('CITY_', CAST(id % 400 AS STRING)) END AS CITY,
   element_at(array('CA','CA','CA','CA','TX','NY','FL','IL','OH','WA'),
              CAST(id % 10 AS INT) + 1) AS STATE_ABBR_NM,
+  -- weighted charter mix (~44/33/11/11) so per-charter charts have a real shape;
+  -- modulus 9 is coprime with the %10 state cycle, keeping charter and state independent
   CASE WHEN id % 50 = 7 THEN '250'
-       ELSE element_at(array('200','300','400','500'), CAST(id % 4 AS INT) + 1) END AS CHTR_TYPE_CD,
+       ELSE element_at(array('200','200','200','200','300','300','300','400','500'),
+                       CAST(id % 9 AS INT) + 1) END AS CHTR_TYPE_CD,
   DATE_ADD(DATE'1950-01-01', CAST(id * 5 AS INT)) AS D_DT_START
 FROM range(1, {ROWS + 1}) AS t(id)
 """)
@@ -314,8 +317,8 @@ summary_rows = spark.sql(f"""
       WHERE STATE_ABBR_NM = 'CA'
       GROUP BY 1, 2)
 """).collect()[0]["n"]
-check("Lab 5 — institution_summary holds 2,000 rows (alert threshold 1,900)",
-      summary_rows == 2000, f"{summary_rows} rows")
+check("Lab 5 — institution_summary holds 1,309 rows (alert threshold 1,200)",
+      summary_rows == 1309, f"{summary_rows} rows")
 
 print("\n=== Lab 2 date range ===")
 in_range = spark.sql(f"""
