@@ -328,7 +328,7 @@ For attendees who finish early.
 5. A colleague who does not write SQL needs to run your query for any date range. What did you add, and what does it not protect them from?
 6. Why is committing a query to a Git folder better than emailing the `.sql` file?
 
-Answers — including worked stretch task answers — are in [`answers/Lab_2_Answers.md`](../answers/Lab_2_Answers.md). Attempt the questions before opening it.
+Answers — including worked stretch task answers — are in [`answers/Lab_2_Answers.md`](../answers/Lab_2_Answers.md). Attempt the questions before opening it. Runnable completed files for this lab live in [`completed/Lab_2/`](../completed/Lab_2/).
 
 ---
 

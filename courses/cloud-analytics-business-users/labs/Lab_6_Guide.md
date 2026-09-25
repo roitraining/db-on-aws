@@ -305,7 +305,7 @@ For attendees who finish early.
 6. Give one question you would let Genie answer unsupervised and one you would always verify. What distinguishes them?
 7. Your dashboard is read hundreds of times a day over a large table. What would you change about how the data is published?
 
-Answers — including worked stretch task answers — are in [`answers/Lab_6_Answers.md`](../answers/Lab_6_Answers.md). Attempt the questions before opening it.
+Answers — including worked stretch task answers — are in [`answers/Lab_6_Answers.md`](../answers/Lab_6_Answers.md). Attempt the questions before opening it. Runnable completed files for this lab live in [`completed/Lab_6/`](../completed/Lab_6/).
 
 ---
 

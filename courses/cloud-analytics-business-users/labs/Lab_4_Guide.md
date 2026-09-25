@@ -450,7 +450,7 @@ For attendees who finish early.
 6. For read, clean, aggregate and verify—which would you do in PySpark and which in SQL, and why?
 7. When is caching a mistake?
 
-Answers — including worked stretch task answers — are in [`answers/Lab_4_Answers.md`](../answers/Lab_4_Answers.md). Attempt the questions before opening it.
+Answers — including worked stretch task answers — are in [`answers/Lab_4_Answers.md`](../answers/Lab_4_Answers.md). Attempt the questions before opening it. Runnable completed files for this lab live in [`completed/Lab_4/`](../completed/Lab_4/).
 
 ---
 

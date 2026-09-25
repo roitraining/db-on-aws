@@ -393,7 +393,7 @@ For attendees who finish early.
 6. What three statuses can an alert report, and what does each mean?
 7. Publishing a view replaced emailing a spreadsheet. Name two things that improved beyond convenience.
 
-Answers — including worked stretch task answers — are in [`answers/Lab_5_Answers.md`](../answers/Lab_5_Answers.md). Attempt the questions before opening it.
+Answers — including worked stretch task answers — are in [`answers/Lab_5_Answers.md`](../answers/Lab_5_Answers.md). Attempt the questions before opening it. Runnable completed files for this lab live in [`completed/Lab_5/`](../completed/Lab_5/).
 
 ---
 

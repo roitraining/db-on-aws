@@ -252,7 +252,7 @@ Keep your answers in mind—they will be relevant in Lab 3.
 4. Why does `SELECT TOP 100 * FROM institutions` fail, and what is the correct form?
 5. Your cloud row count does not match the on-premises figure. Name two things that could cause this that are not a data problem.
 
-Answers — including worked stretch task answers — are in [`answers/Lab_1_Answers.md`](../answers/Lab_1_Answers.md). Attempt the questions before opening it.
+Answers — including worked stretch task answers — are in [`answers/Lab_1_Answers.md`](../answers/Lab_1_Answers.md). Attempt the questions before opening it. Runnable completed files for this lab live in [`completed/Lab_1/`](../completed/Lab_1/).
 
 ---
 

@@ -552,7 +552,7 @@ For attendees who finish early.
 7. Why is the row-level comparison last rather than first?
 8. What is the practical limit on how far back a time travel query can reach, and why?
 
-Answers — including worked stretch task answers — are in [`answers/Lab_3_Answers.md`](../answers/Lab_3_Answers.md). Attempt the questions before opening it.
+Answers — including worked stretch task answers — are in [`answers/Lab_3_Answers.md`](../answers/Lab_3_Answers.md). Attempt the questions before opening it. Runnable completed files for this lab live in [`completed/Lab_3/`](../completed/Lab_3/).
 
 ---
 
