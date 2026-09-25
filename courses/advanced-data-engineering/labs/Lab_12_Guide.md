@@ -39,7 +39,7 @@ Everything you built over two days exists because you clicked it into being. Thi
 
 ## Part 1: The Manifest
 
-### Task 1: Initialiez
+### Task 1: Initialize
 
 1. **Create a bundle in your repository**
 

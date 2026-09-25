@@ -21,7 +21,6 @@ You sat the Intro course as an analyst. Now you own the platform. This lab sets 
 - [ ] `CREATE CATALOG` on the metastore, or an instructor who has it
 - [ ] S3 bucket name and IAM role ARN supplied by your instructor
 - [ ] GitLab repository URL and a personal access token
-- [ ] A peer in the room to verify your grants
 
 > **Did not take the Intro course?** You are not stuck, but do not skip this. Labs 7–12 assume
 > Labs 1–6 and deliberately do not reteach them. Read **[`SETUP.md`](../../../SETUP.md) Part 4—
@@ -45,7 +44,7 @@ You sat the Intro course as an analyst. Now you own the platform. This lab sets 
 ## Objectives
 
 - Create a catalog and schema you own
-- Grant a peer the three privileges required to read, and verify from their side
+- Grant the three privileges required to read, and audit the complete chain at every level
 - Link a GitLab repository as a Databricks Git folder and commit from the UI
 - Create a storage credential and an external location over S3
 - Create an external table and state precisely how it differs from a managed table
@@ -106,29 +105,39 @@ You sat the Intro course as an analyst. Now you own the platform. This lab sets 
 
 4. **Grant SELECT alone**
 
+    Everyone here runs an isolated account, so the stand-in for a colleague is the built-in **`account users`** group—the mechanics are identical to granting one person.
+
     ```sql
-    GRANT SELECT ON TABLE eng_<id>.work.institutions_managed TO `<peer>`;
+    GRANT SELECT ON TABLE eng_<id>.work.institutions_managed TO `account users`;
     ```
     <!-- source: facts_extracted.md §1 -->
 
-5. **Have your peer attempt to read it**
+5. **Audit why that is not enough**
 
-    It will fail. `USE CATALOG` is a traversal privilege that grants access to nothing by itself.
+    A reader holding only that grant still fails—`USE CATALOG` and `USE SCHEMA` are traversal privileges, and neither has been granted. Prove the gap by auditing all three levels:
+
+    ```sql
+    SHOW GRANTS ON TABLE   eng_<id>.work.institutions_managed;
+    SHOW GRANTS ON SCHEMA  eng_<id>.work;
+    SHOW GRANTS ON CATALOG eng_<id>;
+    ```
     <!-- source: facts_extracted.md §1 -->
+
+    > **Expected Result:** `account users` holds `SELECT` at the table and appears nowhere above it.
 
 6. **Grant the traversal privileges**
 
     ```sql
-    GRANT USE CATALOG ON CATALOG eng_<id> TO `<peer>`;
-    GRANT USE SCHEMA  ON SCHEMA  eng_<id>.work TO `<peer>`;
+    GRANT USE CATALOG ON CATALOG eng_<id> TO `account users`;
+    GRANT USE SCHEMA  ON SCHEMA  eng_<id>.work TO `account users`;
     ```
     <!-- source: facts_extracted.md §1 -->
 
-7. **Have your peer retry, then audit**
+7. **Re-audit the complete chain**
 
-    ```sql
-    SHOW GRANTS ON TABLE eng_<id>.work.institutions_managed;
-    ```
+    Re-run the three `SHOW GRANTS` statements—`account users` now appears at every level.
+
+    > **Note:** In a shared class workspace you would verify from a real peer's session—grant, watch them fail, grant traversal, watch them succeed. That cross-check needs two people in one workspace; your instructor may demonstrate it there.
     <!-- source: facts_extracted.md §1 -->
 
     > **Key Insight:** Your analysts hit this in Intro Lab 5 and it looked like a bug. As the platform owner you are the person they will ask. The answer is always the same: check `USE SCHEMA` first.
@@ -156,6 +165,13 @@ You sat the Intro course as an analyst. Now you own the platform. This lab sets 
 ---
 
 ## Part 4: External Storage
+
+> **Free Edition cannot run Parts 4–5.** Storage credentials and external locations need a
+> customer-managed S3 bucket and IAM role, and Free Edition's storage is platform-managed—
+> there is nothing to point a credential at and no permission to create one. These parts run
+> in the shared class workspace, or as an instructor demo. Read them either way: the
+> managed-versus-external distinction decides real migration behavior, and the knowledge
+> check asks about it.
 
 ### Task 4: Storage Credential and External Location
 
@@ -224,7 +240,7 @@ You sat the Intro course as an analyst. Now you own the platform. This lab sets 
 ## Stretch Task
 
 1. Drop the external table, confirm the S3 files survive, then recreate the table over the same path without rereading the source.
-2. Grant your peer `READ FILES` on the external location but not `SELECT` on the table. What can they do, and what does that tell you about the two permission systems?
+2. Grant `account users` `READ FILES` on the external location but not `SELECT` on the table. What can a reader holding that do, and what does it tell you about the two permission systems?
 3. Write the `SHOW GRANTS` statements needed to audit catalog, schema, and table in one pass, and describe how you would spot an over-permissioned principal.
 
 ---
@@ -233,9 +249,8 @@ You sat the Intro course as an analyst. Now you own the platform. This lab sets 
 
 - [ ] I created my own catalog and schema
 - [ ] I created a managed table and recorded its location
-- [ ] I granted `SELECT` alone and confirmed my peer could not read
-- [ ] I added `USE CATALOG` and `USE SCHEMA` and my peer succeeded
-- [ ] I verified a peer's table from my own account
+- [ ] I granted `SELECT` alone and audited why it is not sufficient
+- [ ] I granted `USE CATALOG` and `USE SCHEMA` and re-audited all three levels
 - [ ] I ran `SHOW GRANTS` and read the output
 - [ ] I linked a GitLab repository as a Git folder
 - [ ] I worked on a branch rather than the default
@@ -256,7 +271,7 @@ You sat the Intro course as an analyst. Now you own the platform. This lab sets 
 | Issue | Symptom | Solution |
 |---|---|---|
 | Cannot create a catalog | Permission denied | You lack `CREATE CATALOG` on the metastore. Ask your instructor. |
-| Peer cannot read the table | Access denied with `SELECT` granted | Missing `USE CATALOG` or `USE SCHEMA`. |
+| A reader cannot read the table | Access denied with `SELECT` granted | Missing `USE CATALOG` or `USE SCHEMA`. |
 | Storage credential creation fails | Error on the IAM role | The role ARN is wrong or does not trust Databricks. |
 | `LIST` on the S3 path fails | Access denied error | IAM trust or bucket policy, not Unity Catalog. |
 | `LIST` says no such file or directory | Missing path, not denied | Expected on an empty prefix. The credential worked; there is simply nothing there yet. |
@@ -283,7 +298,7 @@ You sat the Intro course as an analyst. Now you own the platform. This lab sets 
 1. Name the three privileges required to read a table and state which is most often missing.
 2. What does a storage credential wrap, and what does an external location add on top of it?
 3. You drop a managed table and an external table. What happens to the data in each case?
-4. Your peer can `LIST` the S3 path but cannot `SELECT` from the external table over it. Which system is refusing, and why are they separate?
+4. A colleague can `LIST` the S3 path but cannot `SELECT` from the external table over it. Which system is refusing, and why are they separate?
 5. Why commit pipeline work on a branch rather than the default branch?
 6. During a migration, when would you deliberately choose an external table over a managed one?
 

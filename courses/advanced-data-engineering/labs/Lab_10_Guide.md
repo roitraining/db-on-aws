@@ -19,7 +19,6 @@ In Intro Lab 4 you answered a business question with one notebook: read, filter,
 - [ ] Intro Lab 4 completed—you built the simple tier of this pipeline
 - [ ] **Serverless Lakeflow pipelines, or Pro/Advanced edition**—AUTO CDC is not supported on Apache Spark Declarative Pipelines
 - [ ] `training_nic.raw.landing` volume with a `branches/` subdirectory
-- [ ] A peer to receive the Gold grant
 
 ---
 
@@ -31,6 +30,7 @@ In Intro Lab 4 you answered a business question with one notebook: read, filter,
 - Clean native NIC column names at Silver, not on ingest
 - Build a Gold materialized view
 - Apply AUTO CDC and name its legacy equivalent
+- Create and run the pipeline, and read its Data quality metrics
 - Grant read-only Gold access without exposing Bronze
 
 ---
@@ -246,24 +246,107 @@ In Intro Lab 4 you answered a business question with one notebook: read, filter,
     > **Common Pitfall:** AUTO CDC is not supported on Apache Spark Declarative Pipelines. The pipeline must run on serverless Lakeflow pipelines or the Pro or Advanced edition. If your pipeline fails at this step, check the edition before debugging the syntax.
     <!-- source: facts_extracted.md §6 -->
 
-### Task 7: Publish Gold Only
+### Task 7: Assemble, Create, and Run the Pipeline
 
-19. **Grant your peer access to Gold and nothing else**
+19. **Assemble the source file**
+
+    The pieces you wrote in Tasks 2–6 become one pipeline source file. In your user folder, click **Create → File**, name it `medallion.py`, and paste the complete source:
+
+    ```python
+    from pyspark import pipelines as dp
+    from pyspark.sql import functions as F
+
+    @dp.table(name="branches_bronze")
+    def branches_bronze():
+        return (spark.readStream
+                .format("cloudFiles")
+                .option("cloudFiles.format", "csv")
+                .option("header", "true")
+                .load("/Volumes/training_nic/raw/landing/branches/"))
+
+    @dp.table(name="branches_silver")
+    @dp.expect("plausible_city", "CITY IS NULL OR LENGTH(CITY) > 1")
+    @dp.expect_or_drop("valid_key", "ID_RSSD IS NOT NULL")
+    def branches_silver():
+        return (spark.readStream.table("branches_bronze")
+                .withColumnRenamed("#ID_RSSD", "ID_RSSD")
+                .withColumn("NM_LGL", F.trim(F.col("NM_LGL")))
+                .withColumn("CITY", F.nullif(F.col("CITY"), F.lit(""))))
+
+    @dp.materialized_view(name="branch_summary_gold")
+    def branch_summary_gold():
+        return (spark.read.table("branches_silver")
+                .groupBy("STATE_ABBR_NM")
+                .agg(F.count("*").alias("branch_count")))
+
+    dp.create_streaming_table(name="institutions_scd")
+
+    dp.create_auto_cdc_from_snapshot_flow(
+        target="institutions_scd",
+        source="training_nic.legacy_onprem.institutions",
+        keys=["#ID_RSSD"],
+        stored_as_scd_type=2)
+    ```
+    <!-- source: facts_extracted.md §5 -->
+
+    > **Note:** Two deliberate differences from the fragments above. First, the `key_is_numeric` fail expectation is left out of the assembled file—the training data would trip it into failing every update; the stretch task adds it back on purpose. Second, `dp.create_streaming_table(name="institutions_scd")` appears before the CDC flow: **the flow needs its target declared**, and without that line the update fails on an unknown table.
+    <!-- source: facts_extracted.md §6 -->
+
+20. **Create the pipeline**
+
+    In the left sidebar, click **Jobs & Pipelines**, then **Create → ETL pipeline** (labels drift—older workspaces say **Pipelines** or **Delta Live Tables**). Set exactly:
+
+    | Setting | Value |
+    |---|---|
+    | Name | `medallion_<id>` |
+    | Compute | **Serverless** |
+    | Source code | the `medallion.py` file you just created |
+    | Default catalog | `eng_<id>` |
+    | Default schema | `work` |
+
+    <!-- source: facts_extracted.md §5 -->
+
+21. **Start it and read the graph**
+
+    Click **Start**. The pipeline resolves the source into a graph—`branches_bronze → branches_silver → branch_summary_gold`, with `institutions_scd` fed by the snapshot flow—and executes it. The first run ingests the landing files; a few minutes on serverless is normal.
+
+    > **Expected Result:** Every dataset completes. This is the same DAG idea as the Spark UI's, one level up: datasets and flows instead of stages and tasks.
+
+22. **Read the quality metrics where they live**
+
+    Select `branches_silver` in the graph and open its **Data quality** panel. The expectations you declared report their counts—rows warned on by `plausible_city`, rows dropped by `valid_key`.
+
+    > **Key Insight:** Write these numbers down. Lab 11 reads this exact figure—`dropped_records`—out of the pipeline event log by query and gates Gold promotion on it. The UI panel and the event log are two views of the same metrics.
+    <!-- source: facts_extracted.md §5 -->
+
+23. **Start it again and watch nothing happen**
+
+    Click **Start** a second time without landing any new files.
+
+    > **What Just Happened?** Bronze processes zero new files—the checkpoint you managed by hand in Task 1 is managed for you here, and this is it working. An incremental pipeline that reprocesses everything on every run is neither.
+
+### Task 8: Publish Gold Only
+
+24. **Grant read access to Gold and nothing else**
 
     ```sql
-    GRANT USE CATALOG ON CATALOG eng_<id> TO `<peer>`;
-    GRANT USE SCHEMA  ON SCHEMA  eng_<id>.work TO `<peer>`;
-    GRANT SELECT      ON TABLE   eng_<id>.work.branch_summary_gold TO `<peer>`;
+    GRANT USE CATALOG ON CATALOG eng_<id> TO `account users`;
+    GRANT USE SCHEMA  ON SCHEMA  eng_<id>.work TO `account users`;
+    GRANT SELECT      ON TABLE   eng_<id>.work.branch_summary_gold TO `account users`;
     ```
     <!-- source: facts_extracted.md §1 -->
 
-20. **Have your peer verify both the access and its limit**
+25. **Audit both the access and its limit**
 
-    Ask them to query Gold successfully, then attempt Bronze and confirm they cannot.
+    ```sql
+    SHOW GRANTS ON TABLE eng_<id>.work.branch_summary_gold;
+    SHOW GRANTS ON TABLE eng_<id>.work.branches_bronze;
+    ```
+    <!-- source: facts_extracted.md §1 -->
 
-    > **Expected Result:** Gold returns rows; Bronze is refused. Consumers see conformed, quality-gated data and never the raw landing.
+    > **Expected Result:** `account users` holds `SELECT` on Gold and appears nowhere on Bronze. Consumers see conformed, quality-gated data and never the raw landing. In a shared workspace a real peer would prove it by querying both—your instructor may demonstrate there.
 
-21. **Compare your Gold figure against Intro Lab 4**
+26. **Compare your Gold figure against Intro Lab 4**
 
     > **What Just Happened?** The number matches what you produced in one notebook two days ago. Everything added since—incremental ingest, checkpoints, expectations, layer separation, CDC—bought you repeatability, auditability, and a defensible answer to "how do you know this is right?", not a different answer.
 
@@ -292,7 +375,9 @@ In Intro Lab 4 you answered a business question with one notebook: read, filter,
 - [ ] I wrote the SQL equivalent of at least one expectation
 - [ ] I built a Gold materialized view
 - [ ] I applied AUTO CDC and can name its legacy equivalent
-- [ ] My peer can read Gold and cannot read Bronze
+- [ ] I created and ran the pipeline, and read the Data quality panel
+- [ ] A second Start processed zero new files
+- [ ] Readers hold `SELECT` on Gold and nothing on Bronze
 - [ ] My Gold figure matches the Intro Lab 4 result
 
 ---
@@ -310,7 +395,7 @@ In Intro Lab 4 you answered a business question with one notebook: read, filter,
 | Column not found in Silver | Error on `#ID_RSSD` | Bronze keeps the hash; rename at Silver. In SQL, backtick-quote it. |
 | Pipeline fails on an expectation | Update does not complete | Expected if the action is `FAIL UPDATE`. That is the action working. |
 | `import dlt` in existing code | Legacy import | Still runs. `from pyspark import pipelines as dp` is current. |
-| Peer can read Bronze | Over-granted | You granted at schema level rather than on the Gold table. |
+| A reader can reach Bronze | Over-granted | You granted at schema level rather than on the Gold table. |
 
 ---
 

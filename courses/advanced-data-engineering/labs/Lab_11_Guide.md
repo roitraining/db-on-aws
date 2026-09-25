@@ -40,17 +40,17 @@ The pipeline works when you run it. This lab makes it work when you are not ther
 
 1. **Create a new Lakeflow Job**
 
-    Name it for your engineer ID. This is the container the pipeline will run inside.
+    In the left sidebar, click **Jobs & Pipelines**, then **Create → Job**. Name it `medallion_job_<id>`. This is the container the pipeline will run inside.
     <!-- source: facts_extracted.md §7 -->
 
 2. **Add the pipeline as the first task**
 
-    Add a task of type pipeline, pointing at the Lab 10 pipeline. This runs Bronze and Silver.
+    In the task panel set **Type = Pipeline** and point it at the Lab 10 pipeline (`medallion_<id>`). Name the task `run_pipeline`. This runs Bronze and Silver.
     <!-- source: facts_extracted.md §7 -->
 
 3. **Add a second task that reads the event log**
 
-    This task must be a **Python notebook** task, not a SQL task—see step 4 for why.
+    Click **Add task → Notebook**, name it `read_event_log`, and point it at a new notebook holding the cell below. This task must be a **Python notebook** task, not a SQL task—see step 4 for why.
 
     The event log is read through the `event_log()` table-valued function, which takes either a table name or a `pipeline_id`. The pipeline records its own quality outcomes; orchestration reads them rather than recomputing from the data.
 
@@ -93,7 +93,7 @@ The pipeline works when you run it. This lab makes it work when you are not ther
 
 6. **Add an If/else task**
 
-    Add a task of type **If/else condition**. It takes a boolean operator and a pair of operands, and either operand may reference job state, parameters, or a task value.
+    Click **Add task → If/else condition** and name it `quality_gate`. It takes a boolean operator and a pair of operands, and either operand may reference job state, parameters, or a task value.
 
     Available operators: `EQUAL_TO`, `NOT_EQUAL`, `GREATER_THAN`, `GREATER_THAN_OR_EQUAL`, `LESS_THAN`, `LESS_THAN_OR_EQUAL`.
     <!-- source: facts_extracted.md §7 -->
@@ -135,7 +135,7 @@ The pipeline works when you run it. This lab makes it work when you are not ther
 
 11. **Configure a failure notification**
 
-    Add an email destination on job failure.
+    In the Job's right-hand details panel, under **Job notifications**, click **Edit notifications → Add**, choose your email, and select the **Failure** event.
     <!-- source: facts_extracted.md §7 -->
 
 12. **Force a failure and confirm the alert**
@@ -165,7 +165,7 @@ The pipeline works when you run it. This lab makes it work when you are not ther
 
 17. **Change Run As to the service principal**
 
-    Set the job's Run As identity to the service principal supplied by your instructor.
+    In the Job's right-hand details panel, find **Run as**, click the pencil icon, and select the service principal supplied by your instructor.
     <!-- source: facts_extracted.md §7 -->
 
 18. **Run the Job and observe what happens**
