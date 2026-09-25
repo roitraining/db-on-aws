@@ -17,7 +17,7 @@ You already write SQL—in whatever dialect your team used. The reports being mi
 
 - [ ] Lab 1 completed—you can locate `training_nic.migrated` and run a query
 - [ ] A running serverless SQL warehouse selected in the SQL editor
-- [ ] GitLab repository URL and credentials supplied by your instructor
+- [ ] From your instructor: the class GitLab username, the class repository URL, and your personal access token
 - [ ] Your assigned attendee ID
 
 ---
@@ -215,33 +215,49 @@ You already write SQL—in whatever dialect your team used. The reports being mi
 
     > **What Just Happened?** You get zero rows rather than an error. A parameter protects a colleague from editing SQL; it does not protect them from asking a nonsensical question. If this query is going to a non-technical colleague, say so in the query description.
 
-### Task 5: Commit to a Git Folder
+### Task 5: Commit to GitLab
 
-17. **Rename, then save the query**
+17. **Save the query**
 
-    Click the query name in the header and rename it to `lab2_state_summary_<id>`, using your attendee ID. Then click **Save**. When asked where to move the file, keep your home folder.
+    Use **Save** and name the query using your attendee ID, for example `lab2_state_summary_<id>`.
 
-    > **Note:** Rename first. Saving before renaming moves a file still called *Untitled query*.
+18. **Authenticate to GitLab with your class token**
 
-18. **Open the Git folder**
+    Your instructor provides three values: the class GitLab **username**, the class **repository URL**, and your personal **access token** (a `glpat-...` string that belongs to you alone).
 
-    In the left navigation, select **Workspace**, then browse to the Git folder your instructor linked to the GitLab repository — your instructor will tell you where it lives (usually under **Shared**). Git folders are marked with a branch icon in the file list. Databricks Git folders is a visual Git client that integrates Git repositories directly in the workspace.
-    <!-- source: facts_extracted.md §7 -->
+    1. Click your **avatar** (top right), then **Settings**.
+    2. In the left sidebar, choose **Linked accounts**.
+    3. Under Git integration set: **Git provider** = GitLab, **Git provider username** = the class username, **Token** = paste your `glpat-...` string.
+    4. Click **Save**.
 
-19. **Add your query to the folder and commit**
+    > **Note:** Databricks stores one credential per Git provider, and every Git operation in your workspace now uses it silently—there is no login prompt later. If a credential already exists, edit it rather than adding a second.
 
-    1. Open the Git folder, click **Create** at the top right, and choose **File**. Name it `lab2_state_summary_<id>.sql`.
-    2. Paste your query text into the file. It saves automatically.
-    3. Go back to the folder list, **hover over the Git folder's row**, and click the **Git** button that appears (it is hidden until you hover — this catches everyone). The Git dialog opens.
-    4. Confirm your new file is listed as a change, write a commit message that says what the query answers — not what you changed — and click **Commit & Push**.
+19. **Link the class repository as a Git folder**
 
-    > **Note:** A saved query in the SQL editor and a file in a Git folder are two different objects. The saved query is convenient for you; the `.sql` file in the repository is what a colleague can pull, review, and change. Version control needs the file.
+    1. In the left sidebar, click **Workspace**, open **Users → your.email**, click **Create** at the top right, and choose **Git folder**.
+    2. **Git repository URL** = the class repository URL from your instructor; **Git provider** = GitLab. Click **Create Git folder**.
 
-    > **Note:** This replaces emailing `.sql` files. A colleague pulls the repository and gets your query with its history, rather than a file called `final_v3_USE_THIS.sql`.
+    > **Note:** This is a *different* repository from the course guides you added in Lab 0. That one is public GitHub and needs no credential; this one is the private class GitLab repo your token unlocks, and it is where your work goes.
 
-20. **Verify the commit**
+20. **Create your branch**
 
-    Confirm the commit appears in the Git folder history with your message.
+    1. Open the Git folder and click the **Git** button—the branch-icon button next to the folder name (it also appears when you hover the folder's row in the list view).
+    2. In the Git dialog, open the **branch dropdown**. Make sure **main** is selected as your starting point, then choose **Create new branch** and name it `lab/<id>`.
+    3. The folder switches to your branch.
+
+    > **Note:** `main` is protected—**nobody** can push to it, including the instructor. Every attendee works on their own `lab/<id>` branch; the branch name is what keeps your work separate from the person next to you, so get it right.
+
+21. **Add your query and push**
+
+    1. Inside the Git folder, click **Create** at the top right and choose **File**. Name it `queries/lab2_state_summary_<id>.sql`.
+    2. Paste your query text into the file—it saves automatically.
+    3. Reopen the **Git** dialog. Your file is listed as a change. Write a commit message that says what the query answers—not what you changed—and click **Commit & Push**.
+
+22. **Verify on GitLab**
+
+    Open the class repository URL in a browser tab, switch the branch selector to `lab/<id>`, and confirm your file and commit message are there.
+
+    > **What Just Happened?** Your query now lives in version control: anyone with access can read it, see when it changed and why, and pull it—without a single emailed `.sql` file. And because `main` is locked, no amount of fumbling can damage anyone else's work. (Try it if you like: switch the Git dialog to `main` and attempt a push—GitLab refuses with a protected-branch error. Switch back to your branch after.)
 
 ---
 
@@ -288,7 +304,7 @@ For attendees who finish early.
 | Parameter widget does not appear | No widget above the editor | The marker must be a colon immediately followed by the name, with no space. |
 | Parameter returns no rows | Empty result | Check the date range is the right way round and that the type is set to Date, not String. |
 | Cannot find the commit controls | No Git buttons visible anywhere | The **Git** button only appears when you hover over the Git folder's row in the workspace file list. Hover the row, then click it to open the Git dialog. |
-| Commit rejected | Push fails | Confirm your Git credentials are configured and that you are on a branch you may write to. |
+| Commit rejected | Push fails | If the error mentions protected branches, you are on `main`—switch to your `lab/<id>` branch. Otherwise re-check the token in **Settings > Linked accounts**. |
 
 ---
 
