@@ -27,6 +27,7 @@ The last step is the one stakeholders actually see. You will build a dashboard o
 - Build an AI/BI Dashboard with two charts over a published view
 - Add a filter that cross-filters both charts
 - Build a migration-health page over the Lab 3 validation runs, with a KPI counter
+- Color charts by field, customize the palette, and conditionally color a counter
 - Publish with shared credentials and explain what that means for viewers
 - Schedule an email delivery of the published dashboard
 - Ask Genie two business questions and verify the SQL behind one answer
@@ -94,29 +95,35 @@ The last step is the one stakeholders actually see. You will build a dashboard o
     Back on the **Canvas**, add a third visualization widget on this dataset: a bar chart of `institution_count` by `STATE_ABBR_NM`, renamed into business language. The recurring report you rebuilt from SQL Server in Lab 2 is now a live dashboard tile instead of an emailed result set.
 
 
+9. **Give the bars their own colors**
+
+    Every bar defaults to one color. Select the bar chart, and in the configuration panel add a **Color** encoding set to `CHTR_TYPE_CD`—each charter type gets its own color and a legend appears. Then open the **Colors** section and override the palette: click a series swatch and pick your own—a green, a blue, a yellow—anything but four identical bars. Do the same for the state chart with `STATE_ABBR_NM`.
+
+    > **Note:** Color-by-field is the same mechanism grouped and stacked comparisons build on; the manual swatches are how you match a house style. Two different features—one click apart.
+
 ---
 
 ## Part 2: Make It Interactive
 
 ### Task 3: Add a Cross-Filter
 
-9. **Add a date-range filter**
+10. **Add a date-range filter**
 
     Pick the **filter widget** from the same canvas toolbar, place it above the charts, and set its field to `start_month` in the right-hand panel. Dashboards support global, page-level, and widget-level filters.
     <!-- source: facts_extracted.md §16 -->
 
-10. **Scope the filter to both charts**
+11. **Scope the filter to both charts**
 
     Configure the filter so it applies to both widgets rather than one.
     <!-- source: facts_extracted.md §16 -->
 
-11. **Test the interaction**
+12. **Test the interaction**
 
     Change the filter range and confirm both charts respond together.
 
     > **Expected Result:** Both charts update from a single filter change, with no editing and no SQL.
 
-12. **Try cross-filtering from a chart**
+13. **Try cross-filtering from a chart**
 
     Select a bar in the bar chart and observe the effect on the line chart.
     <!-- source: facts_extracted.md §16 -->
@@ -129,11 +136,11 @@ The last step is the one stakeholders actually see. You will build a dashboard o
 
 ### Task 4: Chart the Validation Runs
 
-13. **Add a page**
+14. **Add a page**
 
     At the bottom of the canvas, click the **+** next to the page tab and rename the new page **Migration Health**. One dashboard, two audiences: page one answers business questions, this page answers "can we trust the migration yet?"
 
-14. **Add the validation datasets**
+15. **Add the validation datasets**
 
     On the **Data** tab, **Create from SQL** twice. First, the run history—every validation attempt from your Lab 3 runbook:
 
@@ -156,15 +163,21 @@ The last step is the one stakeholders actually see. You will build a dashboard o
       AND run_ts = (SELECT MAX(run_ts) FROM training_nic.analyst.validation_runs);
     ```
 
-15. **Chart the run history**
+16. **Chart the run history**
 
     On the **Migration Health** page, add a bar chart on the run-history dataset: `run_attempt` on the horizontal axis, with `checks_passed` and `checks_failed` as two measures. Every Lab 3 **Run all** shows up as one bar group.
 
-16. **Add the failure counter**
+17. **Add the failure counter**
 
     Add a **counter** widget on the latest-failures dataset showing `failed_checks`, titled **Failing checks (latest run)**.
 
     > **Key Insight:** The alert and this page read the same `validation_runs` table—the alert interrupts you when it breaks, the dashboard shows stakeholders the history. One validation runbook now feeds monitoring and reporting, which is what "repeatable" buys you.
+
+18. **Make the counter behave like an alarm**
+
+    A counter can carry its threshold visually. With the failing-checks counter selected, find **Conditional formatting** (under Colors in the configuration panel—labels drift) and add a rule: when the value is **greater than 0**, color it **red**. While the migration is broken, the tile burns red; when a fixed migration passes your Lab 3 runbook, it cools off on its own.
+
+    > **Key Insight:** The dashboard does not send anything—interrupting people is the Lab 5 alert's job. The tile's color makes state legible at a glance, which is a different job: the alert finds you, the dashboard answers you.
 
 ---
 
@@ -172,24 +185,24 @@ The last step is the one stakeholders actually see. You will build a dashboard o
 
 ### Task 5: Publish with Shared Credentials
 
-17. **Publish the dashboard**
+19. **Publish the dashboard**
 
     Click **Publish** at the top right of the editor. In the publish dialog, keep credentials **embedded**—that is the shared-credentials option. Dashboards can be published with shared or individual data permissions.
     <!-- source: facts_extracted.md §16 -->
 
     > **Key Insight:** With shared credentials, viewers see the data through your access rather than their own, so everyone sees consistent figures. With individual permissions, each viewer sees only what their own grants allow—which can mean two people looking at the same dashboard and seeing different numbers. Choose deliberately.
 
-18. **Open the published version as a viewer**
+20. **Open the published version as a viewer**
 
     Use the dropdown next to the dashboard title to switch from **Draft** to the **published** version. The filters still work; the editing controls are gone. This is what consumers see.
 
     > **Note:** Verifying view-only access from a genuinely different user needs a second person in the same workspace—everyone here runs an isolated account, so your instructor may demonstrate it in the shared class workspace.
 
-19. **Schedule an email delivery**
+21. **Schedule an email delivery**
 
     On the published dashboard, click **Schedule**, then **Add schedule**. Pick a daily cadence, and on the **Subscribers** tab add yourself. Each scheduled run refreshes the dashboard and emails a snapshot to every subscriber—the live replacement for mailing a spreadsheet every Monday. In a shared workspace you would subscribe colleagues; the mechanics are identical.
 
-20. **Note the reach of publishing**
+22. **Note the reach of publishing**
 
     A published dashboard can be shared with anyone registered to your Databricks account, even if they do not have access to the workspace.
     <!-- source: facts_extracted.md §16 -->
@@ -202,31 +215,31 @@ The last step is the one stakeholders actually see. You will build a dashboard o
 
 ### Task 6: Two Questions and a Verification
 
-21. **Create a Genie space on the same data**
+23. **Create a Genie space on the same data**
 
     In the left sidebar, click **Genie**, then click the **New** button on the Genie page. Name the space `lab6_genie_<id>`, select your published view `training_nic.analyst.institution_summary_published` as its data, and choose the serverless SQL warehouse when prompted. The space opens with a chat box—this is where you ask your questions.
 
-22. **Ask your first business question**
+24. **Ask your first business question**
 
     Ask something a stakeholder would genuinely ask, in plain English—for example, which charter type has grown the most in the last twenty years.
     <!-- source: facts_extracted.md §16 -->
 
-23. **Read the generated SQL, not just the answer**
+25. **Read the generated SQL, not just the answer**
 
     Expand the SQL Genie produced. Check that it queries the columns you expect and applies the filter you meant.
 
-24. **Ask a second question that is harder to answer**
+26. **Ask a second question that is harder to answer**
 
     Ask something ambiguous or requiring a judgement—for example, which states are underserved relative to population.
 
-25. **Verify that answer against your own query**
+27. **Verify that answer against your own query**
 
     Write the SQL yourself and compare results.
     <!-- source: facts_extracted.md §16 -->
 
     > **What Just Happened?** If the two disagree, Genie is not broken and neither are you. It answered the question it understood, which may not be the question you asked. "Underserved" has no definition in the data—Genie had to invent one.
 
-26. **Record when you would and would not trust it**
+28. **Record when you would and would not trust it**
 
     Write two sentences: one describing a question you would let Genie answer unsupervised, and one describing a question you would always verify.
 
@@ -255,6 +268,8 @@ For attendees who finish early.
 - [ ] I added a Migration Health page charting every validation attempt
 - [ ] The failing-checks counter shows the latest run's failures
 - [ ] I charted my Lab 2 report as a dashboard tile
+- [ ] I colored the bar charts by field and customized the palette
+- [ ] The failing-checks counter turns red when checks fail
 - [ ] I published the dashboard with shared credentials
 - [ ] I can explain what shared credentials mean for what a viewer sees
 - [ ] I scheduled an email delivery and subscribed myself
