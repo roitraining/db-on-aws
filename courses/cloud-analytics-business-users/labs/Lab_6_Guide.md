@@ -48,6 +48,7 @@ The last step is the one stakeholders actually see. You will build a dashboard o
     Open the **Data** tab, choose **Create from SQL**, and paste the query below so the dataset reads from the view you published in Lab 5. Run it to confirm it returns rows.
 
     ```sql
+    -- dashboard dataset: the view you published in Lab 5
     SELECT CHTR_TYPE_CD, start_month, institution_count, distinct_cities
     FROM training_nic.analyst.institution_summary_published;
     ```
@@ -78,6 +79,7 @@ The last step is the one stakeholders actually see. You will build a dashboard o
     Dashboards are where the queries you have been saving all course pay off. Open your saved query `lab2_state_summary` in another browser tab, copy its SQL (without the parameters), and on the **Data** tab choose **Create from SQL** again:
 
     ```sql
+    -- the Lab 2 report, reborn as a dashboard dataset
     SELECT i.STATE_ABBR_NM,
            COUNT(*)          AS institution_count,
            MAX(c.population) AS state_population
@@ -136,6 +138,7 @@ The last step is the one stakeholders actually see. You will build a dashboard o
     On the **Data** tab, **Create from SQL** twice. First, the run history—every validation attempt from your Lab 3 runbook:
 
     ```sql
+    -- one row per validation attempt from your Lab 3 runbook
     SELECT run_ts AS run_attempt,
            SUM(CASE WHEN passed THEN 1 ELSE 0 END)     AS checks_passed,
            SUM(CASE WHEN NOT passed THEN 1 ELSE 0 END) AS checks_failed
@@ -146,6 +149,7 @@ The last step is the one stakeholders actually see. You will build a dashboard o
     Second, the latest attempt's failure count—the same logic your Lab 5 alert watches:
 
     ```sql
+    -- latest attempt's failures — the same logic the Lab 5 alert watches
     SELECT COUNT(*) AS failed_checks
     FROM training_nic.analyst.validation_runs
     WHERE NOT passed

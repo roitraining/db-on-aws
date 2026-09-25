@@ -80,6 +80,7 @@ Official documentation, if you want the full detail behind any row:
 2. **Read the migrated table into a DataFrame**
 
     ```python
+    # build a plan over the migrated table — nothing is read yet
     df = spark.table("training_nic.migrated.institutions")
     ```
     <!-- source: facts_extracted.md §13 -->
@@ -96,6 +97,7 @@ Official documentation, if you want the full detail behind any row:
     `display()` is a Databricks notebook function: it executes the plan and renders the result as an interactive table you can sort, filter, and turn into a chart. `.limit(20)` caps how many rows it asks for—the equivalent of `LIMIT 20`.
 
     ```python
+    # display() is an action: this is the first cell that actually reads data
     display(df.limit(20))
     ```
     <!-- source: facts_extracted.md §13 -->
@@ -105,6 +107,7 @@ Official documentation, if you want the full detail behind any row:
 5. **Note the hash-prefixed column**
 
     ```python
+    # note the native '#' on the key column
     print(df.columns)
     ```
     <!-- source: facts_extracted.md §12 -->
@@ -122,6 +125,7 @@ Official documentation, if you want the full detail behind any row:
     ```python
     from pyspark.sql import functions as F
 
+    # keep only California rows (still lazy)
     filtered = df.filter(F.col("STATE_ABBR_NM") == "CA")
     ```
     <!-- source: facts_extracted.md §12 -->
@@ -140,6 +144,7 @@ Official documentation, if you want the full detail behind any row:
     Derive a clean name and the month each record starts in—the padding you met in Lab 3 gets handled once, and the approved report grain is business unit by month.
 
     ```python
+    # derive a trimmed name and the month each record starts in
     cleaned = (filtered
                .withColumn("NM_LGL_CLEAN", F.trim(F.col("NM_LGL")))
                .withColumn("start_month", F.trunc(F.col("D_DT_START").cast("date"), "month")))
@@ -158,6 +163,7 @@ Official documentation, if you want the full detail behind any row:
 8. **Select only what you need**
 
     ```python
+    # narrow to the six columns the summary needs
     slim = cleaned.select("`#ID_RSSD`", "NM_LGL_CLEAN", "CITY",
                           "STATE_ABBR_NM", "CHTR_TYPE_CD", "start_month")
     ```
@@ -177,6 +183,7 @@ Official documentation, if you want the full detail behind any row:
     Each `display()` you just ran was an **action**—it executed the plan built up to that point so you could see the data. The chain itself is still only a plan. Prove it:
 
     ```python
+    # print the plan — proof the chain has not executed
     slim.explain(mode="formatted")
     ```
     <!-- source: facts_extracted.md §13 -->
@@ -188,6 +195,7 @@ Official documentation, if you want the full detail behind any row:
 10. **Summarize by business unit and period**
 
     ```python
+    # aggregate: institutions and distinct cities, per charter type per month
     summary = (slim
                .groupBy("CHTR_TYPE_CD", "start_month")
                .agg(F.count("*").alias("institution_count"),
@@ -216,6 +224,8 @@ Official documentation, if you want the full detail behind any row:
     Lab 3 already created your personal schema for the validation table; `IF NOT EXISTS` makes this cell safe to run either way.
 
     ```python
+    # create your schema, then save the summary as a managed Delta table
+    # overwriteSchema lets a re-run change column types without failing
     spark.sql("CREATE SCHEMA IF NOT EXISTS training_nic.analyst")
     ```
 
@@ -230,6 +240,7 @@ Official documentation, if you want the full detail behind any row:
 13. **Verify it with SQL, not Python**
 
     ```sql
+    -- read it back in SQL — same table, different language
     %sql
     SELECT * FROM training_nic.analyst.institution_summary
     ORDER BY start_month DESC
@@ -272,6 +283,7 @@ Official documentation, if you want the full detail behind any row:
     Your 4,900-row pipeline finishes before performance can matter. Setup built 2-million-row versions of the same tables—`training_nic.perf.institutions_large` and `training_nic.perf.financials_large`—where slow is visible. Run the join-and-aggregate in a `%sql` cell and note the wall time:
 
     ```sql
+    -- the same query shape at 2 million rows — big enough for the profile to tell a story
     %sql
     SELECT i.CHTR_TYPE_CD,
            COUNT(*)          AS institution_count,
@@ -295,6 +307,7 @@ Official documentation, if you want the full detail behind any row:
 20. **Compare against a narrow query**
 
     ```sql
+    -- narrow comparison query: filter + LIMIT, no aggregation, no shuffle
     %sql
     SELECT `#ID_RSSD`, STATE_ABBR_NM
     FROM training_nic.perf.institutions_large
@@ -349,6 +362,7 @@ Official documentation, if you want the full detail behind any row:
 25. **Compare against a query that does not shuffle**
 
     ```python
+    # a narrow query for the Spark UI comparison — filter only, no shuffle
     display(slim.filter(F.col("start_month") >= "2000-01-01").limit(50))
     ```
     <!-- source: facts_extracted.md §13 -->

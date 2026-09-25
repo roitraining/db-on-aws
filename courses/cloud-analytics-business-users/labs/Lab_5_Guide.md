@@ -53,6 +53,7 @@ You have a summary table. A colleague needs it. The old answer was to email a sp
 2. **Set your session context**
 
     ```sql
+    -- work in your schema
     USE CATALOG training_nic;
     USE SCHEMA analyst;
     ```
@@ -64,6 +65,7 @@ You have a summary table. A colleague needs it. The old answer was to email a sp
     A view is a saved query. It stores no data and is always current.
 
     ```sql
+    -- the published interface: a view over your Lab 4 summary table
     CREATE OR REPLACE VIEW institution_summary_published AS
     SELECT CHTR_TYPE_CD, start_month, institution_count, distinct_cities
     FROM training_nic.analyst.institution_summary
@@ -89,6 +91,7 @@ You have a summary table. A colleague needs it. The old answer was to email a sp
     You are the only person in this workspace, so the stand-in for a colleague is the built-in **`account users`** group—every user in the account. The grant mechanics are identical to granting one person.
 
     ```sql
+    -- read on the view alone — deliberately incomplete
     GRANT SELECT ON VIEW institution_summary_published TO `account users`;
     ```
     <!-- source: facts_extracted.md §3 -->
@@ -118,6 +121,7 @@ You have a summary table. A colleague needs it. The old answer was to email a sp
 7. **Grant the traversal privileges**
 
     ```sql
+    -- the traversal privileges that complete the chain
     GRANT USE CATALOG ON CATALOG training_nic TO `account users`;
     GRANT USE SCHEMA  ON SCHEMA  training_nic.analyst TO `account users`;
     ```
@@ -153,6 +157,7 @@ You have a summary table. A colleague needs it. The old answer was to email a sp
     Create a second SQL notebook the same way as step 1, name it `Lab 5 - Compare Materialized View`, attach the same serverless SQL warehouse, and set the context in its first cell:
 
     ```sql
+    -- work in your schema
     USE CATALOG training_nic;
     USE SCHEMA analyst;
     ```
@@ -162,6 +167,7 @@ You have a summary table. A colleague needs it. The old answer was to email a sp
 11. **Create a materialized view over the same query**
 
     ```sql
+    -- same query, precomputed and stored — the freshness-vs-speed trade
     CREATE OR REPLACE MATERIALIZED VIEW institution_summary_mv AS
     SELECT CHTR_TYPE_CD, start_month, institution_count, distinct_cities
     FROM training_nic.analyst.institution_summary
@@ -179,6 +185,7 @@ You have a summary table. A colleague needs it. The old answer was to email a sp
 13. **Refresh it explicitly**
 
     ```sql
+    -- recompute the stored results
     REFRESH MATERIALIZED VIEW institution_summary_mv;
     ```
     <!-- source: facts_extracted.md §14 -->
@@ -212,6 +219,7 @@ You have a summary table. A colleague needs it. The old answer was to email a sp
     You cannot point an alert at a query you saved earlier—each alert owns its own query definition, authored in the alert editor.
 
     ```sql
+    -- the alert's query: current size of the published summary
     SELECT COUNT(*) AS row_count
     FROM training_nic.analyst.institution_summary;
     ```
@@ -278,6 +286,7 @@ You have a summary table. A colleague needs it. The old answer was to email a sp
     The row-count alert guards one table. The higher-value watch is on the validation: fire whenever the latest run has failing checks. Create a second alert (**Alerts → Create Alert**), rename it `lab5_validation_failures_alert`, and author its query:
 
     ```sql
+    -- failed checks in the latest validation attempt
     SELECT COUNT(*) AS failed_checks
     FROM training_nic.analyst.validation_runs
     WHERE NOT passed

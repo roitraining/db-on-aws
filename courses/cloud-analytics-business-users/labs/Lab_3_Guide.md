@@ -56,6 +56,7 @@ You are being asked to sign off that the migrated data matches the source. This 
     Your personal schema holds everything you build in this course, and `validation_runs` is where every check records its verdict.
 
     ```sql
+    -- one-time setup: your schema, plus the table every check writes its verdict into
     CREATE SCHEMA IF NOT EXISTS training_nic.analyst;
 
     CREATE TABLE IF NOT EXISTS training_nic.analyst.validation_runs (
@@ -66,6 +67,7 @@ You are being asked to sign off that the migrated data matches the source. This 
       passed       BOOLEAN,
       note         STRING);
 
+    -- one timestamp per Run All, shared by every check in this attempt
     DECLARE OR REPLACE VARIABLE run_started TIMESTAMP DEFAULT current_timestamp();
     ```
 
@@ -75,6 +77,7 @@ You are being asked to sign off that the migrated data matches the source. This 
 3. **Confirm the cloud side**
 
     ```sql
+    -- how many rows made it to the cloud?
     USE CATALOG training_nic;
     USE SCHEMA migrated;
     SELECT COUNT(*) AS cloud_rows FROM institutions;
@@ -91,6 +94,7 @@ You are being asked to sign off that the migrated data matches the source. This 
 5. **Count the source side**
 
     ```sql
+    -- and how many the source of truth holds
     SELECT COUNT(*) AS source_rows
     FROM training_nic.legacy_onprem.institutions;
     ```
@@ -115,6 +119,7 @@ Run these in order. Each answers a different question, and each has a blind spot
 7. **Compare the totals**
 
     ```sql
+    -- CHECK 1: row count parity — did everything arrive?
     SELECT
       (SELECT COUNT(*) FROM training_nic.migrated.institutions)   AS cloud_rows,
       (SELECT COUNT(*) FROM training_nic.legacy_onprem.institutions)    AS source_rows;
@@ -126,6 +131,7 @@ Run these in order. Each answers a different question, and each has a blind spot
     Record the verdict as data, not as a note to yourself:
 
     ```sql
+    -- record check 1's verdict
     INSERT INTO training_nic.analyst.validation_runs
     SELECT run_started, 'check_1_row_count',
            (SELECT COUNT(*) FROM training_nic.migrated.institutions),
@@ -146,6 +152,7 @@ Run these in order. Each answers a different question, and each has a blind spot
 9. **Find keys present in the source but missing from the cloud**
 
     ```sql
+    -- CHECK 2: key parity — keys present in the source but missing from the cloud
     SELECT s.`#ID_RSSD`
     FROM training_nic.legacy_onprem.institutions AS s
     LEFT ANTI JOIN training_nic.migrated.institutions AS c
@@ -158,6 +165,7 @@ Run these in order. Each answers a different question, and each has a blind spot
 10. **Now flip it—is there anything in the cloud that was never on-premises?**
 
     ```sql
+    -- reverse direction: did the cloud invent keys that never existed on-prem?
     SELECT c.`#ID_RSSD`
     FROM training_nic.migrated.institutions AS c
     LEFT ANTI JOIN training_nic.legacy_onprem.institutions AS s
@@ -172,6 +180,7 @@ Run these in order. Each answers a different question, and each has a blind spot
     A list of missing keys is a symptom. The useful finding is what they have in common. Join the missing keys back to the source and group by the categorical columns one at a time.
 
     ```sql
+    -- what do the missing rows have in common?
     SELECT s.CHTR_TYPE_CD, COUNT(*) AS missing_count
     FROM training_nic.legacy_onprem.institutions AS s
     LEFT ANTI JOIN training_nic.migrated.institutions AS c
@@ -192,6 +201,7 @@ Run these in order. Each answers a different question, and each has a blind spot
     Missing keys go in `cloud_value`, invented keys in `source_value`; the check passes only when both are zero.
 
     ```sql
+    -- record check 2: missing keys, invented keys — pass only if both are zero
     INSERT INTO training_nic.analyst.validation_runs
     SELECT run_started, 'check_2_key_parity',
            (SELECT COUNT(*) FROM training_nic.legacy_onprem.institutions s
@@ -220,6 +230,7 @@ Run these in order. Each answers a different question, and each has a blind spot
     Financial figures are not in the institution record. NIC's Attributes file holds identification, classification and structure only—no balance-sheet data. The amounts come from a separate reporting table keyed on the same `ID_RSSD`.
 
     ```sql
+    -- CHECK 3: aggregate parity — do the totals agree?
     SELECT
       (SELECT SUM(TOT_ASSETS) FROM training_nic.migrated.financials) AS cloud_total,
       (SELECT SUM(TOT_ASSETS) FROM training_nic.legacy_onprem.financials) AS source_total;
@@ -248,6 +259,7 @@ Run these in order. Each answers a different question, and each has a blind spot
     These are not the same value, and a comparison that treats them as interchangeable will mislead you.
 
     ```sql
+    -- NULL and '' are different values — count them separately (cloud side, then source)
     SELECT
       SUM(CASE WHEN CITY IS NULL THEN 1 ELSE 0 END)  AS null_cities,
       SUM(CASE WHEN CITY = ''    THEN 1 ELSE 0 END)  AS empty_cities
@@ -270,6 +282,7 @@ Run these in order. Each answers a different question, and each has a blind spot
     Record the sums restricted to shared keys—the pure value comparison, with the row-count effect removed:
 
     ```sql
+    -- record check 3: sums over shared keys
     INSERT INTO training_nic.analyst.validation_runs
     SELECT run_started, 'check_3_aggregate',
            SUM(c.TOT_ASSETS), SUM(s.TOT_ASSETS),
@@ -293,6 +306,7 @@ Run these in order. Each answers a different question, and each has a blind spot
     Do this before normalizing anything. You are meant to see what it produces.
 
     ```sql
+    -- CHECK 4: row-level comparison — naive version first, on purpose
     SELECT c.`#ID_RSSD`, c.NM_LGL AS cloud_name, s.NM_LGL AS source_name
     FROM training_nic.migrated.institutions AS c
     JOIN training_nic.legacy_onprem.institutions AS s
@@ -305,6 +319,7 @@ Run these in order. Each answers a different question, and each has a blind spot
 20. **Count how many rows it reports**
 
     ```sql
+    -- how many rows does the naive comparison flag?
     SELECT COUNT(*) AS naive_mismatches
     FROM training_nic.migrated.institutions AS c
     JOIN training_nic.legacy_onprem.institutions AS s
@@ -320,6 +335,7 @@ Run these in order. Each answers a different question, and each has a blind spot
     Apply `TRIM` to remove padding and `NULLIF` to collapse empty strings to null, on **both** sides of the comparison.
 
     ```sql
+    -- normalized: TRIM the padding, collapse '' to NULL, null-safe compare
     SELECT COUNT(*) AS real_mismatches
     FROM training_nic.migrated.institutions AS c
     JOIN training_nic.legacy_onprem.institutions AS s
@@ -339,6 +355,7 @@ Run these in order. Each answers a different question, and each has a blind spot
     The normalized count is the real verdict; the naive count rides along in `source_value` as evidence of the noise you removed.
 
     ```sql
+    -- record check 4: normalized mismatches (real) vs naive count (noise)
     INSERT INTO training_nic.analyst.validation_runs
     SELECT run_started, 'check_4_row_level',
            (SELECT COUNT(*) FROM training_nic.migrated.institutions c
@@ -361,6 +378,7 @@ Run these in order. Each answers a different question, and each has a blind spot
     The name column failed on formatting—padding and empty strings. Dates fail differently: there is nothing to trim, but the null-safe `IS DISTINCT FROM` comparison still applies. Run it against `D_DT_START` and look at the `day_difference` column.
 
     ```sql
+    -- dates: nothing to trim, but the null-safe comparison still applies
     SELECT c.`#ID_RSSD`, c.D_DT_START AS cloud_date, s.D_DT_START AS source_date,
            datediff(c.D_DT_START, s.D_DT_START) AS day_difference
     FROM training_nic.migrated.institutions AS c
@@ -374,6 +392,7 @@ Run these in order. Each answers a different question, and each has a blind spot
 25. **Check whether any date difference is consistent**
 
     ```sql
+    -- is the date shift the same size on every affected row?
     SELECT datediff(c.D_DT_START, s.D_DT_START) AS day_difference,
            COUNT(*) AS row_count
     FROM training_nic.migrated.institutions AS c
@@ -396,6 +415,7 @@ Run these in order. Each answers a different question, and each has a blind spot
 26. **View the table's history**
 
     ```sql
+    -- the migration's own audit log
     DESCRIBE HISTORY training_nic.migrated.institutions;
     ```
     <!-- source: facts_extracted.md §8 -->
@@ -409,6 +429,7 @@ Run these in order. Each answers a different question, and each has a blind spot
     Version 0 is the table as first loaded, before any of the writes that introduced defects.
 
     ```sql
+    -- the table as first loaded, before any defect was introduced
     SELECT COUNT(*) AS rows_at_version
     FROM training_nic.migrated.institutions VERSION AS OF 0;
     ```
@@ -429,6 +450,7 @@ Run these in order. Each answers a different question, and each has a blind spot
 28. **Read back the run history**
 
     ```sql
+    -- every verdict recorded so far
     SELECT run_ts, check_name, cloud_value, source_value, passed
     FROM training_nic.analyst.validation_runs
     ORDER BY run_ts, check_name;
@@ -445,6 +467,7 @@ Run these in order. Each answers a different question, and each has a blind spot
     A migration gets fixed and re-attempted, and your validation has to be one click—not an afternoon of pasting. Click **Run all**, then read the history grouped by attempt:
 
     ```sql
+    -- one row per Run All: checks run, checks passed
     SELECT run_ts AS run_attempt,
            COUNT(*) AS checks_run,
            SUM(CASE WHEN passed THEN 1 ELSE 0 END) AS checks_passed
