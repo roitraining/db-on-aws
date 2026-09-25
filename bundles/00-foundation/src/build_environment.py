@@ -419,7 +419,8 @@ summary_rows = spark.sql(f"""
       WHERE STATE_ABBR_NM = 'CA'
       GROUP BY 1, 2)
 """).collect()[0]["n"]
-print(f"  [INFO] Lab 5 summary rows (CA, charter x month) to pin: {summary_rows:,}")
+check("Lab 5 — institution_summary holds 730 rows (alert threshold 650)",
+      summary_rows == 730, f"{summary_rows} rows")
 
 print("\n=== Lab 2 date range ===")
 in_range = spark.sql(f"""

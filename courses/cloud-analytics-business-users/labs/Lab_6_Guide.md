@@ -198,7 +198,7 @@ The last step is the one stakeholders actually see. You will build a dashboard o
 
     ```sql
     -- live status of both Lab 5 alerts, computed from their own conditions
-    SELECT 'summary row count below 1,200' AS alert,
+    SELECT 'summary row count below 650' AS alert,
            CASE WHEN (SELECT COUNT(*) FROM training_nic.analyst.institution_summary) < 1900
                 THEN 'TRIGGERED' ELSE 'OK' END AS status
     UNION ALL

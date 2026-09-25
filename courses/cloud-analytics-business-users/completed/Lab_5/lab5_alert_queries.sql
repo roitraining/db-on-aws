@@ -2,7 +2,7 @@
 -- Each is authored INSIDE its alert editor (alerts cannot reuse saved queries).
 
 -- Alert 1: lab5_row_count_alert
--- Condition: First row of row_count < 1200   (table holds exactly 1,309 rows)
+-- Condition: First row of row_count < 650   (table holds exactly 730 rows)
 SELECT COUNT(*) AS row_count
 FROM training_nic.analyst.institution_summary;
 

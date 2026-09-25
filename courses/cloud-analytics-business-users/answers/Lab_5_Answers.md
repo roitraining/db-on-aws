@@ -40,7 +40,7 @@ Any two of: access is governed and auditable (grants can be inspected and revoke
 
 **1. Fire the alert deliberately.**
 
-Raise the threshold above the current row count (1,309) and let the schedule run: status flips to `TRIGGERED` and the email arrives. Without the alert, the first person to notice the broken table would have been a stakeholder looking at wrong or missing numbers on the dashboard — and you would have heard about it from them.
+Raise the threshold above the current row count (730) and let the schedule run: status flips to `TRIGGERED` and the email arrives. Without the alert, the first person to notice the broken table would have been a stakeholder looking at wrong or missing numbers on the dashboard — and you would have heard about it from them.
 
 **2. Revoke `USE SCHEMA`, leave `SELECT`.**
 

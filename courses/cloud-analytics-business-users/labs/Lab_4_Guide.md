@@ -280,7 +280,7 @@ Official documentation, if you want the full detail behind any row:
 
 18. **Run the same shape of query at 2 million rows**
 
-    Your 4,900-row pipeline finishes before performance can matter. Setup built 2-million-row versions of the same tables—`training_nic.perf.institutions_large` and `training_nic.perf.financials_large`—where slow is visible. Run the join-and-aggregate in a `%sql` cell and note the wall time:
+    Your 62,000-row pipeline is small by Spark standards. Setup built 2-million-row versions of the same tables—`training_nic.perf.institutions_large` and `training_nic.perf.financials_large`—where slow is visible. Run the join-and-aggregate in a `%sql` cell and note the wall time:
 
     ```sql
     %sql

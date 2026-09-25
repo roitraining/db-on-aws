@@ -22,7 +22,7 @@ Answers to the stretch tasks in Labs 1–6. For instructor use — attendees get
     HAVING COUNT(*) >= :min_count
     ORDER BY institution_count DESC;
     ```
-3. In `migrated`: **0 rows** (the migration trimmed the names). In `legacy_onprem`: **5,000 rows** — every name is padded. The asymmetry *is* the whitespace defect Lab 3 uncovers.
+3. In `migrated`: **0 rows** (the migration trimmed the names). In `legacy_onprem`: **every row** — the real FFIEC export pads names to 120 characters. The asymmetry *is* the whitespace defect Lab 3 uncovers.
 
 ## Lab 3
 
@@ -41,7 +41,7 @@ Answers to the stretch tasks in Labs 1–6. For instructor use — attendees get
 
     ```sql
     SELECT COUNT(*) FROM training_nic.legacy_onprem.institutions
-    WHERE CHTR_TYPE_CD = '250';   -- 100 rows on-prem, 0 in migrated
+    WHERE CHTR_TYPE_CD = '250';   -- 381 rows on-prem, 0 in migrated
     ```
 
 ## Lab 4

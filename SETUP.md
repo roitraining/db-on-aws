@@ -98,7 +98,7 @@ SQL warehouse**, which starts in seconds. Three labs need a **classic cluster** 
 SELECT COUNT(*) FROM training_nic.migrated.institutions;
 ```
 
-> **Expected Result:** `4900`. If the table is missing, the environment has not been built —
+> **Expected Result:** `61,699`. If the table is missing, the environment has not been built —
 > see Part 3, or tell your instructor.
 
 ---

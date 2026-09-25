@@ -19,7 +19,7 @@ This data lived in an on-premises SQL Server for years. It now lives in Databric
 - [ ] Your assigned attendee ID (used to name your personal schema)
 - [ ] A browser signed out of any other Databricks workspace
 - [ ] **[`SETUP.md`](../../../SETUP.md) Parts 1 and 2 completed**—course material added as a Git folder, SQL warehouse selected
-- [ ] **[Lab 0: Set Up Your Workspace](Lab_0_Guide.md) completed**—your `training_nic` catalog is built (verify: `SELECT COUNT(*) FROM training_nic.migrated.institutions` returns 4900)
+- [ ] **[Lab 0: Set Up Your Workspace](Lab_0_Guide.md) completed**—your `training_nic` catalog is built (verify: `SELECT COUNT(*) FROM training_nic.migrated.institutions` returns 61,699)
 
 > **Note:** If you have not added the course repository to your workspace yet, do that first—it takes about two minutes and puts every lab guide inside Databricks, next to the query you are running. `SETUP.md` Part 1 walks through it. The repository is public, so you will not be asked for a token or a password.
 
@@ -132,7 +132,7 @@ This data lived in an on-premises SQL Server for years. It now lives in Databric
 
     <!-- source: facts_extracted.md §5 -->
 
-    > **Expected Result:** A single row with one column, `row_count`, containing **4,900**.
+    > **Expected Result:** A single row with one column, `row_count`, containing **61,699**.
 
 ### Task 4: Export and Compare
 
@@ -142,7 +142,7 @@ This data lived in an on-premises SQL Server for years. It now lives in Databric
 
 14. **Compare against the on-premises figure**
 
-    On-premises, this table had **5,000** rows. Your count is **4,900**. They do not match. Do not try to explain the difference yet.
+    On-premises, this table had **62,080** rows. Your count is **61,699**. They do not match. Do not try to explain the difference yet.
 
     > **What Just Happened?** One count, two systems—the smallest possible unit of migration validation. The gap is real and deliberate. Lab 3 is where you find out what the migration did wrong.
 
@@ -209,9 +209,9 @@ Keep your answers in mind—they will be relevant in Lab 3.
 - [ ] I can state what the three levels of `training_nic.migrated.institutions` mean
 - [ ] I ran `USE CATALOG` and `USE SCHEMA` successfully
 - [ ] I ran a `SELECT` with `LIMIT` and saw results
-- [ ] I produced a row count for the institutions table (4,900)
+- [ ] I produced a row count for the institutions table (61,699)
 - [ ] I exported the result set as CSV
-- [ ] I saw that the cloud count (4,900) does not match the on-premises figure (5,000)
+- [ ] I saw that the cloud count (61,699) does not match the on-premises figure (62,080)
 - [ ] I saved my query as `lab1_row_count_<id>`
 - [ ] I can find Recents, Search, my home folder, Compute, and Query History without help
 

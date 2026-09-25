@@ -164,7 +164,7 @@ You already write SQL—in whatever dialect your team used. The reports being mi
     ```
     <!-- source: facts_extracted.md §12 -->
 
-    > **Expected Result:** One row per state, ordered by institution count descending.
+    > **Expected Result:** One row per state, ordered by institution count descending—NY leads the real data.
 
     > **Key Insight:** Look at the join condition. `STATE_ABBR_NM` on the left is the native NIC column name, carried through from the source files untouched. `state_abbr` on the right is a curated reference table we control, so it uses a clean name. Joining a raw-named table to a curated one is the normal state of affairs, not a mistake—and it is why the Silver layer exists.
 
@@ -205,7 +205,7 @@ You already write SQL—in whatever dialect your team used. The reports being mi
 
     Type **1990-01-01** into the `start_date` widget and **1999-12-31** into `end_date`, then click **Run all**.
 
-    > **Expected Result:** One row per state, CA highest.
+    > **Expected Result:** One row per state—NY at the top in the real data, not CA.
 
     Change `end_date` to **2018-12-31** and run again. Every count grows—no SQL edited.
 

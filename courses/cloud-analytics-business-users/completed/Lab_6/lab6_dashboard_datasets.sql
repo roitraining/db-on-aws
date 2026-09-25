@@ -34,7 +34,7 @@ FROM training_nic.analyst.institution_summary_published
 GROUP BY start_month;
 
 -- dataset 6: live alert status (Migration Health table -- same conditions the alerts run)
-SELECT 'summary row count below 1,200' AS alert,
+SELECT 'summary row count below 650' AS alert,
        CASE WHEN (SELECT COUNT(*) FROM training_nic.analyst.institution_summary) < 1900
             THEN 'TRIGGERED' ELSE 'OK' END AS status
 UNION ALL

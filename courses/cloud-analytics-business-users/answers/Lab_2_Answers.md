@@ -80,4 +80,4 @@ SELECT COUNT(*) FROM institutions
 WHERE LENGTH(NM_LGL) <> LENGTH(TRIM(NM_LGL));
 ```
 
-Against `training_nic.migrated`: **0 rows** — the cloud copy was trimmed during migration. Run the same query against `training_nic.legacy_onprem` and **all 5,000 rows** change length, because the source exported fixed-width `CHAR` columns padded to their declared width. That asymmetry is exactly why Lab 3's naive row-level comparison reports almost every name as different.
+Against `training_nic.migrated`: **0 rows** — the cloud copy was trimmed during migration. Run the same query against `training_nic.legacy_onprem` and **every row** changes length — the real FFIEC export pads names to 120 characters. That asymmetry is exactly why Lab 3's naive row-level comparison reports almost every name as different.

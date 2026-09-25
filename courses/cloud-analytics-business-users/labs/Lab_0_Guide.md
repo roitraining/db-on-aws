@@ -112,7 +112,7 @@ do every step yourself, in your own account.
     SELECT COUNT(*) FROM training_nic.migrated.institutions;
     ```
 
-16. Confirm the result is **4900**.
+16. Confirm the result is **61,699**.
 
 ---
 
@@ -121,7 +121,7 @@ do every step yourself, in your own account.
 - [ ] The `db-on-aws` Git folder is in your workspace
 - [ ] The setup notebook finished with "All setup checks passed"
 - [ ] `training_nic` appears in Catalog Explorer (**Catalog** in the sidebar)
-- [ ] `SELECT COUNT(*) FROM training_nic.migrated.institutions` returns 4900
+- [ ] `SELECT COUNT(*) FROM training_nic.migrated.institutions` returns 61,699
 
 If all four are checked, you are ready for **Lab 1**.
 

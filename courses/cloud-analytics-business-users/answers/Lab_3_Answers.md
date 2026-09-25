@@ -8,15 +8,15 @@ Attempt the lab before opening this file — the point of Lab 3 is the investiga
 
 | # | Defect | What you observe | Magnitude |
 |---|--------|------------------|-----------|
-| 1 | Rows dropped | Check 1 gap; every missing key has `CHTR_TYPE_CD = '250'` | 100 rows (5,000 → 4,900) |
-| 2 | Decimals truncated | `SUM(TOT_ASSETS)` differs while row counts match — values were cast to whole dollars | ~$2,443 lost across 4,900 rows in `financials` |
-| 3 | Dates shifted | `D_DT_START` differs on a subset; `datediff` grouped shows every affected row is exactly **+1 day** | ~705 rows |
-| 4 | Empty string became NULL | Cloud `CITY` has ~212 NULLs where the source has ~217 empty strings — `''` was mapped to NULL on migration | ~212 rows |
-| 5 | Padding stripped | Source `NM_LGL` is space-padded (fixed-width `CHAR` export); cloud copy is trimmed | all 5,000 source rows |
+| 1 | Rows dropped | Check 1 gap; every missing key has `CHTR_TYPE_CD = '250'` | 381 rows (62,080 → 61,699) |
+| 2 | Decimals truncated | `SUM(TOT_ASSETS)` differs while row counts match — values were cast to whole dollars | ~$31,962 lost across 61,699 rows in `financials` |
+| 3 | Dates shifted | `D_DT_START` differs on a subset; `datediff` grouped shows every affected row is exactly **+1 day** | 8,770 rows |
+| 4 | Empty string became NULL | Cloud `CITY` has 2,687 NULLs where the source has 2,709 empty strings — `''` was mapped to NULL on migration (the difference is empty-city rows that were also charter 250) | 2,687 rows |
+| 5 | Padding stripped | Source `NM_LGL` is space-padded to 120 — genuinely present in the real FFIEC export — and the cloud copy is trimmed | every source row |
 
 Defects 4 and 5 are **comparison artifacts turned real**: they change representation, not meaning, but they make the naive row-level comparison explode until you normalize with `TRIM` and `NULLIF`. Defects 1–3 are genuine data problems: 1 blocks cutover (rows are gone), 2 and 3 need an engineering decision on whether the transformation was intended.
 
-The build stages these defects as **separate commits**, so `DESCRIBE HISTORY` on `migrated.institutions` is the migration's audit log: version 0 is the faithful 5,000-row copy (what Task 6 time-travels to), the `DELETE` commit carries defect 1's predicate in `operationParameters`, and the `UPDATE` commits are defects 5, 4, and 3 in order.
+The build stages these defects as **separate commits**, so `DESCRIBE HISTORY` on `migrated.institutions` is the migration's audit log: version 0 is the faithful 62,080-row copy (what Task 6 time-travels to), the `DELETE` commit carries defect 1's predicate in `operationParameters`, and the `UPDATE` commits are defects 5, 4, and 3 in order.
 
 ---
 
@@ -43,11 +43,11 @@ A comparison artifact, not a migration defect — almost always formatting, and 
 
 **5. A numeric column's sum differs between systems while the row count matches exactly. What kind of error does that suggest?**
 
-Per-row value corruption rather than missing data — typically truncation or rounding applied during conversion. Here it is defect 2: `TOT_ASSETS` was cast to whole dollars, shaving ~$2,443 in cents off across the table. Small on any single row, visible only in the aggregate.
+Per-row value corruption rather than missing data — typically truncation or rounding applied during conversion. Here it is defect 2: `TOT_ASSETS` was cast to whole dollars, shaving ~$31,962 in cents off across the table. Small on any single row, visible only in the aggregate.
 
 **6. Missing rows all share the same value in one column. Why is that more useful than the count of missing rows?**
 
-A shared value points at a systematic cause — here, a filter that excluded `CHTR_TYPE_CD = '250'` — which tells the engineer exactly what to fix and predicts that re-running the migration without the filter recovers all 100 rows. A bare count tells them only how big the hole is.
+A shared value points at a systematic cause — here, a filter that excluded `CHTR_TYPE_CD = '250'` — which tells the engineer exactly what to fix and predicts that re-running the migration without the filter recovers all 381 rows. A bare count tells them only how big the hole is.
 
 **7. Why is the row-level comparison last rather than first?**
 
@@ -118,4 +118,4 @@ WHERE c.D_DT_START IS DISTINCT FROM s.D_DT_START
 GROUP BY 1;
 ```
 
-No `TRIM`, no `NULLIF` — and it still reports ~705 rows, every one exactly +1 day. The same logic works for the missing rows (a count by `CHTR_TYPE_CD` on both sides) — a defect that survives with normalization removed cannot be an artifact of it.
+No `TRIM`, no `NULLIF` — and it still reports 8,770 rows, every one exactly +1 day. The same logic works for the missing rows (a count by `CHTR_TYPE_CD` on both sides) — a defect that survives with normalization removed cannot be an artifact of it.

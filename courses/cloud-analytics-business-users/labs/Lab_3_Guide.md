@@ -17,7 +17,7 @@ You are being asked to sign off that the migrated data matches the source. This 
 
 - [ ] Labs 1 and 2 completed
 - [ ] A running serverless SQL warehouse selected
-- [ ] Access to `training_nic.legacy_onprem` (verify: `SELECT COUNT(*) FROM training_nic.legacy_onprem.institutions` returns 5,000)
+- [ ] Access to `training_nic.legacy_onprem` (verify: `SELECT COUNT(*) FROM training_nic.legacy_onprem.institutions` returns 62,080)
 - [ ] Your `LENGTH()` observation from Lab 2, step 5
 
 ---
@@ -100,13 +100,13 @@ You are being asked to sign off that the migrated data matches the source. This 
     ```
     <!-- source: facts_extracted.md §9 -->
 
-    > **Expected Result:** `source_rows` is **5,000**.
+    > **Expected Result:** `source_rows` is **62,080**.
 
     > **Troubleshooting (federated variant only):** If a federated query fails immediately rather than returning rows, the cause is usually the connection rather than your SQL. Federated connections are always encrypted with SSL and the certificate hostname must match the endpoint requested, or the connection fails during the handshake.
 
 6. **Confirm the gap**
 
-    Source: **5,000**. Cloud: **4,900**. The four checks that follow find where the 100 rows went—and what else the migration broke.
+    Source: **62,080**. Cloud: **61,699**. The four checks that follow find where the 381 rows went—and what else the migration broke.
 
 ---
 
@@ -142,7 +142,7 @@ Run these in order. Each answers a different question, and each has a blind spot
     ```
     <!-- source: facts_extracted.md §10 -->
 
-    > **Expected Result:** One row added to `validation_runs` with `passed` = `false`—4,900 against 5,000.
+    > **Expected Result:** One row added to `validation_runs` with `passed` = `false`—61,699 against 62,080.
 
     > **Key Insight:** Check 1 answers "did everything arrive?" and nothing else. It tells you nothing about whether the rows that *did* arrive are correct. A migration can pass this check and still be badly wrong.
     <!-- source: facts_extracted.md §10 -->
@@ -160,7 +160,7 @@ Run these in order. Each answers a different question, and each has a blind spot
     ```
     <!-- source: facts_extracted.md §10 -->
 
-    > **Expected Result:** 100 keys—the missing rows from Check 1, now identified individually.
+    > **Expected Result:** 381 keys—the missing rows from Check 1, now identified individually.
 
 10. **Now flip it—is there anything in the cloud that was never on-premises?**
 
@@ -192,9 +192,9 @@ Run these in order. Each answers a different question, and each has a blind spot
 
 12. **Read the pattern**
 
-    > **Expected Result:** One row: charter type `250`, missing count **100**. Every single missing row shares one charter type.
+    > **Expected Result:** One row: charter type `250`, missing count **381**. Every single missing row shares one charter type.
 
-    > **What Just Happened?** The missing rows cluster in one category rather than spreading evenly—that is not random loss, that is a filter in the migration job. A far more actionable finding than "100 rows are missing."
+    > **What Just Happened?** The missing rows cluster in one category rather than spreading evenly—that is not random loss, that is a filter in the migration job. A far more actionable finding than "381 rows are missing."
 
 13. **Record check 2**
 
@@ -221,7 +221,7 @@ Run these in order. Each answers a different question, and each has a blind spot
     ```
     <!-- source: facts_extracted.md §10 -->
 
-    > **Expected Result:** `cloud_value` = 100, `source_value` = 0, `passed` = `false`.
+    > **Expected Result:** `cloud_value` = 381, `source_value` = 0, `passed` = `false`.
 
 ### Task 4: Check 3—Aggregate Parity
 
@@ -295,7 +295,7 @@ Run these in order. Each answers a different question, and each has a blind spot
     ```
     <!-- source: facts_extracted.md §10 -->
 
-    > **Expected Result:** `passed` = `false`—the totals disagree by roughly $2,400 even over identical keys.
+    > **Expected Result:** `passed` = `false`—the totals disagree by roughly $32,000 even over identical keys.
 
     > **Key Insight:** Check 3 catches errors that are invisible row by row. A value that is slightly wrong on every row looks fine in a spot check and only appears when you sum the column.
     <!-- source: facts_extracted.md §10 -->
@@ -436,7 +436,7 @@ Run these in order. Each answers a different question, and each has a blind spot
     ```
     <!-- source: facts_extracted.md §8 -->
 
-    > **Expected Result:** **5,000**—the on-premises count. The 100-row gap from Check 1 did not happen in transit. It happened inside this table's own lifetime, at the `DELETE` you can see in the history.
+    > **Expected Result:** **62,080**—the on-premises count. The 381-row gap from Check 1 did not happen in transit. It happened inside this table's own lifetime, at the `DELETE` you can see in the history.
 
     > **Note:** History retention is governed by `logRetentionDuration`, 30 days by default, but data files are retained for 7 days by default. In Databricks Runtime 18.0 and above, a time travel query is blocked if it requests a version older than the deleted-file retention period. Use time travel for recent comparisons, not as an archive.
     <!-- source: facts_extracted.md §8 -->

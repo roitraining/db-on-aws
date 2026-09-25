@@ -119,7 +119,7 @@ You have a multi-join T-SQL stored procedure that runs on-premises. This lab con
 
 6. **Look at the time you just recorded**
 
-    It is a few seconds, and most of that is scheduling overhead rather than work. The migrated tables hold 4,900 rows. That is the right size for proving your translation is *correct*, and useless for proving anything about *performance*.
+    It is a few seconds, and most of that is scheduling overhead rather than work. The migrated tables hold about 62,000 rows. That is the right size for proving your translation is *correct*, and useless for proving anything about *performance*.
 
     > **Key Insight:** This is the first real lesson of the lab. Benchmarking on toy data tells you nothing, and worse, it tells you something confidently wrong. Every performance figure quoted from here on was measured, not estimated.
 
@@ -290,7 +290,7 @@ You have a multi-join T-SQL stored procedure that runs on-premises. This lab con
 - [ ] My notebook is attached to a classic cluster
 - [ ] I read the T-SQL procedure before writing Python
 - [ ] I reproduced its joins, filter and aggregation in the DataFrame API
-- [ ] I can explain why the 4,900-row tables cannot support a performance claim
+- [ ] I can explain why the production-sized tables cannot support a performance claim
 - [ ] I switched to the performance-scale tables
 - [ ] I opened the Spark UI and counted the stages
 - [ ] I can explain what each stage boundary represents
