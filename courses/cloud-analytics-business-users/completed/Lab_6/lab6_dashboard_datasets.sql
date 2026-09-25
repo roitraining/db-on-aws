@@ -25,3 +25,21 @@ SELECT COUNT(*) AS failed_checks
 FROM training_nic.analyst.validation_runs
 WHERE NOT passed
   AND run_ts = (SELECT MAX(run_ts) FROM training_nic.analyst.validation_runs);
+
+-- dataset 5: cumulative growth (page 1 line chart -- per-month counts are noise)
+SELECT start_month,
+       SUM(institution_count) AS new_institutions,
+       SUM(SUM(institution_count)) OVER (ORDER BY start_month) AS total_institutions
+FROM training_nic.analyst.institution_summary_published
+GROUP BY start_month;
+
+-- dataset 6: live alert status (Migration Health table -- same conditions the alerts run)
+SELECT 'summary row count below 1,900' AS alert,
+       CASE WHEN (SELECT COUNT(*) FROM training_nic.analyst.institution_summary) < 1900
+            THEN 'TRIGGERED' ELSE 'OK' END AS status
+UNION ALL
+SELECT 'validation failures in latest run',
+       CASE WHEN (SELECT COUNT(*) FROM training_nic.analyst.validation_runs
+                  WHERE NOT passed
+                    AND run_ts = (SELECT MAX(run_ts) FROM training_nic.analyst.validation_runs)) > 0
+            THEN 'TRIGGERED' ELSE 'OK' END;

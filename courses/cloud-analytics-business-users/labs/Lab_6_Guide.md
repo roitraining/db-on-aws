@@ -65,9 +65,22 @@ The last step is the one stakeholders actually see. You will build a dashboard o
 
     Back on the **Canvas** tab, pick the **visualization widget** from the toolbar at the bottom of the canvas and drag a rectangle where the chart should sit. In the configuration panel on the right, select your dataset, set the visualization type to **Bar**, and put `CHTR_TYPE_CD` on one axis and `institution_count` on the other.
 
-5. **Add a line chart**
+5. **Add a line chart that tells a story**
 
-    Add a second visualization widget the same way. Set the type to **Line**, with `start_month` on the horizontal axis and `institution_count` on the vertical.
+    Per-month counts here are tiny—two or three institutions a month charts as noise. Cumulative growth is the story worth telling. On the **Data** tab, **Create from SQL** once more:
+
+    ```sql
+    -- cumulative growth: a running total of institutions over time
+    SELECT start_month,
+           SUM(institution_count) AS new_institutions,
+           SUM(SUM(institution_count)) OVER (ORDER BY start_month) AS total_institutions
+    FROM training_nic.analyst.institution_summary_published
+    GROUP BY start_month;
+    ```
+
+    Back on the **Canvas**, add a **Line** chart on this dataset: `start_month` on the horizontal axis, `total_institutions` on the vertical. Rename it **Institution growth**.
+
+    > **Key Insight:** The dataset layer is a real query surface—the window function turned a uselessly flat series into a growth curve without touching any table. When a chart looks wrong, fix the dataset before fighting the chart.
 
 6. **Give both charts titles a stakeholder would understand**
 
@@ -109,7 +122,7 @@ The last step is the one stakeholders actually see. You will build a dashboard o
 
 10. **Add a date-range filter**
 
-    Pick the **filter widget** from the same canvas toolbar, place it above the charts, and set its field to `start_month` in the right-hand panel. Dashboards support global, page-level, and widget-level filters.
+    Pick the **filter widget** from the same canvas toolbar, place it above the charts, and in the right-hand panel add the `start_month` field from **both** datasets—the published view and the growth dataset. One filter can drive widgets from different datasets as long as each contributes a field. Dashboards support global, page-level, and widget-level filters.
     <!-- source: facts_extracted.md §16 -->
 
 11. **Scope the filter to both charts**
@@ -179,30 +192,51 @@ The last step is the one stakeholders actually see. You will build a dashboard o
 
     > **Key Insight:** The dashboard does not send anything—interrupting people is the Lab 5 alert's job. The tile's color makes state legible at a glance, which is a different job: the alert finds you, the dashboard answers you.
 
+19. **Show the alerts' live status**
+
+    A dashboard cannot read an alert object's `OK`/`TRIGGERED` state—but it can evaluate the **same condition** the alert evaluates, which is the same truth without the notification. Add one more dataset:
+
+    ```sql
+    -- live status of both Lab 5 alerts, computed from their own conditions
+    SELECT 'summary row count below 1,900' AS alert,
+           CASE WHEN (SELECT COUNT(*) FROM training_nic.analyst.institution_summary) < 1900
+                THEN 'TRIGGERED' ELSE 'OK' END AS status
+    UNION ALL
+    SELECT 'validation failures in latest run',
+           CASE WHEN (SELECT COUNT(*) FROM training_nic.analyst.validation_runs
+                      WHERE NOT passed
+                        AND run_ts = (SELECT MAX(run_ts) FROM training_nic.analyst.validation_runs)) > 0
+                THEN 'TRIGGERED' ELSE 'OK' END;
+    ```
+
+    On the **Migration Health** page, add a **Table** widget on this dataset showing both columns. One alert reads `OK`, the other `TRIGGERED`—matching what the Alerts page shows, because both are running the same test.
+
+    > **Note:** The alert still owns the interruption: email arrives whether anyone opens this page or not. The table gives stakeholders the status without a trip to the Alerts UI.
+
 ---
 
 ## Part 4: Publish, Schedule, and Share
 
 ### Task 5: Publish with Shared Credentials
 
-19. **Publish the dashboard**
+20. **Publish the dashboard**
 
     Click **Publish** at the top right of the editor. In the publish dialog, keep credentials **embedded**—that is the shared-credentials option. Dashboards can be published with shared or individual data permissions.
     <!-- source: facts_extracted.md §16 -->
 
     > **Key Insight:** With shared credentials, viewers see the data through your access rather than their own, so everyone sees consistent figures. With individual permissions, each viewer sees only what their own grants allow—which can mean two people looking at the same dashboard and seeing different numbers. Choose deliberately.
 
-20. **Open the published version as a viewer**
+21. **Open the published version as a viewer**
 
     Use the dropdown next to the dashboard title to switch from **Draft** to the **published** version. The filters still work; the editing controls are gone. This is what consumers see.
 
     > **Note:** Verifying view-only access from a genuinely different user needs a second person in the same workspace—everyone here runs an isolated account, so your instructor may demonstrate it in the shared class workspace.
 
-21. **Schedule an email delivery**
+22. **Schedule an email delivery**
 
     On the published dashboard, click **Schedule**, then **Add schedule**. Pick a daily cadence, and on the **Subscribers** tab add yourself. Each scheduled run refreshes the dashboard and emails a snapshot to every subscriber—the live replacement for mailing a spreadsheet every Monday. In a shared workspace you would subscribe colleagues; the mechanics are identical.
 
-22. **Note the reach of publishing**
+23. **Note the reach of publishing**
 
     A published dashboard can be shared with anyone registered to your Databricks account, even if they do not have access to the workspace.
     <!-- source: facts_extracted.md §16 -->
@@ -215,31 +249,31 @@ The last step is the one stakeholders actually see. You will build a dashboard o
 
 ### Task 6: Two Questions and a Verification
 
-23. **Create a Genie space on the same data**
+24. **Create a Genie space on the same data**
 
     In the left sidebar, click **Genie**, then click the **New** button on the Genie page. Name the space `lab6_genie_<id>`, select your published view `training_nic.analyst.institution_summary_published` as its data, and choose the serverless SQL warehouse when prompted. The space opens with a chat box—this is where you ask your questions.
 
-24. **Ask your first business question**
+25. **Ask your first business question**
 
     Ask something a stakeholder would genuinely ask, in plain English—for example, which charter type has grown the most in the last twenty years.
     <!-- source: facts_extracted.md §16 -->
 
-25. **Read the generated SQL, not just the answer**
+26. **Read the generated SQL, not just the answer**
 
     Expand the SQL Genie produced. Check that it queries the columns you expect and applies the filter you meant.
 
-26. **Ask a second question that is harder to answer**
+27. **Ask a second question that is harder to answer**
 
     Ask something ambiguous or requiring a judgement—for example, which states are underserved relative to population.
 
-27. **Verify that answer against your own query**
+28. **Verify that answer against your own query**
 
     Write the SQL yourself and compare results.
     <!-- source: facts_extracted.md §16 -->
 
     > **What Just Happened?** If the two disagree, Genie is not broken and neither are you. It answered the question it understood, which may not be the question you asked. "Underserved" has no definition in the data—Genie had to invent one.
 
-28. **Record when you would and would not trust it**
+29. **Record when you would and would not trust it**
 
     Write two sentences: one describing a question you would let Genie answer unsupervised, and one describing a question you would always verify.
 
@@ -270,6 +304,8 @@ For attendees who finish early.
 - [ ] I charted my Lab 2 report as a dashboard tile
 - [ ] I colored the bar charts by field and customized the palette
 - [ ] The failing-checks counter turns red when checks fail
+- [ ] The line chart shows cumulative growth, not per-month noise
+- [ ] The alert-status table matches the Alerts page
 - [ ] I published the dashboard with shared credentials
 - [ ] I can explain what shared credentials mean for what a viewer sees
 - [ ] I scheduled an email delivery and subscribed myself
