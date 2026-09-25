@@ -240,8 +240,8 @@ Official documentation, if you want the full detail behind any row:
 13. **Verify it with SQL, not Python**
 
     ```sql
-    -- read it back in SQL — same table, different language
     %sql
+    -- read it back in SQL — same table, different language
     SELECT * FROM training_nic.analyst.institution_summary
     ORDER BY start_month DESC
     LIMIT 20;
@@ -283,8 +283,8 @@ Official documentation, if you want the full detail behind any row:
     Your 4,900-row pipeline finishes before performance can matter. Setup built 2-million-row versions of the same tables—`training_nic.perf.institutions_large` and `training_nic.perf.financials_large`—where slow is visible. Run the join-and-aggregate in a `%sql` cell and note the wall time:
 
     ```sql
-    -- the same query shape at 2 million rows — big enough for the profile to tell a story
     %sql
+    -- the same query shape at 2 million rows — big enough for the profile to tell a story
     SELECT i.CHTR_TYPE_CD,
            COUNT(*)          AS institution_count,
            SUM(f.TOT_ASSETS) AS total_assets
@@ -307,8 +307,8 @@ Official documentation, if you want the full detail behind any row:
 20. **Compare against a narrow query**
 
     ```sql
-    -- narrow comparison query: filter + LIMIT, no aggregation, no shuffle
     %sql
+    -- narrow comparison query: filter + LIMIT, no aggregation, no shuffle
     SELECT `#ID_RSSD`, STATE_ABBR_NM
     FROM training_nic.perf.institutions_large
     WHERE STATE_ABBR_NM = 'WA'
