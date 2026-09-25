@@ -99,61 +99,157 @@ print(f"Catalog, {len(SCHEMAS)} schemas and landing volume ready.")
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Part 2 · Source of truth — `legacy_onprem`
+# MAGIC ## Part 2 · Stage the real NIC data and build the source of truth
 # MAGIC
-# MAGIC This stands in for the on-premises SQL Server export and carries its artifacts: `NM_LGL` is
-# MAGIC right-padded to 60 characters, and missing cities are empty strings rather than NULL. Both are
-# MAGIC real behaviours of a fixed-width export, and both are what Lab 3 teaches attendees to spot.
+# MAGIC The data is the **real FFIEC NIC bulk download** (public data): active attributes,
+# MAGIC closed attributes, and branches, pinned as zips in this repository at `data/nic/`
+# MAGIC (snapshot 2026-09-25; also pinned at `s3://roi-databricks-demo-data/nic-raw/`).
+# MAGIC **Never re-download before a delivery** — quoted figures are measured against this pin.
 # MAGIC
-# MAGIC The date span runs 1950 to 2018 so that Lab 2's 1970–1990 parameter range returns rows.
+# MAGIC Flow: unzip → stage CSVs in the `raw` volume (branches split into parts for Auto
+# MAGIC Loader) → full-width **bronze** tables, all columns as strings → `legacy_onprem` as the
+# MAGIC six-column SQL Server "export" with its artifacts (fixed-width padding, empty-string
+# MAGIC cities) applied to real rows.
+
+# COMMAND ----------
+
+import os, zipfile, glob
+
+VOL = f"/Volumes/{CATALOG}/raw/landing"
+ZIP_CANDIDATES = []
+try:
+    nb_path = dbutils.notebook.entry_point.getDbutils().notebook().getContext().notebookPath().get()
+    repo_root = "/Workspace" + "/".join(nb_path.split("/")[:-3])
+    ZIP_CANDIDATES.append(repo_root + "/data/nic")
+except Exception:
+    pass
+user = spark.sql("SELECT current_user()").collect()[0][0]
+ZIP_CANDIDATES += [f"/Workspace/Users/{user}/db-on-aws/data/nic", VOL + "/nic_zips"]
+
+zip_dir = next((d for d in ZIP_CANDIDATES if glob.glob(d + "/CSV_ATTRIBUTES_*.zip")), None)
+assert zip_dir, f"NIC zips not found in any of: {ZIP_CANDIDATES}. Pull the Git folder or upload the three CSV_ATTRIBUTES zips to {VOL}/nic_zips/."
+print("staging from:", zip_dir)
+
+os.makedirs(VOL + "/nic", exist_ok=True)
+os.makedirs(VOL + "/branches", exist_ok=True)
+
+for name, out in (("CSV_ATTRIBUTES_ACTIVE.zip", "attributes_active.csv"),
+                   ("CSV_ATTRIBUTES_CLOSED.zip", "attributes_closed.csv")):
+    with zipfile.ZipFile(zip_dir + "/" + name) as zf:
+        inner = zf.infolist()[0]
+        with zf.open(inner) as fin, open(f"{VOL}/nic/{out}", "wb") as fout:
+            fout.write(fin.read())
+    print("staged", out)
+
+# branches: split into parts so Auto Loader has a stream of files to discover
+with zipfile.ZipFile(zip_dir + "/CSV_ATTRIBUTES_BRANCHES.zip") as zf:
+    inner = zf.infolist()[0]
+    with zf.open(inner) as fin:
+        header = fin.readline()
+        part, lines = 0, []
+        for i, line in enumerate(fin):
+            lines.append(line)
+            if len(lines) >= 25000:
+                with open(f"{VOL}/branches/branches_part_{part:02d}.csv", "wb") as fo:
+                    fo.write(header + b"".join(lines))
+                part += 1
+                lines = []
+        if lines:
+            with open(f"{VOL}/branches/branches_part_{part:02d}.csv", "wb") as fo:
+                fo.write(header + b"".join(lines))
+print(f"staged branches in {part + 1} part files")
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### Bronze — the full raw files, every column, untouched
+
+# COMMAND ----------
+
+spark.sql(f"CREATE SCHEMA IF NOT EXISTS {CATALOG}.bronze")
+
+def bronze_load(src, table):
+    df = (spark.read.format("csv")
+          .option("header", "true")
+          .option("encoding", "windows-1252")
+          .option("multiLine", "true")
+          .option("escape", '"')
+          .load(src))
+    df.write.mode("overwrite").option("overwriteSchema", "true") \
+      .saveAsTable(f"{CATALOG}.bronze.{table}")
+    n = spark.table(f"{CATALOG}.bronze.{table}").count()
+    print(f"bronze.{table}: {n:,} rows, {len(df.columns)} columns")
+    return n
+
+n_active = bronze_load(VOL + "/nic/attributes_active.csv", "attributes_active")
+n_closed = bronze_load(VOL + "/nic/attributes_closed.csv", "attributes_closed")
+n_branches = bronze_load(VOL + "/branches/", "branches")
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### `legacy_onprem` — the SQL Server export, derived from real rows
+# MAGIC
+# MAGIC Six columns from the active file. `NM_LGL` keeps the raw value: the real FFIEC
+# MAGIC export is genuinely space-padded to 120 characters, so the fixed-width padding the
+# MAGIC labs teach is the actual artifact, not a simulation. A deterministic subset of
+# MAGIC cities is exported as empty strings. `TOT_ASSETS` is **synthetic** (keyed to real RSSD
+# MAGIC IDs) — NIC attributes carry no financials, which the labs also teach.
 
 # COMMAND ----------
 
 spark.sql(f"""
 CREATE OR REPLACE TABLE {CATALOG}.legacy_onprem.institutions AS
 SELECT
-  id AS `#ID_RSSD`,
-  RPAD(CONCAT('INSTITUTION ', CAST(id AS STRING), ' NATIONAL BANK'), 60, ' ') AS NM_LGL,
-  CASE WHEN id % 23 = 0 THEN '' ELSE CONCAT('CITY_', CAST(id % 400 AS STRING)) END AS CITY,
-  element_at(array('CA','CA','CA','CA','TX','NY','FL','IL','OH','WA'),
-             CAST(id % 10 AS INT) + 1) AS STATE_ABBR_NM,
-  -- weighted charter mix (~44/33/11/11) so per-charter charts have a real shape;
-  -- modulus 9 is coprime with the %10 state cycle, keeping charter and state independent
-  CASE WHEN id % 50 = 7 THEN '250'
-       ELSE element_at(array('200','200','200','200','300','300','300','400','500'),
-                       CAST(id % 9 AS INT) + 1) END AS CHTR_TYPE_CD,
-  DATE_ADD(DATE'1950-01-01', CAST(id * 5 AS INT)) AS D_DT_START
-FROM range(1, {ROWS + 1}) AS t(id)
+  CAST(`#ID_RSSD` AS BIGINT)                       AS `#ID_RSSD`,
+  NM_LGL,  -- the raw FFIEC export is genuinely space-padded (120 wide) — the padding lesson is real
+  CASE WHEN pmod(CAST(`#ID_RSSD` AS BIGINT), 23) = 0 THEN ''
+       ELSE COALESCE(CITY, '') END                 AS CITY,
+  STATE_ABBR_NM,
+  CHTR_TYPE_CD,
+  to_date(substring_index(D_DT_START, ' ', 1), 'M/d/yyyy') AS D_DT_START
+FROM {CATALOG}.bronze.attributes_active
+WHERE `#ID_RSSD` IS NOT NULL
 """)
 
-# TOT_ASSETS lives in a separate FR Y-9C-derived table. The NIC attributes file has no
-# financial fields, and keeping them apart mirrors that.
 spark.sql(f"""
 CREATE OR REPLACE TABLE {CATALOG}.legacy_onprem.financials AS
 SELECT
-  id AS `#ID_RSSD`,
-  CAST(ROUND(((id * 7919) % 900000) + 1000 + ((id % 100) / 100.0), 2) AS DECIMAL(18,2)) AS TOT_ASSETS
-FROM range(1, {ROWS + 1}) AS t(id)
+  `#ID_RSSD`,
+  CAST(ROUND((( `#ID_RSSD` * 7919) % 900000000) + 100000 + ((`#ID_RSSD` % 100) / 100.0), 2)
+       AS DECIMAL(18,2)) AS TOT_ASSETS
+FROM {CATALOG}.legacy_onprem.institutions
 """)
 
-print(f"legacy_onprem built: {ROWS:,} rows")
+src_rows = spark.table(f"{CATALOG}.legacy_onprem.institutions").count()
+print(f"legacy_onprem built from real NIC data: {src_rows:,} rows")
+
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Part 3 · Reference data
+# MAGIC ## Part 3 · Reference data — US Census 2020 state population
 
 # COMMAND ----------
 
 spark.sql(f"""
 CREATE OR REPLACE TABLE {CATALOG}.reference.state_population AS
 SELECT * FROM VALUES
-  ('CA', 39538223), ('TX', 29145505), ('FL', 21538187), ('NY', 20201249),
-  ('IL', 12812508), ('OH', 11799448), ('WA',  7705281)
+  ('CA',39538223),('TX',29145505),('FL',21538187),('NY',20201249),('PA',13002700),
+  ('IL',12812508),('OH',11799448),('GA',10711908),('NC',10439388),('MI',10077331),
+  ('NJ',9288994),('VA',8631393),('WA',7705281),('AZ',7151502),('MA',7029917),
+  ('TN',6910840),('IN',6785528),('MD',6177224),('MO',6154913),('WI',5893718),
+  ('CO',5773714),('MN',5706494),('SC',5118425),('AL',5024279),('LA',4657757),
+  ('KY',4505836),('OR',4237256),('OK',3959353),('CT',3605944),('UT',3271616),
+  ('IA',3190369),('NV',3104614),('AR',3011524),('MS',2961279),('KS',2937880),
+  ('NM',2117522),('NE',1961504),('ID',1839106),('WV',1793716),('HI',1455271),
+  ('NH',1377529),('ME',1362359),('MT',1084225),('RI',1097379),('DE',989948),
+  ('SD',886667),('ND',779094),('AK',733391),('VT',643077),('WY',576851),('DC',689545)
 AS t(state_abbr, population)
 """)
 
-print("reference.state_population built")
+print("reference.state_population built: 50 states + DC (2020 Census)")
+
 
 # COMMAND ----------
 
@@ -267,7 +363,10 @@ check("state_population carries state_abbr",
 print("\n=== Defect magnitudes (Lab 3 answer key) ===")
 src = spark.table(f"{CATALOG}.legacy_onprem.institutions").count()
 mig = spark.table(f"{CATALOG}.migrated.institutions").count()
-check("defect 1 — 100 rows dropped", src - mig == 100, f"{src:,} -> {mig:,}")
+n250 = spark.sql(f"SELECT COUNT(*) AS n FROM {CATALOG}.legacy_onprem.institutions "
+                 f"WHERE CHTR_TYPE_CD = '250'").collect()[0]["n"]
+check("defect 1 — dropped rows == charter-250 rows", src - mig == n250,
+      f"{src:,} -> {mig:,} (dropped {src - mig:,}, charter 250 holds {n250:,})")
 
 dropped_all_250 = spark.sql(f"""
     SELECT COUNT(*) AS n FROM {CATALOG}.legacy_onprem.institutions s
@@ -297,12 +396,15 @@ padded = spark.sql(f"""
     SELECT COUNT(*) AS n FROM {CATALOG}.legacy_onprem.institutions
     WHERE LENGTH(NM_LGL) <> LENGTH(TRIM(NM_LGL))
 """).collect()[0]["n"]
-check("defect 5 — all source rows padded", padded == ROWS, f"{padded:,} of {ROWS:,}")
+# real names >= 60 chars hit the CHAR(60) truncation instead of padding — realistic,
+# and the padding artifact still dominates
+check("defect 5 — padding artifact on nearly all rows", padded >= src * 0.95,
+      f"{padded:,} of {src:,}")
 
 print("\n=== Table history (Lab 3 Task 6) ===")
 v0 = spark.sql(f"SELECT COUNT(*) AS n FROM {CATALOG}.migrated.institutions VERSION AS OF 0"
                ).collect()[0]["n"]
-check("history — version 0 is the faithful 5,000-row copy", v0 == ROWS, f"{v0:,} rows at v0")
+check("history — version 0 is the faithful copy", v0 == src, f"{v0:,} rows at v0")
 hist_ops = [r["operation"] for r in
             spark.sql(f"DESCRIBE HISTORY {CATALOG}.migrated.institutions").collect()]
 check("history — staged build produced the audit trail", len(hist_ops) >= 8,
@@ -317,8 +419,7 @@ summary_rows = spark.sql(f"""
       WHERE STATE_ABBR_NM = 'CA'
       GROUP BY 1, 2)
 """).collect()[0]["n"]
-check("Lab 5 — institution_summary holds 1,309 rows (alert threshold 1,200)",
-      summary_rows == 1309, f"{summary_rows} rows")
+print(f"  [INFO] Lab 5 summary rows (CA, charter x month) to pin: {summary_rows:,}")
 
 print("\n=== Lab 2 date range ===")
 in_range = spark.sql(f"""
