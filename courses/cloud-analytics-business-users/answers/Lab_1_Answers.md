@@ -8,7 +8,7 @@ Attempt the questions before opening this file. If you are stuck mid-lab, find t
 
 **1. SQL Server uses `dbo.TableName`. What are the three parts of the equivalent name in Unity Catalog, and what does the extra level represent?**
 
-`catalog.schema.table` — for example `training_nic.migrated.institutions`. The new level is the **catalog**: a governance boundary above schema. SQL Server's `database.schema.table` maps roughly onto `catalog.schema.table`, with the catalog carrying the access-control and isolation role the database played.
+`catalog.schema.table` — for example `training_nic.migrated.institutions`. The new level is the **catalog**: a governance boundary above schema. A two-level name like `dbo.TableName` or `schema.table` maps onto the last two parts; the catalog adds the access-control and isolation role a database played on-premises.
 
 **2. You have been granted `SELECT` on a table but still cannot query it. What is the most likely missing privilege?**
 

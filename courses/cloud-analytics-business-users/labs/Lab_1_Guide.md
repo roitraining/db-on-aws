@@ -9,7 +9,7 @@
 
 ## Overview
 
-You have queried this data in SQL Server for years. It now lives in Databricks. This lab answers the only question that matters on day one: where is everything, and can I still find it? You will locate the tables your team owns, run a query against them, and compare one figure to the number you already know from on-premises.
+This data lived in an on-premises SQL Server for years. It now lives in Databricks. This lab answers the only question that matters on day one: where is everything, and can I still find it? You will locate the tables your team owns, run a query against them, and compare one figure to the number you already know from on-premises.
 
 ---
 
@@ -29,7 +29,7 @@ You have queried this data in SQL Server for years. It now lives in Databricks. 
 
 - Sign in to a Databricks workspace and start a SQL warehouse
 - Navigate Unity Catalog using Catalog Explorer to locate a migrated table
-- Read the three-level namespace and explain how it maps to SQL Server's two-level naming
+- Read the three-level namespace and explain how it maps to the two-level naming most databases use
 - Run a `SELECT` query in the SQL editor
 - Export a result set and compare one value against the on-premises figure
 - Locate Recents, Search, your home folder, Compute, and Query History
@@ -81,7 +81,7 @@ You have queried this data in SQL Server for years. It now lives in Databricks. 
 
     > **Note:** If there is no **institutions** table, the setup has not been run—go back to [Lab 0](Lab_0_Guide.md). Every remaining step in this lab refers to this table.
 
-    > **Key Insight:** Unity Catalog uses a three-level namespace—`catalog.schema.table`—where SQL Server used two, as in `dbo.TableName`. The catalog level is new. Everything you reference will have three parts unless you set a session default.
+    > **Key Insight:** Unity Catalog uses a three-level namespace—`catalog.schema.table`—where most databases use two—`schema.table` in PostgreSQL or MySQL, `dbo.TableName` in SQL Server. The catalog level is new. Everything you reference will have three parts unless you set a session default.
 
     <!-- source: facts_extracted.md §2 -->
 
@@ -110,7 +110,7 @@ You have queried this data in SQL Server for years. It now lives in Databricks. 
 
     <!-- source: facts_extracted.md §2 -->
 
-    > **Note:** This is the equivalent of `USE DatabaseName` in SQL Server, except it takes two statements because there is one more level in the namespace.
+    > **Note:** This is the equivalent of `USE database` in most SQL dialects, except it takes two statements because there is one more level in the namespace.
 
 11. **Run a simple SELECT**
 
@@ -228,7 +228,7 @@ Keep your answers in mind—they will be relevant in Lab 3.
 | Query never starts | Query sits queued and no results appear | The SQL warehouse is stopped or still starting. Check the compute selector at the top right of the editor. |
 | `SELECT TOP` fails | Syntax error near `TOP` | `TOP` is T-SQL. Use `LIMIT n` at the end of the statement. |
 | Table not found | Error naming the table | You are missing a namespace level. Either fully qualify as `training_nic.migrated.<table>` or run both `USE CATALOG` and `USE SCHEMA`. |
-| A cast that worked in SQL Server errors | Cast raises rather than returning null | Expected. Databricks does not silently coerce invalid values. Use `TRY_CAST` if null is the outcome you want. |
+| A cast that worked in your old database errors | Cast raises rather than returning null | Expected. Databricks does not silently coerce invalid values. Use `TRY_CAST` if null is the outcome you want. |
 | Export control not visible | No download option above results | The query must have completed and returned rows. Rerun and wait for the result grid. |
 
 ---
@@ -246,7 +246,7 @@ Keep your answers in mind—they will be relevant in Lab 3.
 
 ## Knowledge Check
 
-1. SQL Server uses `dbo.TableName`. What are the three parts of the equivalent name in Unity Catalog, and what does the extra level represent?
+1. Most databases use two-level names—`schema.table` or `dbo.TableName`. What are the three parts of the equivalent name in Unity Catalog, and what does the extra level represent?
 2. You have been granted `SELECT` on a table but still cannot query it. What is the most likely missing privilege?
 3. A colleague's query has been "running" for four minutes with no result. What should you check before looking at their SQL?
 4. Why does `SELECT TOP 100 * FROM institutions` fail, and what is the correct form?

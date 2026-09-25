@@ -9,7 +9,7 @@
 
 ## Overview
 
-You already write SQL. This lab is not SQL instruction—it is a translation exercise. You will convert T-SQL constructs into Databricks SQL, join tables that live in two different schemas in one statement, and then make the query reusable by a colleague who does not write SQL at all.
+You already write SQL—in whatever dialect your team used. The reports being migrated were written in T-SQL for SQL Server, so this lab is a translation exercise: each old construct is shown on the page, then converted to Databricks SQL. No prior T-SQL is assumed. You will also join tables across two schemas in one statement, and make the result reusable by a colleague who does not write SQL at all.
 
 ---
 
@@ -52,7 +52,7 @@ You already write SQL. This lab is not SQL instruction—it is a translation exe
 
 3. **Row limiting**
 
-    In T-SQL you would write `SELECT TOP 100 *`. In Databricks SQL the limit moves to the end of the statement.
+    The old report reads `SELECT TOP 100 *`—that is T-SQL. In Databricks SQL the limit moves to the end of the statement.
 
     ```sql
     SELECT * FROM institutions LIMIT 100;
@@ -102,7 +102,7 @@ You already write SQL. This lab is not SQL instruction—it is a translation exe
 
 7. **Date arithmetic**
 
-    This is the translation most likely to give you a wrong answer rather than an error. In T-SQL you write `DATEDIFF(day, start, end)`. In Databricks SQL the function is `datediff(endDate, startDate)`—**end date first**, no unit argument, and the result is always in days.
+    This is the translation most likely to give you a wrong answer rather than an error. The old reports use `DATEDIFF(day, start, end)`. In Databricks SQL the function is `datediff(endDate, startDate)`—**end date first**, no unit argument, and the result is always in days.
 
     ```sql
     SELECT datediff('2009-07-31', '2009-07-30') AS forward,
@@ -149,7 +149,7 @@ You already write SQL. This lab is not SQL instruction—it is a translation exe
 
 11. **Write the cross-schema join**
 
-    Because the two tables are in different schemas, at least one side must be fully qualified. This is the equivalent of a cross-database join in SQL Server.
+    Because the two tables are in different schemas, at least one side must be fully qualified—what a cross-database join was on-premises.
 
     ```sql
     SELECT

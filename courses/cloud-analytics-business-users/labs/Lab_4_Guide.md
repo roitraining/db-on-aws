@@ -88,7 +88,7 @@ Official documentation, if you want the full detail behind any row:
 
     The cell finished immediately. No data has been read yet.
 
-    > **Key Insight:** This is lazy evaluation, the concept that most often surprises SQL Server engineers. `spark.table()` builds a plan; it does not fetch data. Nothing executes until an action asks for results.
+    > **Key Insight:** This is lazy evaluation, the concept that most often surprises anyone coming from a traditional database. `spark.table()` builds a plan; it does not fetch data. Nothing executes until an action asks for results.
     <!-- source: facts_extracted.md §13 -->
 
 4. **Trigger an action**
