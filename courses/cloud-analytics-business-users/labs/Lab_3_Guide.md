@@ -260,6 +260,7 @@ Run these in order. Each answers a different question, and each has a blind spot
 
     ```sql
     -- NULL and '' are different values — count them separately (cloud side, then source)
+    -- NULL and '' are different values — count them separately (cloud side, then source)
     SELECT
       SUM(CASE WHEN CITY IS NULL THEN 1 ELSE 0 END)  AS null_cities,
       SUM(CASE WHEN CITY = ''    THEN 1 ELSE 0 END)  AS empty_cities
