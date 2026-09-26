@@ -163,7 +163,7 @@ The last step is the one stakeholders actually see. You will build a dashboard o
     Clear the state filter first, then work through this sequence and watch the growth line after each click:
 
     1. Click the **NY** bar in the state chart—the growth line redraws as New York's curve alone.
-    2. **Ctrl+click** the **TX** bar—Texas joins the selection, and the line becomes the *combined* CA-free NY + TX running total. Ctrl+click adds; plain click replaces.
+    2. **Ctrl+click** the **TX** bar—Texas joins the selection, and the line becomes the *combined* NY + TX running total. Ctrl+click adds; plain click replaces.
     3. Click an empty area of the chart—the selection clears and the national curve returns.
     4. Now click a bar in the **charter type** chart—the growth line does **not** move.
 
