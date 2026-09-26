@@ -23,7 +23,7 @@ setup first (or the `00-foundation` bundle) and try again.
 ## Confirm
 
 ```sql
-SELECT COUNT(*) FROM training_nic.migrated.institutions;     -- 4900   (foundation)
+SELECT COUNT(*) FROM training_nic.migrated.institutions;     -- 61,699 (real NIC data)
 SELECT COUNT(*) FROM training_nic.perf.institutions_large;   -- 2000000 (Lab 8)
 ```
 

@@ -115,7 +115,7 @@ You have a multi-join T-SQL stored procedure that runs on-premises. This lab con
 
 ## Part 2: Read the Execution
 
-### Task 2: Why You Cannot Measure This on 4,900 Rows
+### Task 2: Why You Cannot Measure This on 62,000 Rows
 
 6. **Look at the time you just recorded**
 
@@ -280,7 +280,7 @@ You have a multi-join T-SQL stored procedure that runs on-premises. This lab con
 ## Stretch Task
 
 1. Set `spark.sql.shuffle.partitions` to a much lower and a much higher value than the default of 200, with AQE off. Record task counts and durations for both. Which direction helped, and why did the other hurt?
-2. Join `inst_l` to `training_nic.reference.state_population` and inspect the physical plan with `.explain()`. Now wrap the small table in `F.broadcast()` and inspect it again. **Expect no difference**—both plans already show `BroadcastHashJoin`, because that table is seven rows and Spark broadcasts anything under `spark.sql.autoBroadcastJoinThreshold` automatically. The lesson is to read the plan before optimising it: the hint you were about to add had already been applied, and a hint that changes nothing is a hint that hides what the engine is actually doing.
+2. Join `inst_l` to `training_nic.reference.state_population` and inspect the physical plan with `.explain()`. Now wrap the small table in `F.broadcast()` and inspect it again. **Expect no difference**—both plans already show `BroadcastHashJoin`, because that table is fifty-one rows and Spark broadcasts anything under `spark.sql.autoBroadcastJoinThreshold` automatically. The lesson is to read the plan before optimising it: the hint you were about to add had already been applied, and a hint that changes nothing is a hint that hides what the engine is actually doing.
 3. Write the version of this query you would put into production, and justify every difference from the version you first wrote.
 
 ---
@@ -322,7 +322,7 @@ You have a multi-join T-SQL stored procedure that runs on-premises. This lab con
 | Cache makes it slower | Time increased | Caching costs a write. On a single-use DataFrame that cost is never recovered. |
 | One task runs far longer | Stage waits on a single task | Skew. Find the dominant key; more executors will not help. |
 | Error surfaces at `count()` | Failure on an action | Lazy evaluation—the fault is in an earlier transformation. |
-| No straggler visible | Max task duration equals median | You are on the 4,900-row tables, or AQE is still on. Either one hides it. |
+| No straggler visible | Max task duration equals median | You are on the migrated tables rather than `perf`, or AQE is still on. Either one hides it. |
 | Broadcast hint changes nothing | Plan identical before and after | The table was already under the auto-broadcast threshold. Read the plan first. |
 
 ---

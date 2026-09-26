@@ -346,9 +346,11 @@ In Intro Lab 4 you answered a business question with one notebook: read, filter,
 
     > **Expected Result:** `account users` holds `SELECT` on Gold and appears nowhere on Bronze. Consumers see conformed, quality-gated data and never the raw landing. In a shared workspace a real peer would prove it by querying both—your instructor may demonstrate there.
 
-26. **Compare your Gold figure against Intro Lab 4**
+26. **Put your Gold table next to Intro Lab 4's summary**
 
-    > **What Just Happened?** The number matches what you produced in one notebook two days ago. Everything added since—incremental ingest, checkpoints, expectations, layer separation, CDC—bought you repeatability, auditability, and a defensible answer to "how do you know this is right?", not a different answer.
+    Query `branch_summary_gold` alongside the institutions-by-state numbers from the Intro course. They will not match—branches and institutions are different populations, and comparing them is the point: the same question shape (counts by state) at a different grain of the business.
+
+    > **What Just Happened?** Two days ago the analysts answered "how big are we, by state?" with one notebook over one table. You just answered the branch-level version with a governed, incremental, quality-gated pipeline. Everything added—incremental ingest, checkpoints, expectations, layer separation, CDC—bought repeatability, auditability, and a defensible answer to "how do you know this is right?".
 
 ---
 

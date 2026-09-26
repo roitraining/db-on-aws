@@ -27,7 +27,7 @@ Labs 1-6.`** The notebook raises on any mismatch, so a green run is a real signa
 In the SQL Editor:
 
 ```sql
-SELECT COUNT(*) FROM training_nic.migrated.institutions;   -- expect 4900
+SELECT COUNT(*) FROM training_nic.migrated.institutions;   -- expect 61,699 (real NIC data)
 ```
 
 ## Notes
