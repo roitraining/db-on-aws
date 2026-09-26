@@ -4,14 +4,31 @@
 SELECT CHTR_TYPE_CD, start_month, institution_count, distinct_cities
 FROM training_nic.analyst.institution_summary_published;
 
--- dataset 2: the Lab 2 report, reborn as a dashboard dataset (page 1 state bar chart)
-SELECT i.STATE_ABBR_NM,
-       COUNT(*)          AS institution_count,
-       MAX(c.population) AS state_population
-FROM training_nic.migrated.institutions i
-JOIN training_nic.reference.state_population c
-  ON i.STATE_ABBR_NM = c.state_abbr
-GROUP BY i.STATE_ABBR_NM;
+-- dataset 2: state-growth spine (state bar + growth line share this, enabling cross-filtering)
+-- one dataset for both the state chart and the growth line: per state, per month,
+-- new institutions plus a carry-forward running total. The "spine" pattern (cross
+-- join states x months) keeps the cumulative correct when states are filtered or
+-- summed -- months with no openings still carry the total forward.
+WITH per AS (
+  SELECT STATE_ABBR_NM, date_trunc('month', D_DT_START) AS start_month, COUNT(*) AS n
+  FROM training_nic.migrated.institutions
+  WHERE STATE_ABBR_NM IS NOT NULL
+AND TRIM(STATE_ABBR_NM) NOT IN ('', '0')   -- code '0' marks foreign entities
+  GROUP BY 1, 2),
+spine AS (
+  SELECT s.STATE_ABBR_NM, m.start_month
+  FROM (SELECT DISTINCT STATE_ABBR_NM FROM per) s
+  CROSS JOIN (SELECT explode(sequence((SELECT MIN(start_month) FROM per),
+   (SELECT MAX(start_month) FROM per),
+   INTERVAL 1 MONTH)) AS start_month) m)
+SELECT sp.STATE_ABBR_NM,
+   sp.start_month,
+   COALESCE(p.n, 0) AS new_institutions,
+   SUM(COALESCE(p.n, 0)) OVER (PARTITION BY sp.STATE_ABBR_NM
+ORDER BY sp.start_month) AS total_institutions
+FROM spine sp
+LEFT JOIN per p
+  ON p.STATE_ABBR_NM = sp.STATE_ABBR_NM AND p.start_month = sp.start_month;
 
 -- dataset 3: one row per validation attempt (Migration Health bar chart)
 SELECT run_ts AS run_attempt,
@@ -26,12 +43,6 @@ FROM training_nic.analyst.validation_runs
 WHERE NOT passed
   AND run_ts = (SELECT MAX(run_ts) FROM training_nic.analyst.validation_runs);
 
--- dataset 5: cumulative growth (page 1 line chart -- per-month counts are noise)
-SELECT start_month,
-       SUM(institution_count) AS new_institutions,
-       SUM(SUM(institution_count)) OVER (ORDER BY start_month) AS total_institutions
-FROM training_nic.analyst.institution_summary_published
-GROUP BY start_month;
 
 -- dataset 6: live alert status (Migration Health table -- same conditions the alerts run)
 SELECT 'summary row count below 650' AS alert,

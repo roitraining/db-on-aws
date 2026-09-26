@@ -25,7 +25,8 @@ The last step is the one stakeholders actually see. You will build a dashboard o
 ## Objectives
 
 - Build an AI/BI Dashboard with two charts over a published view
-- Add a filter that cross-filters both charts
+- Build a spine dataset whose cumulative stays correct under any filter
+- Add date-range and multi-select state filters, and cross-filter by clicking a chart
 - Build a migration-health page over the Lab 3 validation runs, with a KPI counter
 - Color charts by field, customize the palette, and conditionally color a counter
 - Publish with shared credentials and explain what that means for viewers
@@ -65,48 +66,56 @@ The last step is the one stakeholders actually see. You will build a dashboard o
 
     Back on the **Canvas** tab, pick the **visualization widget** from the toolbar at the bottom of the canvas and drag a rectangle where the chart should sit. In the configuration panel on the right, select your dataset, set the visualization type to **Bar**, and put `CHTR_TYPE_CD` on one axis and `institution_count` on the other.
 
-5. **Add a line chart that tells a story**
+5. **Give the chart a title a stakeholder would understand**
 
-    Per-month counts here are tiny—two or three institutions a month charts as noise. Cumulative growth is the story worth telling. On the **Data** tab, **Create from SQL** once more:
-
-    ```sql
-    -- cumulative growth: a running total of institutions over time
-    SELECT start_month,
-           SUM(institution_count) AS new_institutions,
-           SUM(SUM(institution_count)) OVER (ORDER BY start_month) AS total_institutions
-    FROM training_nic.analyst.institution_summary_published
-    GROUP BY start_month;
-    ```
-
-    Back on the **Canvas**, add a **Line** chart on this dataset: `start_month` on the horizontal axis, `total_institutions` on the vertical. Rename it **Institution growth**.
-
-    > **Key Insight:** The dataset layer is a real query surface—the window function turned a uselessly flat series into a growth curve without touching any table. When a chart looks wrong, fix the dataset before fighting the chart.
-
-6. **Give both charts titles a stakeholder would understand**
-
-    Rename them in business language rather than column names. `CHTR_TYPE_CD` means nothing to the person reading your dashboard.
+    Rename the charter chart in business language rather than column names. `CHTR_TYPE_CD` means nothing to the person reading your dashboard.
 
     > **Key Insight:** This is the moment the native NIC column names stop being an academic point. They were correct to preserve through raw and Bronze, but nobody outside this room knows what `CHTR_TYPE_CD` is. Presentation is where you translate.
 
-7. **Reuse your Lab 2 report as a second dataset**
+6. **Build the state-growth dataset**
 
-    Dashboards are where the queries you have been saving all course pay off. Open your saved query `lab2_state_summary` in another browser tab, copy its SQL (without the parameters), and on the **Data** tab choose **Create from SQL** again:
+    This is your Lab 2 report, grown up: state grain, month grain, and a running total—one dataset that will power two charts *and* their interactivity. On the **Data** tab, **Create from SQL**:
 
     ```sql
-    -- the Lab 2 report, reborn as a dashboard dataset
-    SELECT i.STATE_ABBR_NM,
-           COUNT(*)          AS institution_count,
-           MAX(c.population) AS state_population
-    FROM training_nic.migrated.institutions AS i
-    JOIN training_nic.reference.state_population AS c
-      ON i.STATE_ABBR_NM = c.state_abbr
-    GROUP BY i.STATE_ABBR_NM;
+    -- one dataset for both the state chart and the growth line: per state, per month,
+    -- new institutions plus a carry-forward running total. The "spine" pattern (cross
+    -- join states x months) keeps the cumulative correct when states are filtered or
+    -- summed -- months with no openings still carry the total forward.
+    WITH per AS (
+      SELECT STATE_ABBR_NM, date_trunc('month', D_DT_START) AS start_month, COUNT(*) AS n
+      FROM training_nic.migrated.institutions
+      WHERE STATE_ABBR_NM IS NOT NULL
+        AND TRIM(STATE_ABBR_NM) NOT IN ('', '0')   -- code '0' marks foreign entities
+      GROUP BY 1, 2),
+    spine AS (
+      SELECT s.STATE_ABBR_NM, m.start_month
+      FROM (SELECT DISTINCT STATE_ABBR_NM FROM per) s
+      CROSS JOIN (SELECT explode(sequence((SELECT MIN(start_month) FROM per),
+                                           (SELECT MAX(start_month) FROM per),
+                                           INTERVAL 1 MONTH)) AS start_month) m)
+    SELECT sp.STATE_ABBR_NM,
+           sp.start_month,
+           COALESCE(p.n, 0) AS new_institutions,
+           SUM(COALESCE(p.n, 0)) OVER (PARTITION BY sp.STATE_ABBR_NM
+                                        ORDER BY sp.start_month) AS total_institutions
+    FROM spine sp
+    LEFT JOIN per p
+      ON p.STATE_ABBR_NM = sp.STATE_ABBR_NM AND p.start_month = sp.start_month;
     ```
 
-8. **Chart it**
+    > **Key Insight:** The `spine` CTE looks like ceremony until you skip it. A naive per-state running total has rows only for months where a state opened something—sum a few states together and the line dips wherever one of them has a gap. Cross-joining every state with every month and carrying the total forward makes the cumulative correct under any filter. When a chart is going to be filtered, build the dataset so every slice is already true.
 
-    Back on the **Canvas**, add a third visualization widget on this dataset: a bar chart of `institution_count` by `STATE_ABBR_NM`, renamed into business language. The recurring report you rebuilt from SQL Server in Lab 2 is now a live dashboard tile instead of an emailed result set.
+7. **Chart the growth**
 
+    On the **Canvas**, add a **Line** chart on this dataset: `start_month` on the horizontal axis, `total_institutions` (Sum) on the vertical. Rename it **Institution growth**.
+
+    > **Expected Result:** A curve climbing to about 61,700 by 2026—every active institution in the country, no filter applied yet.
+
+8. **Chart the states from the same dataset**
+
+    Add a **Bar** chart on the *same* dataset: `STATE_ABBR_NM` on the horizontal axis, `new_institutions` (Sum) on the vertical. Rename it **Institutions by state**.
+
+    > **Note:** Sharing one dataset between these two widgets is a deliberate choice, not laziness—Part 2 shows what it buys you: filters and clicks on one chart flow to the other.
 
 9. **Give the bars their own colors**
 
@@ -122,7 +131,7 @@ The last step is the one stakeholders actually see. You will build a dashboard o
 
 10. **Add a date-range filter**
 
-    Pick the **filter widget** from the same canvas toolbar, place it above the charts, and in the right-hand panel add the `start_month` field from **both** datasets—the published view and the growth dataset. One filter can drive widgets from different datasets as long as each contributes a field. Dashboards support global, page-level, and widget-level filters.
+    Pick the **filter widget** from the same canvas toolbar, place it above the charts, and in the right-hand panel add the `start_month` field from **both** datasets—the published view and the state-growth dataset. One filter can drive widgets from different datasets as long as each contributes a field. Dashboards support global, page-level, and widget-level filters.
     <!-- source: facts_extracted.md §16 -->
 
 11. **Scope the filter to both charts**
@@ -136,12 +145,20 @@ The last step is the one stakeholders actually see. You will build a dashboard o
 
     > **Expected Result:** Both charts update from a single filter change, with no editing and no SQL.
 
-13. **Try cross-filtering from a chart**
+13. **Add a state filter that defaults to everything**
 
-    Select a bar in the bar chart and observe the effect on the line chart.
-    <!-- source: facts_extracted.md §16 -->
+    Add a second **filter widget** from the canvas toolbar. Set its field to `STATE_ABBR_NM` from the state-growth dataset. It renders as a multi-select: empty means **all states**—the default view stays national.
 
-    > **What Just Happened?** A stakeholder can now slice your analysis themselves. That is the difference between a report you rerun on request and one that answers follow-up questions without you.
+    Now pick two or three states in it.
+
+    > **Expected Result:** The state bar chart trims to your selection and the growth line redraws as the *combined* running total of just those states—correct, because the spine dataset made every slice pre-computed truth.
+
+14. **Filter by clicking the chart itself**
+
+    Clear the filter, then click the **NY** bar in the state chart.
+
+    > **What Just Happened?** The growth line redrew to New York's curve alone—no filter widget involved. **Cross-filtering flows between widgets that share a dataset**: a click on one becomes a filter on the others. This is why step 6 put both charts on one dataset. Click the bar again (or click empty space) to clear it. A stakeholder can now answer "how did Texas grow?" with one click and zero SQL.
+
 
 ---
 
@@ -149,11 +166,11 @@ The last step is the one stakeholders actually see. You will build a dashboard o
 
 ### Task 4: Chart the Validation Runs
 
-14. **Add a page**
+15. **Add a page**
 
     At the bottom of the canvas, click the **+** next to the page tab and rename the new page **Migration Health**. One dashboard, two audiences: page one answers business questions, this page answers "can we trust the migration yet?"
 
-15. **Add the validation datasets**
+16. **Add the validation datasets**
 
     On the **Data** tab, **Create from SQL** twice. First, the run history—every validation attempt from your Lab 3 runbook:
 
@@ -176,23 +193,23 @@ The last step is the one stakeholders actually see. You will build a dashboard o
       AND run_ts = (SELECT MAX(run_ts) FROM training_nic.analyst.validation_runs);
     ```
 
-16. **Chart the run history**
+17. **Chart the run history**
 
     On the **Migration Health** page, add a bar chart on the run-history dataset: `run_attempt` on the horizontal axis, with `checks_passed` and `checks_failed` as two measures. Every Lab 3 **Run all** shows up as one bar group.
 
-17. **Add the failure counter**
+18. **Add the failure counter**
 
     Add a **counter** widget on the latest-failures dataset showing `failed_checks`, titled **Failing checks (latest run)**.
 
     > **Key Insight:** The alert and this page read the same `validation_runs` table—the alert interrupts you when it breaks, the dashboard shows stakeholders the history. One validation runbook now feeds monitoring and reporting, which is what "repeatable" buys you.
 
-18. **Make the counter behave like an alarm**
+19. **Make the counter behave like an alarm**
 
     A counter can carry its threshold visually. With the failing-checks counter selected, find **Conditional formatting** (under Colors in the configuration panel—labels drift) and add a rule: when the value is **greater than 0**, color it **red**. While the migration is broken, the tile burns red; when a fixed migration passes your Lab 3 runbook, it cools off on its own.
 
     > **Key Insight:** The dashboard does not send anything—interrupting people is the Lab 5 alert's job. The tile's color makes state legible at a glance, which is a different job: the alert finds you, the dashboard answers you.
 
-19. **Show the alerts' live status**
+20. **Show the alerts' live status**
 
     A dashboard cannot read an alert object's `OK`/`TRIGGERED` state—but it can evaluate the **same condition** the alert evaluates, which is the same truth without the notification. Add one more dataset:
 
@@ -219,24 +236,24 @@ The last step is the one stakeholders actually see. You will build a dashboard o
 
 ### Task 5: Publish with Shared Credentials
 
-20. **Publish the dashboard**
+21. **Publish the dashboard**
 
     Click **Publish** at the top right of the editor. In the publish dialog, keep credentials **embedded**—that is the shared-credentials option. Dashboards can be published with shared or individual data permissions.
     <!-- source: facts_extracted.md §16 -->
 
     > **Key Insight:** With shared credentials, viewers see the data through your access rather than their own, so everyone sees consistent figures. With individual permissions, each viewer sees only what their own grants allow—which can mean two people looking at the same dashboard and seeing different numbers. Choose deliberately.
 
-21. **Open the published version as a viewer**
+22. **Open the published version as a viewer**
 
     Use the dropdown next to the dashboard title to switch from **Draft** to the **published** version. The filters still work; the editing controls are gone. This is what consumers see.
 
     > **Note:** Verifying view-only access from a genuinely different user needs a second person in the same workspace—everyone here runs an isolated account, so your instructor may demonstrate it in the shared class workspace.
 
-22. **Schedule an email delivery**
+23. **Schedule an email delivery**
 
     On the published dashboard, click **Schedule**, then **Add schedule**. Pick a daily cadence, and on the **Subscribers** tab add yourself. Each scheduled run refreshes the dashboard and emails a snapshot to every subscriber—the live replacement for mailing a spreadsheet every Monday. In a shared workspace you would subscribe colleagues; the mechanics are identical.
 
-23. **Note the reach of publishing**
+24. **Note the reach of publishing**
 
     A published dashboard can be shared with anyone registered to your Databricks account, even if they do not have access to the workspace.
     <!-- source: facts_extracted.md §16 -->
@@ -249,31 +266,31 @@ The last step is the one stakeholders actually see. You will build a dashboard o
 
 ### Task 6: Two Questions and a Verification
 
-24. **Create a Genie space on the same data**
+25. **Create a Genie space on the same data**
 
     In the left sidebar, click **Genie**, then click the **New** button on the Genie page. Name the space `lab6_genie_<id>`, select your published view `training_nic.analyst.institution_summary_published` as its data, and choose the serverless SQL warehouse when prompted. The space opens with a chat box—this is where you ask your questions.
 
-25. **Ask your first business question**
+26. **Ask your first business question**
 
     Ask something a stakeholder would genuinely ask, in plain English—for example, which charter type has grown the most in the last twenty years.
     <!-- source: facts_extracted.md §16 -->
 
-26. **Read the generated SQL, not just the answer**
+27. **Read the generated SQL, not just the answer**
 
     Expand the SQL Genie produced. Check that it queries the columns you expect and applies the filter you meant.
 
-27. **Ask a second question that is harder to answer**
+28. **Ask a second question that is harder to answer**
 
     Ask something ambiguous or requiring a judgement—for example, which states are underserved relative to population.
 
-28. **Verify that answer against your own query**
+29. **Verify that answer against your own query**
 
     Write the SQL yourself and compare results.
     <!-- source: facts_extracted.md §16 -->
 
     > **What Just Happened?** If the two disagree, Genie is not broken and neither are you. It answered the question it understood, which may not be the question you asked. "Underserved" has no definition in the data—Genie had to invent one.
 
-29. **Record when you would and would not trust it**
+30. **Record when you would and would not trust it**
 
     Write two sentences: one describing a question you would let Genie answer unsupervised, and one describing a question you would always verify.
 
@@ -296,7 +313,10 @@ For attendees who finish early.
 - [ ] I created a dashboard connected to my published view
 - [ ] I built a bar chart and a line chart
 - [ ] I renamed both charts into business language
+- [ ] I built the state-growth spine dataset
 - [ ] I added a filter on `start_month`
+- [ ] I added a state multi-select filter that defaults to all states
+- [ ] Clicking a state bar redrew the growth line for that state
 - [ ] The filter applies to both charts, not just one
 - [ ] I tested cross-filtering by selecting a value in one chart
 - [ ] I added a Migration Health page charting every validation attempt
@@ -304,7 +324,7 @@ For attendees who finish early.
 - [ ] I charted my Lab 2 report as a dashboard tile
 - [ ] I colored the bar charts by field and customized the palette
 - [ ] The failing-checks counter turns red when checks fail
-- [ ] The line chart shows cumulative growth, not per-month noise
+- [ ] The growth line climbs to ~61,700 with no filters applied
 - [ ] The alert-status table matches the Alerts page
 - [ ] I published the dashboard with shared credentials
 - [ ] I can explain what shared credentials mean for what a viewer sees
