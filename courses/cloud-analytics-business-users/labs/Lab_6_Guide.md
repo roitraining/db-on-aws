@@ -108,7 +108,7 @@ The last step is the one stakeholders actually see. You will build a dashboard o
       ON p.STATE_ABBR_NM = sp.STATE_ABBR_NM AND p.start_month = sp.start_month;
     ```
 
-    > **Key Insight:** The `spine` CTE looks like ceremony until you skip it. A naive per-state running total has rows only for months where a state opened something—sum a few states together and the line dips wherever one of them has a gap. Cross-joining every state with every month and carrying the total forward makes the cumulative correct under any filter. When a chart is going to be filtered, build the dataset so every slice is already true.
+    > **Key Insight:** The `spine` CTE looks like ceremony until you skip it. A naive per-state running total has rows only for months where a state opened something—sum a few states together and the line dips wherever one of them has a gap. Cross-joining every state with every month and carrying the total forward makes the cumulative correct under any filter. The underlying idea: `new_institutions` is a **flow** (openings that month—zero is a fine answer), while `total_institutions` is a **stock** (how many *exist as of* that month—it persists until something changes it, like a bank balance on a day you spend nothing). Stocks must be carried through quiet months, and the spine is the scaffolding that gives the carry somewhere to live. When a chart is going to be filtered, build the dataset so every slice is already true.
 
 7. **Chart the growth**
 
