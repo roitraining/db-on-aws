@@ -159,6 +159,30 @@ with zipfile.ZipFile(zip_dir + "/CSV_ATTRIBUTES_BRANCHES.zip") as zf:
                 fo.write(header + b"".join(lines))
 print(f"staged branches in {part + 1} part files")
 
+# One crafted "bad batch" file so Lab 10's expectations fire and Lab 11's quality
+# gate has something to gate: 7 rows with a null key (dropped by valid_key),
+# 5 rows with a one-character city (warned by plausible_city), 8 clean rows.
+cols = header.decode("windows-1252").strip().split(",")
+idx = {c: i for i, c in enumerate(cols)}
+
+def _branch_row(key, name, city, state):
+    r = [""] * len(cols)
+    r[idx["#ID_RSSD"]] = key
+    r[idx["NM_LGL"]] = name
+    r[idx["CITY"]] = city
+    r[idx["STATE_ABBR_NM"]] = state
+    return ",".join(r)
+
+bad_rows = (
+    [_branch_row("", f"QUALITY TEST BRANCH {i} (NO KEY)", "TESTVILLE", "CA") for i in range(1, 8)]
+    + [_branch_row(str(90000000 + i), f"QUALITY TEST BRANCH {i} (SHORT CITY)", "X", "TX") for i in range(1, 6)]
+    + [_branch_row(str(90000100 + i), f"QUALITY TEST BRANCH {i} (CLEAN)", "TESTVILLE", "NY") for i in range(1, 9)]
+)
+with open(f"{VOL}/branches/branches_part_zz_quality_batch.csv", "wb") as fo:
+    NL = chr(10)
+    fo.write(header + (NL.join(bad_rows) + NL).encode("windows-1252"))
+print("staged quality-test batch: 20 rows (7 droppable, 5 warnable, 8 clean)")
+
 # COMMAND ----------
 
 # MAGIC %md

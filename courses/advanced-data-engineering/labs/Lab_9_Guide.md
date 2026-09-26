@@ -65,7 +65,7 @@ Your analysts ran a four-check comparison in Intro Lab 3. This lab builds the ma
     ```
     <!-- source: facts_extracted.md §3 -->
 
-    > **Expected Result:** A small `numFiles` figure (typically **1**). Write both down—this is your baseline for Part 4.
+    > **Expected Result:** `numFiles` of **1**, at roughly 1.1 MB. Write both down—this is your baseline for Part 4. Write both down—this is your baseline for Part 4.
 
 ---
 
@@ -109,7 +109,7 @@ Your analysts ran a four-check comparison in Intro Lab 3. This lab builds the ma
 
 9. **Compare against your baseline**
 
-    > **Expected Result:** Three versions in the history—`CREATE OR REPLACE TABLE AS SELECT`, `WRITE`, `WRITE`—and `numFiles` risen by two.
+    > **Expected Result:** Three versions in the history—`CREATE OR REPLACE TABLE AS SELECT`, `WRITE`, `WRITE`—and `numFiles` risen from **1 to 3**.
 
     > **What Just Happened?** Two small loads added two commits and one file each. Each incremental write produces its own files regardless of how few rows it carries. Three files is harmless. The point is the *rate*: this table grew its file count by 200% on two loads of 500 rows. Run that pattern nightly for a year and you have thousands of small files, each of which must be opened on every read.
 
@@ -197,7 +197,7 @@ Your analysts ran a four-check comparison in Intro Lab 3. This lab builds the ma
 
 19. **Confirm the reduction**
 
-    > **Expected Result:** `numFiles` compacted back down, an unchanged row count of 63,080, and a fourth version logged as `OPTIMIZE`. Total size drops too, because one compacted file compresses far better than fragments of the same data.
+    > **Expected Result:** `numFiles` back down from **3 to 1**, an unchanged row count of 63,080, and a fourth version logged as `OPTIMIZE`. Total size barely moves at this scale—the win is opening one file instead of three on every read. The compression payoff appears when fragments number in the thousands, not units.
 
     > **Common Pitfall:** Do not read that size drop as data loss. Confirm it is not by rerunning your row count, and by time traveling to version 0—it still returns the original 62,080 rows.
 

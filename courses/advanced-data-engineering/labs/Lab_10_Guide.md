@@ -310,13 +310,13 @@ In Intro Lab 4 you answered a business question with one notebook: read, filter,
 
     Click **Start**. The pipeline resolves the source into a graph—`branches_bronze → branches_silver → branch_summary_gold`, with `institutions_scd` fed by the snapshot flow—and executes it. The first run ingests the landing files; a few minutes on serverless is normal.
 
-    > **Expected Result:** Every dataset completes. This is the same DAG idea as the Spark UI's, one level up: datasets and flows instead of stages and tasks.
+    > **Expected Result:** Every dataset completes: `branches_bronze` **173,914** rows, `branches_silver` **173,907**, `institutions_scd` **62,080**. This is the same DAG idea as the Spark UI's, one level up: datasets and flows instead of stages and tasks.
 
 22. **Read the quality metrics where they live**
 
-    Select `branches_silver` in the graph and open its **Data quality** panel. The expectations you declared report their counts—rows warned on by `plausible_city`, rows dropped by `valid_key`.
+    Select `branches_silver` in the graph and open its **Data quality** panel. The expectations report their counts: `valid_key` dropped **7** rows and `plausible_city` warned on **5**—a crafted bad batch the setup stages into the landing exactly so these numbers are non-zero. Real branch data alone is too clean to teach a quality gate.
 
-    > **Key Insight:** Write these numbers down. Lab 11 reads this exact figure—`dropped_records`—out of the pipeline event log by query and gates Gold promotion on it. The UI panel and the event log are two views of the same metrics.
+    > **Key Insight:** Write these numbers down. Lab 11 reads the **7** out of the pipeline event log by query and gates Gold promotion on it. The UI panel and the event log are two views of the same metrics.
     <!-- source: facts_extracted.md §5 -->
 
 23. **Start it again and watch nothing happen**

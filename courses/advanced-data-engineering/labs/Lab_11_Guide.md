@@ -60,7 +60,7 @@ The pipeline works when you run it. This lab makes it work when you are not ther
         FROM event_log(TABLE(eng_<id>.work.branches_silver))
         WHERE event_type = 'flow_progress'
     """).collect()[0]["dropped"] or 0
-    print(f"dropped records: {dropped}")
+    print(f"dropped records: {dropped}")   # expect 7 — the quality batch's null-key rows
     ```
     <!-- source: facts_extracted.md §7 -->
 
@@ -107,7 +107,7 @@ The pipeline works when you run it. This lab makes it work when you are not ther
     ```
     <!-- source: facts_extracted.md §7 -->
 
-    Set the operator to `LESS_THAN` and the right operand to your chosen threshold.
+    Set the operator to `LESS_THAN` and the right operand to **10**. Your latest run dropped exactly **7** records, so this gate passes; drop the threshold to **5** later and the same run is refused.
 
     > **Common Pitfall:** Operands accept numeric, string and boolean values only, and anything non-numeric is serialized to a string and compared **as a string**. The comparison operators do compare numerically—`"12.0" >= "12"` evaluates true—but only when both sides are genuinely numeric. A value emitted as a string is why a gate silently always takes one branch.
     <!-- source: facts_extracted.md §7 -->
@@ -125,7 +125,7 @@ The pipeline works when you run it. This lab makes it work when you are not ther
 
 10. **Run the Job and confirm the gate evaluated**
 
-    > **Expected Result:** The pipeline task succeeds, the event-log task emits a count, and the Condition Task routes to Gold or halts based on your threshold.
+    > **Expected Result:** The pipeline task succeeds, the event-log task emits **7**, and the Condition Task routes down the **true** branch to Gold. Re-run with the threshold at 5 to watch the same DAG halt.
 
 ---
 
