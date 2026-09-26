@@ -1,8 +1,11 @@
 -- Lab 6 completed: the four dashboard dataset queries (Data tab > Create from SQL).
 
--- dataset 1: the published view (page 1 bar + line charts, start_month filter)
-SELECT CHTR_TYPE_CD, start_month, institution_count, distinct_cities
-FROM training_nic.analyst.institution_summary_published;
+-- dataset 1: the published view with charter codes decoded to names (page 1 charter chart)
+SELECT COALESCE(ct.charter_type, CONCAT('Code ', s.CHTR_TYPE_CD)) AS charter_type,
+       s.start_month, s.institution_count, s.distinct_cities
+FROM training_nic.analyst.institution_summary_published s
+LEFT JOIN training_nic.reference.charter_types ct
+  ON s.CHTR_TYPE_CD = ct.chtr_type_cd;
 
 -- dataset 2: state-growth spine (state bar + growth line share this, enabling cross-filtering)
 -- one dataset for both the state chart and the growth line: per state, per month,

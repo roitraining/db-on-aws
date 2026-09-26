@@ -250,6 +250,21 @@ AS t(state_abbr, population)
 
 print("reference.state_population built: 50 states + DC (2020 Census)")
 
+spark.sql(f"""
+CREATE OR REPLACE TABLE {CATALOG}.reference.charter_types AS
+SELECT * FROM VALUES
+  ('200','Commercial Bank'), ('250','Non-deposit Trust Company'),
+  ('300','Savings Bank'), ('310','Savings & Loan Association'),
+  ('320','Cooperative Bank'), ('330','Credit Union'),
+  ('340','Industrial Bank'), ('400','Edge or Agreement Corporation'),
+  ('500','Holding Company'), ('550','Insurance Broker or Agent'),
+  ('700','Securities Broker or Dealer'), ('720','Domestic Entity (Other)')
+AS t(chtr_type_cd, charter_type)
+""")
+# labels per the NIC data dictionary; codes without a confident label fall back to
+# 'Code N' at presentation time
+print("reference.charter_types built: 12 decoded charter types")
+
 
 # COMMAND ----------
 

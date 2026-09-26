@@ -51,8 +51,13 @@ The last step is the one stakeholders actually see. You will build a dashboard o
 
     ```sql
     -- dashboard dataset: the view you published in Lab 5
-    SELECT CHTR_TYPE_CD, start_month, institution_count, distinct_cities
-    FROM training_nic.analyst.institution_summary_published;
+    -- dashboard dataset: the published view, with charter codes decoded to names
+    -- (presentation is where you translate -- the pipeline keeps the raw codes)
+    SELECT COALESCE(ct.charter_type, CONCAT('Code ', s.CHTR_TYPE_CD)) AS charter_type,
+           s.start_month, s.institution_count, s.distinct_cities
+    FROM training_nic.analyst.institution_summary_published s
+    LEFT JOIN training_nic.reference.charter_types ct
+      ON s.CHTR_TYPE_CD = ct.chtr_type_cd;
     ```
     <!-- source: facts_extracted.md §12 -->
 
@@ -64,7 +69,7 @@ The last step is the one stakeholders actually see. You will build a dashboard o
 
 4. **Add a bar chart**
 
-    Back on the **Canvas** tab, pick the **visualization widget** from the toolbar at the bottom of the canvas and drag a rectangle where the chart should sit. In the configuration panel on the right, select your dataset, set the visualization type to **Bar**, and put `CHTR_TYPE_CD` on one axis and `institution_count` on the other.
+    Back on the **Canvas** tab, pick the **visualization widget** from the toolbar at the bottom of the canvas and drag a rectangle where the chart should sit. In the configuration panel on the right, select your dataset, set the visualization type to **Bar**, and put `charter_type` on one axis and `institution_count` on the other.
 
 5. **Give the chart a title a stakeholder would understand**
 
@@ -119,7 +124,7 @@ The last step is the one stakeholders actually see. You will build a dashboard o
 
 9. **Give the bars their own colors**
 
-    Every bar defaults to one color. Select the bar chart, and in the configuration panel add a **Color** encoding set to `CHTR_TYPE_CD`—each charter type gets its own color and a legend appears. Then open the **Colors** section and override the palette: click a series swatch and pick your own—a green, a blue, a yellow—anything but four identical bars. Do the same for the state chart with `STATE_ABBR_NM`.
+    Every bar defaults to one color. Select the bar chart, and in the configuration panel add a **Color** encoding set to `charter_type`—each charter type gets its own color and a legend appears. Then open the **Colors** section and override the palette: click a series swatch and pick your own—a green, a blue, a yellow—anything but four identical bars. Do the same for the state chart with `STATE_ABBR_NM`.
 
     > **Note:** Color-by-field is the same mechanism grouped and stacked comparisons build on; the manual swatches are how you match a house style. Two different features—one click apart.
 
