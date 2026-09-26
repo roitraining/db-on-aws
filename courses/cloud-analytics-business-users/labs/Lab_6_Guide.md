@@ -160,10 +160,14 @@ The last step is the one stakeholders actually see. You will build a dashboard o
 
 14. **Filter by clicking the chart itself**
 
-    Clear the filter, then click the **NY** bar in the state chart.
+    Clear the state filter first, then work through this sequence and watch the growth line after each click:
 
-    > **What Just Happened?** The growth line redrew to New York's curve alone—no filter widget involved. **Cross-filtering flows between widgets that share a dataset**: a click on one becomes a filter on the others. This is why step 6 put both charts on one dataset. **Ctrl+click** adds to the selection—ctrl+click Texas and the growth line becomes the combined CA + TX curve. Click the bar again (or click empty space) to clear. A stakeholder can now answer "how did Texas grow?" with one click and zero SQL. One boundary worth knowing: clicking the charter chart does *not* redraw the growth line—it sits on a different dataset, and interactivity only flows where the dataset carries the field.
+    1. Click the **NY** bar in the state chart—the growth line redraws as New York's curve alone.
+    2. **Ctrl+click** the **TX** bar—Texas joins the selection, and the line becomes the *combined* CA-free NY + TX running total. Ctrl+click adds; plain click replaces.
+    3. Click an empty area of the chart—the selection clears and the national curve returns.
+    4. Now click a bar in the **charter type** chart—the growth line does **not** move.
 
+    > **What Just Happened?** Steps 1–3 are cross-filtering: a click on one widget becomes a filter on the others—but only between widgets that **share a dataset**, which is why step 6 put the state chart and the growth line on one. Step 4 is the boundary: the charter chart sits on a different dataset, so its clicks stay local. Interactivity flows exactly as far as the dataset's fields do—design the dataset for the questions you want clickable. A stakeholder can now answer "how did Texas grow?" with zero SQL.
 
 ---
 
