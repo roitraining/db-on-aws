@@ -162,7 +162,7 @@ The last step is the one stakeholders actually see. You will build a dashboard o
 
     Clear the filter, then click the **NY** bar in the state chart.
 
-    > **What Just Happened?** The growth line redrew to New York's curve alone—no filter widget involved. **Cross-filtering flows between widgets that share a dataset**: a click on one becomes a filter on the others. This is why step 6 put both charts on one dataset. Click the bar again (or click empty space) to clear it. A stakeholder can now answer "how did Texas grow?" with one click and zero SQL.
+    > **What Just Happened?** The growth line redrew to New York's curve alone—no filter widget involved. **Cross-filtering flows between widgets that share a dataset**: a click on one becomes a filter on the others. This is why step 6 put both charts on one dataset. **Ctrl+click** adds to the selection—ctrl+click Texas and the growth line becomes the combined CA + TX curve. Click the bar again (or click empty space) to clear. A stakeholder can now answer "how did Texas grow?" with one click and zero SQL. One boundary worth knowing: clicking the charter chart does *not* redraw the growth line—it sits on a different dataset, and interactivity only flows where the dataset carries the field.
 
 
 ---
