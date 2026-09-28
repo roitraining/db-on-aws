@@ -1,8 +1,8 @@
 # Demos
 
-Instructor demonstration notebooks. These are shown live in class; they are here so you can re-read them afterwards. In class workspaces they live at `/Shared/db-on-aws/`.
+Class demonstration notebooks. The instructor runs these live — and the Day 1 demos run on serverless in **your own account** too, so pull this repo as a Git folder and run along, or re-run them afterwards.
 
-## Day 1 (run on serverless in the instructor's account)
+## Day 1 (serverless — run along in your own account)
 
 - `module_1_lazy_evaluation.py` — read → transform → action, then the typo cell that succeeds and the innocent cell that fails. **The last cell fails on purpose.**
 - `module_2_translating_a_real_query.sql` — TOP/LIMIT, backticks, LENGTH (the 120-char seed), ISNULL→COALESCE+NULLIF, the silently-wrong DATEDIFF argument order, then `:start_date`/`:end_date` parameter widgets.
