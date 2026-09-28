@@ -38,7 +38,8 @@ for state in states:
 
 # MAGIC %md
 # MAGIC ### 3 — functions
-# MAGIC `def` names a recipe so you can reuse it. Arguments in, `return` out.
+# MAGIC You already know this concept from SQL: a stored procedure — logic with a name,
+# MAGIC arguments in, a result out. `def` is how Python writes one.
 
 # COMMAND ----------
 
