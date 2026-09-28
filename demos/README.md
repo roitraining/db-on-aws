@@ -13,5 +13,5 @@ Class demonstration notebooks. The instructor runs these live — and the Day 1 
 ## Day 2+ (requires a classic cluster)
 
 - `spark_ui_showcase.py` — partition sizes, shuffle, skew, spill, and OOM, each producing one artifact in the Spark UI. Requires a **classic cluster** (the Spark UI does not exist on serverless, and Free Edition cannot create classic compute), so in class this runs on the instructor's shared cluster. The final cell fails on purpose.
-- `delta_log_old_school.py` - the actual `_delta_log` JSON files, listed and read, via a hive_metastore table on the DBFS root (UC tables never expose theirs). Creates and updates its own scratch table, then ties the raw files back to DESCRIBE HISTORY.
+- `delta_log_old_school.py` - **Advanced course (Day 3, pairs with Lab 9 Delta internals)** - the actual `_delta_log` JSON files, listed and read, via a hive_metastore table on the DBFS root (UC tables never expose theirs). Creates and updates its own scratch table, then ties the raw files back to DESCRIBE HISTORY. Follow-on talking point: in a customer-managed AWS deployment the same files are browsable in the S3 console, because you own the bucket - UC controls the front door, your AWS account controls the building.
 - `spark_ui_showcase_demo_script.md` — step-by-step Spark UI navigation for demoing the above.
