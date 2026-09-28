@@ -16,10 +16,9 @@ Everything so far has been reading someone else's data. This lab is the first th
 ## Prerequisites
 
 - [ ] Labs 1–3 completed
-- [ ] For **Part 4 only**: access to the classic cluster named by your instructor (possibly in the shared class workspace)
 - [ ] Nothing to prepare for storage — your personal schema `training_nic.analyst` is created in this lab
 
-> **Note:** Parts 1–3 run on serverless compute in your own account. Only Part 4 needs a classic cluster, because the Spark UI is not available on serverless compute—and that part may run in a different, shared workspace. The lab keeps it last so you switch environments once, at a clean boundary.
+> **Note:** Parts 1–4 run on serverless compute in your own account. Part 5 (the Spark UI) is an **instructor-led demo**: the Spark UI is not available on serverless compute, and Free Edition accounts cannot create the classic cluster it requires, so the instructor runs it while you follow along. The demo notebook is in this repository at [`demos/spark_ui_showcase.py`](https://github.com/roitraining/db-on-aws/blob/main/demos/spark_ui_showcase.py).
 <!-- source: facts_extracted.md §13 -->
 
 ---
@@ -327,53 +326,25 @@ Official documentation, if you want the full detail behind any row:
 
 ---
 
-## Part 5: Read the Spark UI
+## Part 5: Read the Spark UI (Instructor Demo — Follow Along)
 
-### Task 7: Find the Shuffle
+### Task 7: Watch the Shuffle, Skew, and Spill
 
-22. **Attach the classic cluster and re-run the pipeline**
+The Spark UI belongs to classic compute, and Free Edition accounts cannot create classic clusters—so this part is a **demonstration**. The instructor runs the demo notebook on a classic cluster and walks the Spark UI on screen; your job is to recognise each artifact so you know it when you meet a real cluster. Open the notebook from this repository at [`demos/spark_ui_showcase.py`](https://github.com/roitraining/db-on-aws/blob/main/demos/spark_ui_showcase.py) (also in your Git folder under `demos/`) and read along—it has five sections, each producing one thing in the Spark UI:
+<!-- source: facts_extracted.md §13 -->
 
-    The Spark UI belongs to classic compute, so this part runs on the classic cluster named by your instructor—and if your own account cannot create classic compute (Free Edition), it happens in the **shared class workspace** your instructor provides. The login steps for that workspace are covered separately; everything below assumes you are in a workspace where the classic cluster exists.
+22. **Partition sizes** — the same scan run twice with different input-split sizes. Watch the **task count** change (11 tasks vs 79) and, under Summary Metrics, the per-task input size. Task count is parallelism: too few tasks and cores sit idle, too many and scheduling overhead beats the work.
 
-    Open the compute selector, attach the **classic cluster**, and click **Run All** so the whole pipeline executes on compute whose Spark UI you can open.
-
-    > **Note:** The Spark UI shows work done by *that cluster only*. Your serverless runs from Parts 1–3 are not in it—the re-run is what puts stages there.
-
-23. **Open the Spark UI**
-
-    1. In the left sidebar, click **Compute**. (Open it in a new browser tab if you want to keep the notebook visible—right-click, **Open link in new tab**.)
-    2. In the cluster list, click the name of the classic cluster your notebook is attached to—**`db-on-aws · lab cluster`** in the standard deploy.
-    3. Across the top of the cluster page, select the **Spark UI** tab.
-    4. Inside the Spark UI, select the **Stages** tab.
-
-    The list shows every stage the cluster has run, newest at the top. The ones with a **Submitted** time from a moment ago are from the `display(summary)` cell you just ran.
+23. **Shuffle** — a `COUNT(DISTINCT ...)` per key that Spark cannot pre-combine, so ~2.4 GB physically crosses the network. Watch the map stage's **Shuffle Write** and the matching **Shuffle Read** on the reduce stage. This is the same Exchange you found in Part 4's query profile, now with per-task detail. (A plain filter, by contrast, is narrow—each partition is processed independently, no shuffle columns at all.)
     <!-- source: facts_extracted.md §13 -->
 
-    > **Note:** If you ran the aggregation on **serverless** compute, you will not be able to see this—serverless has no Spark UI and exposes a query profile instead. Go back to step 1, attach the classic cluster, re-run the `display(summary)` cell, and then open the Spark UI.
-    <!-- source: facts_extracted.md §13 -->
+24. **Skew** — 60% of the rows share one key. In the stage's **Summary Metrics**, compare the **Max** column against the **Median**: one straggler task reads 60% of the data and runs hundreds of times longer than the median. The job is as slow as its biggest partition.
 
-24. **Record what you see**
+25. **Spill** — a full sort squeezed into 8 partitions. Each task gets more data than its share of execution memory, and two new columns appear on the stage: **Spill (Memory)** and **Spill (Disk)**. Spill is not failure—the job succeeds. It is the performance smell that says "this stage needed more memory or more partitions."
 
-    Note three figures for the aggregation stage: the number of tasks, the shuffle write volume, and the shuffle read volume.
+26. **Out of memory** — an aggregate whose *single value* cannot fit in memory has nowhere to spill. Watch the executor die (`ExecutorLostFailure` — a real memory death rarely says "OutOfMemoryError" politely), Spark retry the task four times on fresh executors, and the job fail. Other users' jobs on the cluster survive; the executor is replaced.
 
-    > **Key Insight:** The task count reflects how many partitions the data was split into. The shuffle figures show how much data moved across the cluster to bring matching keys together. A `groupBy` cannot avoid a shuffle—that is what it is.
-    <!-- source: facts_extracted.md §13 -->
-
-25. **Compare against a query that does not shuffle**
-
-    ```python
-    # a narrow query for the Spark UI comparison — filter only, no shuffle
-    display(slim.filter(F.col("start_month") >= "2000-01-01").limit(50))
-    ```
-    <!-- source: facts_extracted.md §13 -->
-
-26. **Look at the stages for that cell**
-
-    > **What Just Happened?** A filter is narrow—each partition can be processed independently, so there is no shuffle. An aggregation is wide—rows with the same key must end up together, which means moving data. When a query is slow, this distinction is the first thing to check.
-
-### No classic cluster?
-
-You have already done the serverless version of this lesson—Part 4's query profile. The Spark UI adds what the profile cannot show: task counts, partition counts, and straggler diagnosis. If your account cannot create classic compute (Free Edition), this part runs in the shared class workspace your instructor provides.
+> **Key Insight:** Part 4's query profile answers "does my query perform well?" on serverless. The Spark UI adds what the profile cannot show—task counts, partition sizes, stragglers, spill—and that is what you just watched. When your organisation's workspace has classic clusters, everything in this demo is available on any job you run there.
 
 ---
 
@@ -381,8 +352,8 @@ You have already done the serverless version of this lesson—Part 4's query pro
 
 For attendees who finish early.
 
-1. Rerun the aggregation with `spark.conf.set("spark.sql.shuffle.partitions", 8)` and compare task counts in the Spark UI. What changed, and did it get faster?
-2. Add `.cache()` before the aggregation and run it twice. Compare the two run times, then explain why the second was faster and when caching would be a bad idea.
+1. Open `demos/spark_ui_showcase.py` from your Git folder. For each of the five sections, write one sentence predicting what the Stages tab will show *before* reading that section's explanation—then check yourself against what the instructor demonstrated.
+2. Pick the largest table you can find in `training_nic` and run an aggregation over it, then read its query profile. Where is the Exchange, and how many rows and bytes moved through it?
 3. Rewrite the entire pipeline as a single SQL statement. Which version would you rather hand to a colleague, and which would you rather maintain as a scheduled job?
 
 ---
@@ -405,10 +376,10 @@ For attendees who finish early.
 - [ ] I ran the 2M-row aggregation and read its query profile
 - [ ] I found the Exchange operator and recorded its rows and bytes
 - [ ] I compared a narrow query's profile and saw no Exchange
-- [ ] I attached the classic cluster and re-ran the pipeline
-- [ ] I opened the Spark UI and found the Stages tab
-- [ ] I recorded task count, shuffle read and shuffle write for the aggregation
-- [ ] I compared those against a filter-only query and saw no shuffle
+- [ ] I followed the Spark UI demo and can name its five artifacts
+- [ ] I know where task counts, shuffle volume, and spill appear in the Spark UI
+- [ ] I can explain why a filter shuffles nothing and a groupBy must
+- [ ] I know where to find the demo notebook in the course repository
 
 ---
 
