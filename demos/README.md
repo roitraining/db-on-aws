@@ -8,6 +8,7 @@ Class demonstration notebooks. The instructor runs these live — and the Day 1 
 - `module_2_translating_a_real_query.sql` — TOP/LIMIT, backticks, LENGTH (the 120-char seed), ISNULL→COALESCE+NULLIF, the silently-wrong DATEDIFF argument order, then `:start_date`/`:end_date` parameter widgets.
 - `module_3_four_checks.sql` — the four-check UAT framework against the real migrated data: 62,080 vs 61,699, the charter-250 anti-join, paired aggregates, and the naive-vs-normalised row comparison with the LENGTH() reveal. Does not name the total defect count — the lab is the discovery.
 - `module_3_time_travel.sql` — DESCRIBE HISTORY, VERSION AS OF 0 (the 62,080 reveal: the gap happened *inside* the table's lifetime), TIMESTAMP AS OF, and the 7-day retention limits.
+- `module_3_python_primer.py` - a first taste of Python for the Day 1 close: variables, f-strings, lists/loops, a function, the PySpark bridge, and the one-loop-many-tables payoff. Ends with a table of free learning resources (all links verified).
 - `delta_under_the_hood.sql` - the files and the log without filesystem access: DESCRIBE DETAIL, the hidden `_metadata` column listing the real Parquet files, DESCRIBE HISTORY, then an UPDATE on a scratch copy to watch new files appear and the old version stay readable.
 
 ## Day 2+ (requires a classic cluster)
