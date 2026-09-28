@@ -64,21 +64,25 @@ print("Scan #2 done - same data, ~8x the tasks, each ~1/8 the size")
 # MAGIC %md
 # MAGIC ## 2 · Shuffle — data moving between stages
 # MAGIC
-# MAGIC A `GROUP BY` on a high-cardinality key forces every row to move to the node that
-# MAGIC owns its key. In the UI this is a **two-stage job**: the first stage shows
-# MAGIC **Shuffle Write**, the second shows **Shuffle Read**. The bytes match — that is
-# MAGIC the data physically crossing the network.
+# MAGIC A `COUNT(DISTINCT payload)` per key forces every full payload to move to the node
+# MAGIC that owns its key — Spark cannot pre-combine distinct values on the map side, so
+# MAGIC the whole ~2.4 GB physically crosses the network. In the UI this is a
+# MAGIC **two-stage job**: the first stage shows **Shuffle Write**, the second shows a
+# MAGIC matching **Shuffle Read**.
 # MAGIC
 # MAGIC Talking point: the shuffle is the expensive thing in distributed computing.
-# MAGIC Every `GROUP BY`, `JOIN`, `ORDER BY`, and `DISTINCT` pays this cost.
+# MAGIC Every `GROUP BY`, `JOIN`, `ORDER BY`, and `DISTINCT` pays this cost. (A plain
+# MAGIC `GROUP BY ... COUNT(*)` shuffles almost nothing — Spark pre-aggregates on the map
+# MAGIC side. That contrast is worth showing if someone asks.)
 
 # COMMAND ----------
 
 (spark.table(BIG)
-   .groupBy((F.col("k") % 1000).alias("bucket"))
-   .agg(F.count("*").alias("n"), F.avg(F.length("payload")).alias("avg_len"))
+   .groupBy("k")
+   .agg(F.countDistinct("payload").alias("distinct_payloads"))
+   .agg(F.sum("distinct_payloads"))
    .display())
-print("Open the job: stage 1 = Shuffle Write, stage 2 = Shuffle Read")
+print("Open the job: map stage = Shuffle Write ~2.4GB, reduce stage = matching Shuffle Read")
 
 # COMMAND ----------
 
@@ -137,13 +141,16 @@ print("Open the sort stage: Spill (Memory) / Spill (Disk) columns are now visibl
 # MAGIC
 # MAGIC `collect_list` must build one group's entire array in a single task's memory — it
 # MAGIC cannot spill. We aggregate ~20M payloads (~5 GB) into ONE group, which exceeds the
-# MAGIC executor heap. Watch the UI live: the task dies with `OutOfMemoryError`, Spark
-# MAGIC **retries it 4 times** (that retry behaviour is itself worth narrating), then the
-# MAGIC job fails. Expect ~10 minutes for the full death spiral — narrate while it burns.
+# MAGIC executor heap. Watch the UI live: the executor drowns in garbage collection and is
+# MAGIC lost (`ExecutorLostFailure` / "heartbeat timed out" — a real memory death usually
+# MAGIC looks like this, not a tidy `OutOfMemoryError`), Spark **retries the task 4 times**
+# MAGIC on fresh executors (that retry behaviour is itself worth narrating), then the job
+# MAGIC fails. Expect ~10 minutes for the full death spiral — narrate while it burns.
 # MAGIC
 # MAGIC Talking point: spill saves sorts and joins, but an aggregate whose *single value*
 # MAGIC is too big for memory has nowhere to go. The executor is killed and replaced —
-# MAGIC other users' jobs on the cluster survive.
+# MAGIC other users' jobs on the cluster survive. In the UI: **Stages → failed stage →
+# MAGIC Failure Reason**, and the Executors tab shows the dead executor.
 
 # COMMAND ----------
 
