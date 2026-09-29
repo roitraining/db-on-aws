@@ -24,6 +24,9 @@ Class demonstration notebooks. The instructor runs these live — and the Day 1 
 - `module_5_demo_2_publish_compare_alert.sql` — view vs materialized view honestly compared,
   REFRESH via serverless pipeline, then the alert flow including the you-cannot-reuse-a-saved-query
   frustration, shown deliberately.
+- `module_5_demo_3_row_filter.sql` — BONUS (not in the outline): row filter + column mask on
+  the nic_econ enrichment data — same table, per-user truths; ties grants (Demo 1) to the
+  Module 6 credential decision. Needs the second identity; replace `<colleague>` before class.
 - `module_6_demo_1_dashboard.sql` — click path for the live dashboard build: two charts, one
   dataset, a filter scoped to both, the deliberately mis-scoped filter, the fix, cross-filtering.
 - `module_6_demo_2_genie.sql` — Genie right and wrong: the well-formed question, the
