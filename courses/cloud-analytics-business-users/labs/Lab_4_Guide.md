@@ -18,7 +18,7 @@ Everything so far has been reading someone else's data. This lab is the first th
 - [ ] Labs 1–3 completed
 - [ ] Nothing to prepare for storage — your personal schema `training_nic.analyst` is created in this lab
 
-> **Note:** Parts 1–4 run on serverless compute in your own account. Part 5 (the Spark UI) is an **instructor-led demo**: the Spark UI is not available on serverless compute, and Free Edition accounts cannot create the classic cluster it requires, so the instructor runs it while you follow along. The demo notebook is in this repository at [`demos/spark_ui_showcase.py`](https://github.com/roitraining/db-on-aws/blob/main/demos/spark_ui_showcase.py).
+> **Note:** The whole lab runs on serverless compute in your own account. The **Spark UI** — the classic-compute performance tool — is not part of this lab: the instructor will demo it so you recognize it when you meet a real cluster. The demo materials are in this repository at [`demos/spark_ui_follow_along.md`](https://github.com/roitraining/db-on-aws/blob/main/demos/spark_ui_follow_along.md) and [`demos/spark_ui_showcase.py`](https://github.com/roitraining/db-on-aws/blob/main/demos/spark_ui_showcase.py).
 <!-- source: facts_extracted.md §13 -->
 
 ---
@@ -30,7 +30,6 @@ Everything so far has been reading someone else's data. This lab is the first th
 - Explain why nothing executes until an action is called
 - Write a result back to Unity Catalog as a managed Delta table
 - Verify a query's performance on serverless with the query profile
-- Read partition count and shuffle volume in the Spark UI
 - State, for each stage, whether SQL or PySpark was the right tool
 
 ---
@@ -74,7 +73,7 @@ Official documentation, if you want the full detail behind any row:
     2. Click **Create** at the top right and choose **Notebook**.
     3. Rename it from **Untitled Notebook** to `Lab 4 - DataFrames` by clicking the title.
     4. In the language selector next to the title, choose **Python**.
-    5. Open the compute selector at the top right of the notebook and attach **serverless** compute. Parts 1–3 all run on serverless; only Part 4 (the Spark UI) switches to the classic cluster.
+    5. Open the compute selector at the top right of the notebook and attach **serverless** compute. The whole lab runs on serverless.
 
 2. **Read the migrated table into a DataFrame**
 
@@ -322,39 +321,17 @@ Official documentation, if you want the full detail behind any row:
 
     In a Markdown cell, describe the aggregation the way you would to an engineer: which operator dominated the time, how many rows and bytes crossed the Exchange, and how long the query took. "It was slow" is not actionable; "the join shuffled N rows and the Exchange dominated a M-second query" is.
 
-    > **Key Insight:** This is the serverless answer to "does my query perform well?"—run it, open the profile, find the Exchange and the bytes read. Task counts, partition counts, and straggler diagnosis need the Spark UI, which is where Part 5 goes.
+    > **Key Insight:** This is the serverless answer to "does my query perform well?"—run it, open the profile, find the Exchange and the bytes read. Task counts, partition counts, and straggler diagnosis need the Spark UI, which belongs to classic compute — the instructor will demo it separately.
 
 ---
 
-## Part 5: Read the Spark UI (Instructor Demo — Follow Along)
-
-### Task 7: Watch the Shuffle, Skew, and Spill
-
-The Spark UI belongs to classic compute, and Free Edition accounts cannot create classic clusters—so this part is a **demonstration**. The instructor runs the demo notebook on a classic cluster and walks the Spark UI on screen; your job is to recognise each artifact so you know it when you meet a real cluster. Open the notebook from this repository at [`demos/spark_ui_showcase.py`](https://github.com/roitraining/db-on-aws/blob/main/demos/spark_ui_showcase.py) (also in your Git folder under `demos/`) and read along—it has five sections, each producing one thing in the Spark UI:
-<!-- source: facts_extracted.md §13 -->
-
-22. **Partition sizes** — the same scan run twice with different input-split sizes. Watch the **task count** change (11 tasks vs 79) and, under Summary Metrics, the per-task input size. Task count is parallelism: too few tasks and cores sit idle, too many and scheduling overhead beats the work.
-
-23. **Shuffle** — a `COUNT(DISTINCT ...)` per key that Spark cannot pre-combine, so ~2.4 GB physically crosses the network. Watch the map stage's **Shuffle Write** and the matching **Shuffle Read** on the reduce stage. This is the same Exchange you found in Part 4's query profile, now with per-task detail. (A plain filter, by contrast, is narrow—each partition is processed independently, no shuffle columns at all.)
-    <!-- source: facts_extracted.md §13 -->
-
-24. **Skew** — 60% of the rows share one key. In the stage's **Summary Metrics**, compare the **Max** column against the **Median**: one straggler task reads 60% of the data and runs hundreds of times longer than the median. The job is as slow as its biggest partition.
-
-25. **Spill** — a full sort squeezed into 8 partitions. Each task gets more data than its share of execution memory, and two new columns appear on the stage: **Spill (Memory)** and **Spill (Disk)**. Spill is not failure—the job succeeds. It is the performance smell that says "this stage needed more memory or more partitions."
-
-26. **Out of memory** — an aggregate whose *single value* cannot fit in memory has nowhere to spill. Watch the executor die (`ExecutorLostFailure` — a real memory death rarely says "OutOfMemoryError" politely), Spark retry the task four times on fresh executors, and the job fail. Other users' jobs on the cluster survive; the executor is replaced.
-
-> **Key Insight:** Part 4's query profile answers "does my query perform well?" on serverless. The Spark UI adds what the profile cannot show—task counts, partition sizes, stragglers, spill—and that is what you just watched. When your organisation's workspace has classic clusters, everything in this demo is available on any job you run there.
-
----
 
 ## Stretch Task
 
 For attendees who finish early.
 
-1. Open `demos/spark_ui_showcase.py` from your Git folder. For each of the five sections, write one sentence predicting what the Stages tab will show *before* reading that section's explanation—then check yourself against what the instructor demonstrated.
-2. Pick the largest table you can find in `training_nic` and run an aggregation over it, then read its query profile. Where is the Exchange, and how many rows and bytes moved through it?
-3. Rewrite the entire pipeline as a single SQL statement. Which version would you rather hand to a colleague, and which would you rather maintain as a scheduled job?
+1. Pick the largest table you can find in `training_nic` and run an aggregation over it, then read its query profile. Where is the Exchange, and how many rows and bytes moved through it?
+2. Rewrite the entire pipeline as a single SQL statement. Which version would you rather hand to a colleague, and which would you rather maintain as a scheduled job?
 
 ---
 
@@ -376,10 +353,7 @@ For attendees who finish early.
 - [ ] I ran the 2M-row aggregation and read its query profile
 - [ ] I found the Exchange operator and recorded its rows and bytes
 - [ ] I compared a narrow query's profile and saw no Exchange
-- [ ] I followed the Spark UI demo and can name its five artifacts
-- [ ] I know where task counts, shuffle volume, and spill appear in the Spark UI
 - [ ] I can explain why a filter shuffles nothing and a groupBy must
-- [ ] I know where to find the demo notebook in the course repository
 
 ---
 
@@ -390,11 +364,10 @@ For attendees who finish early.
 
 | Issue | Symptom | Solution |
 |---|---|---|
-| No Spark UI available | No Spark UI link on the compute | You are on serverless. Attach to the classic cluster; serverless exposes a query profile instead. |
 | Column not found on the key | Error naming the `#`-prefixed column | In SQL wrap it in backticks. In Python pass it as a plain string. |
 | Write fails | Schema-not-found or permission error on `saveAsTable` | Run the `CREATE SCHEMA` cell in step 12 first. |
 | Error appears at the wrong line | Failure reported on a `display()` | Lazy evaluation. The fault is in an earlier transformation; the action merely triggered it. |
-| Aggregation very slow | Long-running stage | Check partition count in the Spark UI. Very many small partitions or very few large ones both hurt. |
+| Aggregation very slow | Long-running query | Open the query profile: find the Exchange and its rows/bytes. Very large shuffles dominate wall time. |
 | `%sql` cell cannot see the table | Table not found | Fully qualify with catalog and schema, or set `USE CATALOG` and `USE SCHEMA` in that cell. |
 
 ---
@@ -403,11 +376,10 @@ For attendees who finish early.
 
 | Resource | Driver | Control |
 |---|---|---|
-| Classic cluster | Billed while running, including idle | Detach and let it auto-terminate at the end of the session. |
 | `display()` on a full DataFrame | Reads far more than needed | Always `.limit()` when eyeballing data. |
 | Repeated reruns | Each action rereads unless cached | Cache only when you will reuse the same DataFrame several times. |
 
-**Cleanup:** Keep `institution_summary`—Labs 5 and 6 both build on it. Detach from the cluster when finished.
+**Cleanup:** Keep `institution_summary`—Labs 5 and 6 both build on it.
 
 ---
 

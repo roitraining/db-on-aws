@@ -11,7 +11,29 @@ Class demonstration notebooks. The instructor runs these live — and the Day 1 
 - `module_3_python_primer.py` - a first taste of Python for the Day 1 close: variables, f-strings, lists/loops, a function, the PySpark bridge, and the one-loop-many-tables payoff. Ends with a table of free learning resources (all links verified).
 - `delta_under_the_hood.sql` - the files and the log without filesystem access: DESCRIBE DETAIL, the hidden `_metadata` column listing the real Parquet files, DESCRIBE HISTORY, then an UPDATE on a scratch copy to watch new files appear and the old version stay readable.
 
-## Day 2+ (requires a classic cluster)
+## Day 2 (serverless unless noted)
+
+- `module_4_demo_1_etl_path.py` — the 9-minute ETL arc: read → transform → aggregate → the same
+  thing in `%sql` (the "same engine" reassurance) → `saveAsTable` → prove it's real. Serverless.
+- `module_4_demo_2_why_slow.py` — the 7-minute Spark UI walk: one visible aggregation over the
+  2M-row perf tables, stages, shuffle read/write, task count, and the one-sentence takeaway.
+  **Classic cluster required** — start it before the session.
+- `module_5_demo_1_grant_fail.sql` — the correct grant that fails: SELECT granted and visible,
+  access denied anyway, fixed by USE CATALOG + USE SCHEMA with SELECT untouched. Needs a second
+  identity. Replace `<colleague>` before class.
+- `module_5_demo_2_publish_compare_alert.sql` — view vs materialized view honestly compared,
+  REFRESH via serverless pipeline, then the alert flow including the you-cannot-reuse-a-saved-query
+  frustration, shown deliberately.
+- `module_6_demo_1_dashboard.sql` — click path for the live dashboard build: two charts, one
+  dataset, a filter scoped to both, the deliberately mis-scoped filter, the fix, cross-filtering.
+- `module_6_demo_2_genie.sql` — Genie right and wrong: the well-formed question, the
+  underspecified one, the silently-resolved ambiguity, and the read-the-SQL verification habit.
+  Needs a curated Genie space; rehearse both questions.
+- `spark_ui_follow_along.md` — the five-artifact Spark UI follow-along (partitions, shuffle,
+  skew, spill, OOM). Formerly Lab 4 Part 5; removed from the lab 2026-09-28 because the Spark UI
+  is a DE topic — in the DA class it is demo-only. Pairs with `spark_ui_showcase.py`.
+
+## Classic-cluster / Advanced
 
 - `spark_ui_showcase.py` — partition sizes, shuffle, skew, spill, and OOM, each producing one artifact in the Spark UI. Requires a **classic cluster** (the Spark UI does not exist on serverless, and Free Edition cannot create classic compute), so in class this runs on the instructor's shared cluster. The final cell fails on purpose.
 - `delta_log_old_school.py` - **Advanced course (Day 3, pairs with Lab 9 Delta internals)** - the actual `_delta_log` JSON files, listed and read, via a hive_metastore table on the DBFS root (UC tables never expose theirs). Creates and updates its own scratch table, then ties the raw files back to DESCRIBE HISTORY. Follow-on talking point: in a customer-managed AWS deployment the same files are browsable in the S3 console, because you own the bucket - UC controls the front door, your AWS account controls the building.
