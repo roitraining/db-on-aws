@@ -162,7 +162,7 @@ Official documentation, if you want the full detail behind any row:
 
     ```python
     # narrow to the six columns the summary needs
-    slim = cleaned.select("`#ID_RSSD`", "NM_LGL_CLEAN", "CITY",
+    slim = cleaned.select("#ID_RSSD", "NM_LGL_CLEAN", "CITY",
                           "STATE_ABBR_NM", "CHTR_TYPE_CD", "start_month")
     ```
     <!-- source: facts_extracted.md §12 -->
