@@ -2,7 +2,7 @@
 # MAGIC %md
 # MAGIC # Module 4 · Demo 2: Why Was That Slow?
 # MAGIC
-# MAGIC **Seven minutes. Classic cluster required** — the Spark UI does not exist on serverless.
+# MAGIC **Seven minutes. Classic cluster required** — this demo reads the **per-task distribution** (Summary Metrics, max vs median), which only the classic Spark UI exposes. Serverless's query profile covers the DAG, shuffle volume, task counts and spill — see `demos/serverless_profile_vs_spark_ui.md` for the verified boundary.
 # MAGIC Start the cluster before the session (~6 min cold start).
 # MAGIC
 # MAGIC Goal is ONE sentence an engineer can act on — *"it shuffled N rows on the join"* — not tuning.

@@ -2,7 +2,7 @@
 # MAGIC %md
 # MAGIC # DE Module 2 · Demo 2: Find the Straggler
 # MAGIC
-# MAGIC **Seven minutes. Classic cluster required** — the Spark UI does not exist on serverless.
+# MAGIC **Seven minutes. Classic cluster required** — this demo reads the **per-task distribution** (Summary Metrics, max vs median), which only the classic Spark UI exposes. Serverless's query profile covers the DAG, shuffle volume, task counts and spill — see `demos/serverless_profile_vs_spark_ui.md` for the verified boundary.
 # MAGIC The deliverable is one true sentence an engineer can act on, not a live tuning session.
 # MAGIC
 # MAGIC This notebook *builds* the skew deliberately (60% of rows on one key), so the straggler is

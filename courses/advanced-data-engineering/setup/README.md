@@ -30,7 +30,7 @@ SELECT COUNT(*) FROM training_nic.perf.institutions_large;   -- 2000000 (Lab 8)
 ## Notes
 
 - **Run once per workspace** — instructor or admin, not attendees.
-- **Labs 8 and 9 need a classic cluster** — the Spark UI is not available on serverless. Create
+- **Labs 8 and 9 need a classic cluster** — they read per-task Spark UI detail (stragglers, spill columns) that serverless's query profile does not expose. Create
   one: **Compute → Create compute**, single node, **`m5d.large`**, Databricks Runtime **16.4
   LTS**. (Plain `m5.large` is rejected with *"At least one EBS volume must be attached"* — use
   `m5d.large`.) A cold cluster takes ~6 minutes; start it before Lab 8.

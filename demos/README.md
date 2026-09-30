@@ -1,6 +1,7 @@
 # Demos
 
-Class demonstration notebooks.
+Class demonstration notebooks. The instructor runs these live — and the serverless demos run in
+**your own account** too, so pull this repo as a Git folder and run along, or re-run them afterwards.
 
 ## Advanced Data Engineering (Days 3–4) — `de_module_*`
 
@@ -19,7 +20,8 @@ real `bundles/solutions/lab-10-pipeline` and `lab-11-job` artifacts — deploy t
 - `de_module_5_demo_1_task_values_gate.py` — task values (Python-only), If/else operands, both branches via the threshold variable; presenter script for the Lab 11 job.
 - `de_module_5_demo_2_event_log_run_as.py` — event_log() as owner, the Run As failure, SET OWNER + repair-run.
 - `de_module_6_demo_1_manifest_to_deploy.py` — terminal script: validate/deploy/run the Lab 10 bundle; CLI must be v1.x (0.2xx fails downloading Terraform).
-- `de_module_6_demo_2_adopt_running_resource.py` — `bundle generate job` + `deployment bind`, syntax verified on CLI v1.18; GitLab CI sketch (`jesseroi/db-on-aws`). The instructor runs these live — and the Day 1 demos run on serverless in **your own account** too, so pull this repo as a Git folder and run along, or re-run them afterwards.
+- `de_module_6_demo_2_adopt_running_resource.py` — `bundle generate job` + `deployment bind`, syntax verified on CLI v1.18; GitLab CI sketch (`jesseroi/db-on-aws`).
+- `serverless_profile_vs_spark_ui.md` — **verified capability matrix**: what the serverless query profile covers (DAG, shuffle, task counts, spill) vs what genuinely needs the classic Spark UI (per-task skew, stragglers, executors).
 
 ## Day 1 (serverless — run along in your own account)
 
@@ -57,6 +59,6 @@ real `bundles/solutions/lab-10-pipeline` and `lab-11-job` artifacts — deploy t
 
 ## Classic-cluster / Advanced
 
-- `spark_ui_showcase.py` — partition sizes, shuffle, skew, spill, and OOM, each producing one artifact in the Spark UI. Requires a **classic cluster** (the Spark UI does not exist on serverless, and Free Edition cannot create classic compute), so in class this runs on the instructor's shared cluster. The final cell fails on purpose.
+- `spark_ui_showcase.py` — partition sizes, shuffle, skew, spill, and OOM, each producing one artifact in the Spark UI. Requires a **classic cluster** (the per-task Spark UI view does not exist on serverless — see `serverless_profile_vs_spark_ui.md` — and Free Edition cannot create classic compute), so in class this runs on the instructor's shared cluster. The final cell fails on purpose.
 - `delta_log_old_school.py` - **Advanced course (Day 3, pairs with Lab 9 Delta internals)** - the actual `_delta_log` JSON files, listed and read, via a hive_metastore table on the DBFS root (UC tables never expose theirs). Creates and updates its own scratch table, then ties the raw files back to DESCRIBE HISTORY. Follow-on talking point: in a customer-managed AWS deployment the same files are browsable in the S3 console, because you own the bucket - UC controls the front door, your AWS account controls the building.
 - `spark_ui_showcase_demo_script.md` — step-by-step Spark UI navigation for demoing the above.

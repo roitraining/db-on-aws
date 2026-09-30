@@ -16,7 +16,7 @@ You have a multi-join T-SQL stored procedure that runs on-premises. This lab con
 ## Prerequisites
 
 - [ ] Lab 7 completed—you have `eng_<id>.work`
-- [ ] **A classic cluster attached**—the Spark UI is not available on serverless
+- [ ] **A classic cluster attached**—this lab reads the per-task distribution (Summary Metrics), which only the classic Spark UI exposes. Serverless's query profile shows the DAG, shuffle and task counts, but not per-task detail
 - [ ] Nothing else—the T-SQL procedure you will rewrite is printed in Task 1
 - [ ] `training_nic.perf` tables present (created by the environment setup script)
 - [ ] Intro Lab 4 completed (DataFrame basics are assumed, not taught here)
@@ -315,7 +315,7 @@ You have a multi-join T-SQL stored procedure that runs on-premises. This lab con
 
 | Issue | Symptom | Solution |
 |---|---|---|
-| No Spark UI | No link on the compute | You are on serverless. Attach a classic cluster. |
+| No Spark UI | No link on the compute | You are on serverless—it shows a query profile instead (DAG, shuffle, task counts). This lab needs per-task metrics: attach a classic cluster. |
 | Join produces duplicate rows | Row count higher than expected | A one-to-many relationship. Check the join key's cardinality on both sides. |
 | Ambiguous column after join | Reference error on a shared name | Qualify with the DataFrame alias, or rename before joining. |
 | Cache appears to do nothing | No time improvement | The DataFrame is used once. Caching only pays back on reuse. |

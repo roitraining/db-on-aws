@@ -321,7 +321,7 @@ Official documentation, if you want the full detail behind any row:
 
     In a Markdown cell, describe the aggregation the way you would to an engineer: which operator dominated the time, how many rows and bytes crossed the Exchange, and how long the query took. "It was slow" is not actionable; "the join shuffled N rows and the Exchange dominated a M-second query" is.
 
-    > **Key Insight:** This is the serverless answer to "does my query perform well?"—run it, open the profile, find the Exchange and the bytes read. Task counts, partition counts, and straggler diagnosis need the Spark UI, which belongs to classic compute — the instructor will demo it separately.
+    > **Key Insight:** This is the serverless answer to "does my query perform well?"—run it, open the profile, find the Exchange and the bytes read. The profile also reports task and partition counts and total spill — more than this course originally credited it with. What still needs the classic Spark UI is the per-task story: straggler diagnosis from the max-vs-median task distribution, and executor-level failures — the instructor will demo those separately.
 
 ---
 
