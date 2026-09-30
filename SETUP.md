@@ -198,9 +198,13 @@ through Labs 1–6, but four things from them are assumed knowledge, and Lab 7 s
 
 ### Do this before Lab 7
 
-1. Complete **Part 1** and **Part 2** above.
+1. Work through **Part 1** above — add the course repository as a Git folder in your
+   workspace. Part 4 does not repeat those steps, and nothing else adds the repo for
+   you: without it there are no lab guides in your workspace.
 
-2. Confirm you can reach the training data:
+2. Work through **Part 2** above — pick your compute and run its checks.
+
+3. Confirm you can reach the training data:
 
     ```sql
     SELECT `#ID_RSSD`, NM_LGL, STATE_ABBR_NM
