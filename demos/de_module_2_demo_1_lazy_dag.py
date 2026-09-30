@@ -41,13 +41,39 @@ chain.count()
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ### Step 4 — a bad column reference. **The cell succeeds.**
-# MAGIC Ask the room: is this a working pipeline?
+# MAGIC ### Step 4 — a bad column reference. **The cell fails immediately.**
+# MAGIC Databricks analyzes eagerly now: name and type errors surface at the *transformation*,
+# MAGIC complete with a did-you-mean list. (Verified on DBR 19.6, 2026-09-30 — older material
+# MAGIC claimed this error waits for the action. It no longer does.)
 
 # COMMAND ----------
 
-broken = chain.withColumn("ASSET_BAND", F.col("TOTAL_ASSETS") > 1000000)  # no such column
+try:
+    chain.withColumn("ASSET_BAND", F.col("TOTAL_ASSETS") > 1000000)   # no such column
+except Exception as e:
+    print(str(e)[:300])   # UNRESOLVED_COLUMN — with suggestions
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### Step 5 — a *data* error. The transformation is accepted — and even `count()` passes.
+# MAGIC Analysis can check names and types. It cannot check the data.
+
+# COMMAND ----------
+
+from pyspark.sql.functions import udf
+
+@udf("int")
+def as_number(name):
+    return int(name)          # legal names are not numbers — fails only when data flows through
+
+broken = chain.withColumn("ID_NUM", as_number(F.col("NM_LGL")))
 print("Transformation accepted. No error. Nothing has run.")
+
+# COMMAND ----------
+
+# count() does not need ID_NUM, so Spark never computes it — lazy means "only what the action needs":
+print("count() succeeds:", broken.count())
 
 # COMMAND ----------
 
@@ -56,10 +82,10 @@ print("Transformation accepted. No error. Nothing has run.")
 # MAGIC `count()` job: the plan Spark built from the lazy chain. Point at narrow vs wide — the
 # MAGIC filter stayed inside a stage; a groupBy or join would open a new one.
 # MAGIC
-# MAGIC ### Step 5 — an action on the broken chain. *Now* it fails, naming the column.
-# MAGIC *"The cell that fails is rarely the wrong cell. Read upward."*
+# MAGIC ### Step 7 — an action that READS the new column. *Now* it fails — naming the data value,
+# MAGIC three cells after the mistake. *"The cell that fails is rarely the wrong cell. Read upward."*
 # MAGIC **This cell fails on purpose — that is the end of the demo.**
 
 # COMMAND ----------
 
-broken.count()
+broken.select("NM_LGL", "ID_NUM").show(5)
