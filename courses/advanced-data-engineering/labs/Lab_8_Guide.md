@@ -111,6 +111,10 @@ You have a multi-join T-SQL stored procedure that runs on-premises. This lab con
 
     > **Expected Result:** An elapsed time you write down. Everything after this is measured against it.
 
+    > **Common Pitfall:** On a freshly started cluster the very first Spark action pays roughly
+    > 30 seconds of executor warm-up that has nothing to do with your query (measured 32s cold,
+    > seconds warm). Run the cell twice and record the second number.
+
 ---
 
 ## Part 2: Read the Execution
@@ -142,19 +146,42 @@ You have a multi-join T-SQL stored procedure that runs on-premises. This lab con
 
 8. **Open the Spark UI**
 
-    From your cluster, open the Spark UI and find the job produced by the previous cell.
+    If you have never opened the Spark UI: it is not a separate tool — every classic cluster
+    serves it from a browser tab. There are two ways in; use the first when you care about one
+    specific cell.
+
+    **From the cell you just ran (fastest):** directly under the cell's output, click the small
+    **▸ Spark Jobs** expander. Each job in the list has a **View** link — click the one for the
+    `count()` you just ran. The job's detail page opens in a new browser tab, already inside the
+    Spark UI.
+
+    **From the cluster:** in the left sidebar click **Compute**, click your cluster's name
+    (`db-on-aws · lab cluster`), then the **Spark UI** tab. You land on the **Jobs** page, which
+    lists every job this cluster has run, newest first — yours is at the top, and its
+    **Description** names the notebook cell that submitted it. Click that description to open the
+    job's detail page.
+
+    Keep the Spark UI tab open beside your notebook — you will be back in it for the rest of
+    the lab. A narrated tour of the whole UI lives in the course repo at
+    `demos/spark_ui_follow_along.md` if you want more than this lab uses.
     <!-- source: facts_extracted.md §2 -->
 
 9. **Identify the stage boundaries**
 
-    Count the stages. Each stage boundary is a shuffle.
+    On the job's detail page, expand **DAG Visualization** (a link near the top). Each blue box
+    is a stage; every arrow crossing between boxes is a shuffle. The **Completed Stages** table
+    below it lists the same stages with their task counts. Count the stages. Each stage boundary
+    is a shuffle.
 
     > **Key Insight:** Narrow transformations—`filter`, `select`, `withColumn`—run inside a stage because each partition can be processed independently. Wide transformations—`join`, `groupBy`, `distinct`—force a shuffle and therefore a new stage. The number of stages tells you how many times your data crossed the cluster.
     <!-- source: facts_extracted.md §2 -->
 
 10. **Record shuffle read and write for the largest stage**
 
-    Note both figures from the **Stages** tab.
+    In the Spark UI's top navigation bar (Jobs · Stages · Storage · Environment · Executors ·
+    SQL / DataFrame), click **Stages**. Every stage appears as a row with **Shuffle Read** and
+    **Shuffle Write** columns; the largest stage is the one with the biggest Shuffle Read. Note
+    both figures.
     <!-- source: facts_extracted.md §2 -->
 
 ### Task 4: Find the Straggler
@@ -177,7 +204,7 @@ You have a multi-join T-SQL stored procedure that runs on-premises. This lab con
     ```
     <!-- source: facts_extracted.md §2 -->
 
-    > **Expected Result:** Noticeably slower than the same query will run in step 16. Measured across repeated runs on the reference cluster: **17–28 seconds**. Absolute times move with cluster size, warm caches, and what else is running, so record *your* number—the step 16 comparison is the point, not matching this figure.
+    > **Expected Result:** Noticeably slower than the same query will run in step 16. Measured across repeated runs on the reference cluster: **17–45 seconds**. Absolute times move with cluster size, warm caches, and what else is running, so record *your* number—the step 16 comparison is the point, not matching this figure.
 
 13. **Measure how unevenly the rows are distributed**
 
@@ -194,7 +221,11 @@ You have a multi-join T-SQL stored procedure that runs on-premises. This lab con
 
 14. **Confirm it in Summary Metrics**
 
-    Open Summary Metrics for the shuffle stage and compare maximum task duration against the median.
+    Back in the **Stages** tab, click the shuffle stage's **Description** link to open the stage
+    detail page. The **Summary Metrics for N Completed Tasks** table sits near the top: each row
+    is a metric (**Duration**, Shuffle Read Size, …) and the columns spread that metric across
+    the stage's tasks — **Min · 25th percentile · Median · 75th percentile · Max**. Read the
+    **Duration** row and compare **Max** against **Median**.
     <!-- source: facts_extracted.md §2 -->
 
     > **Key Insight:** If the maximum task duration greatly exceeds the median, one task is doing far more work than its peers. That is **skew**—one key has disproportionately many rows—and it is a different problem from having too much data overall. More cluster does not fix skew; the straggler is still one task.
@@ -232,7 +263,7 @@ You have a multi-join T-SQL stored procedure that runs on-premises. This lab con
     ```
     <!-- source: facts_extracted.md §2 -->
 
-    > **Expected Result:** Substantially faster than step 12—around **6 seconds**, a **3× to 4×** improvement with no change to your code. The partition ratio in step 13 reproduced at exactly **9.0×** on every run; that structural number is stable even when the timings are not.
+    > **Expected Result:** Substantially faster than step 12—around **6–10 seconds**, a **3× to 5×** improvement with no change to your code (most recently verified: 43.5s off → 9.4s on). The partition ratio in step 13 reproduced at exactly **9.0×** on every run; that structural number is stable even when the timings are not.
 
 17. **So what actually fixed it?**
 
@@ -253,7 +284,7 @@ You have a multi-join T-SQL stored procedure that runs on-premises. This lab con
     ```
     <!-- source: facts_extracted.md §2 -->
 
-    > **Expected Result:** A large drop—roughly **3.3s to 0.5s** on the reference cluster—because the second count reads memory instead of rereading and rejoining.
+    > **Expected Result:** Do not expect the folklore drop here. On the single-node reference cluster the cached count is **slower** — measured **4.6s uncached → 12.5s cached**, repeatably: the join output is far wider than the source files, it does not fit executor memory, the cache spills to disk, and reading the spilled cache loses to recomputing from compact Parquet with Photon. On a larger cluster with memory to spare, the same cell shows a large drop. Record *your* two numbers — either outcome sets up the next step.
 
 19. **Check what caching did not fix**
 
@@ -345,7 +376,7 @@ You have a multi-join T-SQL stored procedure that runs on-premises. This lab con
 2. Distinguish a narrow from a wide transformation, giving two examples of each.
 3. Max task duration is twenty times the median. What is the diagnosis, and what will adding executors achieve?
 4. When does caching pay for itself, and when is it pure overhead?
-5. Caching improved your total time but the straggler remained. Explain both facts.
+5. Caching changed your timing — possibly for the worse — but the straggler remained either way. Explain both facts, and name the case where a cache makes a query slower.
 6. Your rewrite returns more rows than the stored procedure did. What is the first thing to check?
 7. Name one fix for skew that is not caching and not a bigger cluster.
 
