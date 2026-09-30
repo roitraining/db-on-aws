@@ -57,7 +57,10 @@
 
 # COMMAND ----------
 
-# Evidence for the room: what the gate actually read on the last run
+# Evidence for the room: what the gate actually read on the last run.
+# RUN THIS ON A SQL WAREHOUSE (or a Shared-mode cluster) — an Assigned (single-user)
+# cluster raises EVENT_LOG_REQUIRES_SHARED_COMPUTE. Verified 2026-09-30: reads 0 on
+# the current solution deployment (expect_or_drop drops nothing on the staged data).
 from pyspark.sql import functions as F
 df = spark.sql("""
     SELECT SUM(CAST(details:flow_progress.data_quality.dropped_records AS BIGINT)) AS dropped_records
