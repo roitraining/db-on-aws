@@ -19,7 +19,7 @@ You sat the Intro course as an analyst. Now you own the platform. This lab sets 
 - [ ] **The `training_nic` environment is built**—an instructor runs the notebook in [`../setup/`](../setup/) once before class (see its [`README`](../setup/README.md)). Quick check: `SELECT COUNT(*) FROM training_nic.perf.institutions_large` returns 2,000,000
 - [ ] Intro Labs 1–6 completed, **or** `SETUP.md` Part 4 worked through—its first two steps are Parts 1 and 2 (Git folder, compute); see below
 - [ ] `CREATE CATALOG` on the metastore, or an instructor who has it
-- [ ] S3 bucket name and IAM role ARN supplied by your instructor
+- [ ] S3 bucket name and IAM role ARN supplied by your instructor — in the ROI class workspace: bucket `roi-databricks-demo-data`, role `arn:aws:iam::029331796573:role/roi-databricks-uc-demo`
 - [ ] GitLab repository URL and a personal access token
 
 > **Did not take the Intro course?** You are not stuck, but do not skip this. Labs 7–12 assume
@@ -75,11 +75,13 @@ You sat the Intro course as an analyst. Now you own the platform. This lab sets 
     >
     > ```sql
     > CREATE CATALOG IF NOT EXISTS eng_<id>
-    > MANAGED LOCATION 's3://<bucket>/<prefix>/eng_<id>';
+    > MANAGED LOCATION 's3://roi-databricks-demo-data/eng-catalogs/eng_<id>';
     > ```
     >
-    > The path must sit inside an external location you are allowed to use. Your instructor will
-    > tell you which form this workspace needs—worth settling before the whole room hits it at once.
+    > The path must sit inside an external location you are allowed to use — in the ROI class
+    > workspace that is `eng_catalogs`, over `s3://roi-databricks-demo-data/eng-catalogs/`,
+    > pre-created by the instructor. **The ROI class workspace requires this form** — the plain
+    > `CREATE CATALOG` fails there. In a different workspace, your instructor supplies the path.
     <!-- source: facts_extracted.md §1 -->
 
 2. **Create a managed table from the training data**
@@ -184,6 +186,8 @@ You sat the Intro course as an analyst. Now you own the platform. This lab sets 
     Go to **Catalog → Connect → Credentials → Create credential**, choose credential type **AWS IAM Role**, and enter a name of `cred_<id>` plus the IAM Role ARN your instructor supplied.
     <!-- source: facts_extracted.md §1 -->
 
+    In the ROI class workspace the ARN is `arn:aws:iam::029331796573:role/roi-databricks-uc-demo`. Every attendee's credential wraps this same role — your isolation comes from the external location *path* you create next, not from the role.
+
     > **Note:** Copy the **External ID** shown after creation. It completes the trust relationship on the AWS side. Creating the credential requires `CREATE STORAGE CREDENTIAL` on the metastore.
 
     > **Key Insight:** Notice you were sent to the UI. Almost everything else in Unity Catalog is SQL, and it is worth asking why this is not. A credential is a secret-bearing object with an AWS-side handshake, so it deliberately does not live in a statement you might paste into a shared notebook.
@@ -192,7 +196,7 @@ You sat the Intro course as an analyst. Now you own the platform. This lab sets 
 
     ```sql
     CREATE EXTERNAL LOCATION IF NOT EXISTS `loc_<id>`
-    URL 's3://<bucket>/<prefix>/<id>'
+    URL 's3://roi-databricks-demo-data/lab7/<id>'
     WITH (STORAGE CREDENTIAL `cred_<id>`)
     COMMENT 'Lab 7 external location';
     ```
@@ -203,13 +207,13 @@ You sat the Intro course as an analyst. Now you own the platform. This lab sets 
 13. **Verify the location is reachable**
 
     ```sql
-    LIST 's3://<bucket>/<prefix>/<id>';
+    LIST 's3://roi-databricks-demo-data/lab7/<id>';
     ```
     <!-- source: facts_extracted.md §1 -->
 
     > **Common Pitfall:** Read the error text before you react. Your prefix is empty at this point, so `LIST` returns **`No such file or directory`**—that is the expected result here and it is *not* a permissions failure. It proves the credential worked: Databricks reached S3 and found nothing there. You will see files appear at this same path in Task 5.
 
-    > **Troubleshooting:** A genuine failure reads as an *access* or *access denied* error rather than a missing path, and it is an IAM trust or bucket policy problem, not a Unity Catalog problem. The role must trust Databricks and permit the bucket path.
+    > **Troubleshooting:** A genuine failure reads as an *access* or *access denied* error rather than a missing path. One shape to know: `UNAUTHORIZED_ACCESS ... statusCode: 403` on `LIST` run *before* the external location exists is **Unity Catalog** refusing — no external location covers that path yet — so create the location first. A 403 that persists *after* the location exists is an IAM trust or bucket policy problem: the role must trust Databricks and permit the bucket path.
 
 ### Task 5: External vs Managed
 
@@ -217,7 +221,7 @@ You sat the Intro course as an analyst. Now you own the platform. This lab sets 
 
     ```sql
     CREATE OR REPLACE TABLE eng_<id>.work.institutions_external
-    LOCATION 's3://<bucket>/<prefix>/<id>/institutions'
+    LOCATION 's3://roi-databricks-demo-data/lab7/<id>/institutions'
     AS SELECT * FROM training_nic.migrated.institutions;
     ```
     <!-- source: facts_extracted.md §1 -->
