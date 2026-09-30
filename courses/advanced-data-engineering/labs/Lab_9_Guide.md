@@ -65,7 +65,7 @@ Your analysts ran a four-check comparison in Intro Lab 3. This lab builds the ma
     ```
     <!-- source: facts_extracted.md §3 -->
 
-    > **Expected Result:** `numFiles` of **1**, at roughly 1.1 MB. Write both down—this is your baseline for Part 4. Write both down—this is your baseline for Part 4.
+    > **Expected Result:** `numFiles` of **1**, at roughly 1.1 MB. Write both down—this is your baseline for Part 4.
 
 ---
 
