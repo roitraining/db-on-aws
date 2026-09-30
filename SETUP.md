@@ -85,11 +85,12 @@ SQL warehouse**, which starts in seconds. Three labs need a **classic cluster** 
 
 | Labs | Attach to | Why |
 |---|---|---|
-| 10, 11 | **Serverless** | Fast, and pipelines require it for AUTO CDC |
-| **4, 8, 9** | **A classic cluster** | The Spark UI is **not available** on serverless, and these labs read it directly |
+| 4, 10, 11 | **Serverless** | Fast, and pipelines require it for AUTO CDC. Lab 4 verifies performance with the serverless **query profile**; the classic Spark UI is an instructor demo |
+| **8** | **A classic cluster** | Lab 8 reads per-task **Summary Metrics**, which only the classic Spark UI exposes |
+| 9 | **Serverless** | Lab 9 is `DESCRIBE HISTORY` / `DESCRIBE DETAIL` SQL — no Spark UI needed |
 
 > **Common Pitfall:** A cold classic cluster takes about **six minutes** to start. Start it at the
-> break *before* Lab 4 rather than at the start of it. If your compute dropdown shows no classic
+> break *before* Lab 8 rather than at the start of it. If your compute dropdown shows no classic
 > cluster at all, ask your instructor — attendees usually cannot create one.
 
 ### Confirm your data is there
@@ -116,8 +117,9 @@ Two paths. Both produce the same environment; pick on whether you want local too
 
 > **Free Edition cannot run these labs' Spark UI sections.** Databricks Free Edition is
 > serverless-only — cluster creation fails with *"organization does not have any associated
-> worker environments"*, for admins too. Labs 4, 8 and 9's Spark UI work needs a standard
-> (paid or trial) workspace. Everything else in both courses runs fine on Free Edition.
+> worker environments"*, for admins too. Lab 8's Spark UI work (and the Spark UI instructor
+> demo) needs a standard (paid or trial) workspace. Everything else in both courses runs fine
+> on Free Edition.
 
 ### Path A · Entirely inside Databricks — no CLI
 
@@ -141,9 +143,10 @@ Best when you are setting up from a browser, or on a locked-down machine.
     | `bundles/20-perf-data/src/build_perf_tables.py` | 2M-row skewed tables | Lab 8 |
     | `bundles/40-attendees/src/grant_attendee_access.py` | Attendee grants | Labs 4–7 |
 
-6. The notebook's **Part 6 creates the classic cluster** for Labs 4, 8 and 9 automatically
+6. The notebook's **Part 6 creates the classic cluster** for Lab 8 and the Spark UI
+   instructor demo automatically
    and leaves it **Terminated**, so it costs nothing until class. Confirm `db-on-aws · lab
-   cluster` appears under **Compute**; start it at the break before Lab 4 (cold start ~6
+   cluster` appears under **Compute**; start it at the break before Lab 8 (cold start ~6
    minutes). If it is missing — some workspaces restrict cluster creation — create it by
    hand: **Compute → Create compute**, single node, `m5d.large`, Databricks Runtime 16.4 LTS.
 
@@ -260,7 +263,7 @@ Everything else in Labs 7–12 is self-contained.
 | `PARSE_SYNTAX_ERROR` near `#` | Unquoted native column name | Backtick it: `` `#ID_RSSD` `` |
 | `TABLE_OR_VIEW_NOT_FOUND` on a short name | `USE CATALOG` was a separate session | Qualify fully, or re-run `USE` in the same session |
 | `Table training_nic...` not found | Environment not built | Part 3, or ask your instructor |
-| No Spark UI link on your compute | You are on serverless | Labs 4, 8, 9 need a classic cluster |
+| No Spark UI link on your compute | You are on serverless | Only Lab 8 needs a classic cluster; Lab 4 uses the serverless query profile instead |
 | Classic cluster missing from the dropdown | Not created, or you lack permission | Ask your instructor |
 | Cluster takes minutes to start | Normal — about six for a cold start | Start it before the preceding break |
 | `Metastore storage root URL does not exist` | No default managed location | Part 3, "If catalog creation fails" |
