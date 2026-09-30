@@ -12,6 +12,9 @@
 
 # MAGIC %md
 # MAGIC ### Step 1 — as yourself, the owner, the event-log query works
+# MAGIC **Compute note:** run this on a **SQL warehouse or Shared-mode cluster** — an Assigned
+# MAGIC (single-user) cluster raises `EVENT_LOG_REQUIRES_SHARED_COMPUTE` regardless of ownership
+# MAGIC (verified 2026-09-30).
 
 # COMMAND ----------
 
