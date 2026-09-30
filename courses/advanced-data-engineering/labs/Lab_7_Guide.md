@@ -17,14 +17,16 @@ You sat the Intro course as an analyst. Now you own the platform. This lab sets 
 
 - [ ] **[`SETUP.md`](../../../SETUP.md) Parts 1 and 2 completed**—course material added as a Git folder, compute selected
 - [ ] **The `training_nic` environment is built**—an instructor runs the notebook in [`../setup/`](../setup/) once before class (see its [`README`](../setup/README.md)). Quick check: `SELECT COUNT(*) FROM training_nic.perf.institutions_large` returns 2,000,000
-- [ ] Intro Labs 1–6 completed, **or** `SETUP.md` Part 4 read—see below
+- [ ] Intro Labs 1–6 completed, **or** `SETUP.md` Part 4 worked through—its first two steps are Parts 1 and 2 (Git folder, compute); see below
 - [ ] `CREATE CATALOG` on the metastore, or an instructor who has it
 - [ ] S3 bucket name and IAM role ARN supplied by your instructor
 - [ ] GitLab repository URL and a personal access token
 
 > **Did not take the Intro course?** You are not stuck, but do not skip this. Labs 7–12 assume
-> Labs 1–6 and deliberately do not reteach them. Read **[`SETUP.md`](../../../SETUP.md) Part 4—
-> Advanced course catch-up** before starting. It is a ten-minute read covering the four things this
+> Labs 1–6 and deliberately do not reteach them. Work through **[`SETUP.md`](../../../SETUP.md)
+> Part 4—Advanced course catch-up** before starting. Its first two steps send you through Parts
+> 1 and 2—adding the course repo as a Git folder, and picking compute—and the rest is a
+> ten-minute read covering the four things this
 > lab assumes you already know: the three-level namespace, the leading `#` on the NIC key and why
 > it needs backticks, the three privileges required to read a table, and what the `legacy_onprem`
 > and `migrated` schemas represent. Task 2 of this lab in particular will look like a bug if you
