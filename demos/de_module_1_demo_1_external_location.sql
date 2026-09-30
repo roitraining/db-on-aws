@@ -10,6 +10,13 @@
 -- MAGIC **Catalog Explorer → External data → Credentials** (show the IAM Role ARN + External ID on
 -- MAGIC screen as step 1). This notebook takes over at the SQL boundary.
 -- MAGIC
+-- MAGIC **The staged objects (Learn2Training workspace only — NOT Free Edition):**
+-- MAGIC | Object | Name |
+-- MAGIC |---|---|
+-- MAGIC | Storage credential | `roi_demo_data` |
+-- MAGIC | IAM role it wraps | `arn:aws:iam::029331796573:role/roi-databricks-uc-demo` |
+-- MAGIC | External location | `training_ext_loc` → `s3://roi-databricks-demo-data/uc-external-demo/` |
+-- MAGIC
 -- MAGIC **Environment note:** Free Edition / trial workspaces have no storage credential, so the
 -- MAGIC external-location cells only run in the instructor's paid workspace. The managed-table drop
 -- MAGIC contrast (steps 4–6) runs anywhere.
