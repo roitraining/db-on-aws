@@ -18,7 +18,7 @@
 
 -- MAGIC %md
 -- MAGIC ### Step 2 — the external location IS SQL. Two objects, two privileges, on purpose.
--- MAGIC (Replace the credential name with yours: `SHOW STORAGE CREDENTIALS` lists them.)
+-- MAGIC (Instructor workspace credential: `roi_demo_data` — `SHOW STORAGE CREDENTIALS` lists it.)
 
 -- COMMAND ----------
 
@@ -29,7 +29,7 @@ SHOW STORAGE CREDENTIALS;
 -- Instructor workspace only — requires the pre-created credential:
 -- CREATE EXTERNAL LOCATION IF NOT EXISTS training_ext_loc
 --   URL 's3://roi-databricks-demo-data/uc-external-demo/'
---   WITH (STORAGE CREDENTIAL <credential_name>)
+--   WITH (STORAGE CREDENTIAL roi_demo_data)
 --   COMMENT 'Module 1 demo: external location over the training bucket';
 
 -- COMMAND ----------
