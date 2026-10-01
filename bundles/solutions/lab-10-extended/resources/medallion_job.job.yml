@@ -1,0 +1,64 @@
+resources:
+  jobs:
+    medallion_job:
+      name: medallion_job_labtest
+      tasks:
+        - task_key: run_pipeline
+          disabled: false
+          email_notifications: {}
+          pipeline_task:
+            full_refresh: false
+            pipeline_id: ${resources.pipelines.medallion_pipeline.id}
+          run_if: ALL_SUCCESS
+          timeout_seconds: 0
+        - task_key: read_event_log
+          depends_on:
+            - task_key: run_pipeline
+          disabled: false
+          email_notifications: {}
+          notebook_task:
+            notebook_path: ../src/read_event_log.py
+            source: WORKSPACE
+          run_if: ALL_SUCCESS
+          timeout_seconds: 0
+        - task_key: quality_gate
+          depends_on:
+            - task_key: read_event_log
+          condition_task:
+            left: '{{tasks.read_event_log.values.dropped_records}}'
+            op: LESS_THAN
+            right: "10"
+          disabled: false
+          email_notifications: {}
+          run_if: ALL_SUCCESS
+          timeout_seconds: 0
+        - task_key: promote_gold
+          depends_on:
+            - outcome: "true"
+              task_key: quality_gate
+          disabled: false
+          email_notifications: {}
+          notebook_task:
+            notebook_path: ../src/promote_gold.py
+            source: WORKSPACE
+          run_if: ALL_SUCCESS
+          timeout_seconds: 0
+        - task_key: halt_and_alert
+          depends_on:
+            - outcome: "false"
+              task_key: quality_gate
+          disabled: false
+          email_notifications: {}
+          notebook_task:
+            notebook_path: ../src/halt_and_alert.py
+            source: WORKSPACE
+          run_if: ALL_SUCCESS
+          timeout_seconds: 0
+      email_notifications:
+        on_failure:
+          - jessetoporowski@gmail.com
+      max_concurrent_runs: 1
+      queue:
+        enabled: true
+      timeout_seconds: 0
+      webhook_notifications: {}
