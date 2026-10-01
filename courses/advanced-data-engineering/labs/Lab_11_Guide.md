@@ -114,19 +114,28 @@ The pipeline works when you run it. This lab makes it work when you are not ther
 
 8. **Add the Gold task on the true branch**
 
-    A downstream task's **Depends on** field defaults to `<task-name> (true)`. Attach the Gold materialized view refresh there so it runs only when the gate passes. To attach a task to the failing outcome instead, select `<task-name> (false)`.
+    A downstream task's **Depends on** field defaults to `<task-name> (true)`. Attach the Gold *promotion* task there so it runs only when the gate passes. To attach a task to the failing outcome instead, select `<task-name> (false)`.
     <!-- source: facts_extracted.md §7 -->
 
-    Make the Gold task a **SQL task** — **Add task → SQL**, pointed at a query or SQL file
-    containing `REFRESH MATERIALIZED VIEW eng_<id>.work.branch_summary_gold;`, running on
-    your **SQL warehouse**.
+    **Promotion is publication, not recomputation.** Gold was already recomputed by the
+    pipeline task at the top of this DAG. Make `promote_gold` a **notebook task** that reads
+    the gate's verdict and publishes — report Gold's row count as ready for consumers (and in
+    production, this is where the analyst group's `SELECT` grant on Gold would go):
 
-    > **Common Pitfall:** A serverless *notebook* task cannot refresh a materialized view —
-    > it fails with `MATERIALIZED_VIEW_OPERATION_NOT_ALLOWED ...
-    > MV_NOT_ENABLED_ON_SERVERLESS_GENERIC_COMPUTE` (verified 2026-09-30). MV refresh runs on
-    > a SQL warehouse or inside the pipeline, not on serverless general compute. The task-type
-    > split in this job is deliberate: the event-log task must be a Python notebook (task
-    > values), and the Gold task must be SQL (MV refresh).
+    ```python
+    dropped = dbutils.jobs.taskValues.get(
+        taskKey="read_event_log", key="dropped_records", default=0, debugValue=0)
+    print(f"Quality gate PASSED with {dropped} dropped record(s). Promoting Gold.")
+    n = spark.table("eng_<id>.work.branch_summary_gold").count()
+    print(f"branch_summary_gold: {n} row(s) ready for consumers")
+    ```
+
+    > **Common Pitfall:** Do not try to `REFRESH` the Gold materialized view from a job task —
+    > both routes are blocked (verified 2026-09-30): a serverless notebook task fails with
+    > `MV_NOT_ENABLED_ON_SERVERLESS_GENERIC_COMPUTE`, and a SQL-warehouse task fails with
+    > *"Cannot REFRESH a Materialized View created from DLT — update it by starting the
+    > pipeline."* A pipeline-created MV is refreshed only by its pipeline, which is exactly
+    > why the pipeline task sits upstream of the gate.
 
 9. **Decide what happens on the false branch**
 
@@ -252,7 +261,7 @@ The pipeline works when you run it. This lab makes it work when you are not ther
 | Repair reruns everything | Whole job re-executes | You triggered a new run rather than repairing the failed one. |
 | No failure notification | Job failed silently | The notification is configured on the wrong event, or the destination is unset. |
 | Gold refreshes despite violations | Gate did not hold | The Gold task has a dependency on the pipeline task rather than the Condition Task. |
-| Gold refresh task fails | `MATERIALIZED_VIEW_OPERATION_NOT_ALLOWED` | `REFRESH MATERIALIZED VIEW` cannot run from a serverless notebook task. Make it a SQL task on a warehouse. |
+| Gold task fails trying to REFRESH | `MATERIALIZED_VIEW_OPERATION_NOT_ALLOWED`, or "Cannot REFRESH a Materialized View created from DLT" | A pipeline-created MV is refreshed only by its pipeline. The promotion task publishes/verifies Gold; it does not recompute it. |
 
 ---
 
