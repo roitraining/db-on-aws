@@ -117,6 +117,17 @@ The pipeline works when you run it. This lab makes it work when you are not ther
     A downstream task's **Depends on** field defaults to `<task-name> (true)`. Attach the Gold materialized view refresh there so it runs only when the gate passes. To attach a task to the failing outcome instead, select `<task-name> (false)`.
     <!-- source: facts_extracted.md §7 -->
 
+    Make the Gold task a **SQL task** — **Add task → SQL**, pointed at a query or SQL file
+    containing `REFRESH MATERIALIZED VIEW eng_<id>.work.branch_summary_gold;`, running on
+    your **SQL warehouse**.
+
+    > **Common Pitfall:** A serverless *notebook* task cannot refresh a materialized view —
+    > it fails with `MATERIALIZED_VIEW_OPERATION_NOT_ALLOWED ...
+    > MV_NOT_ENABLED_ON_SERVERLESS_GENERIC_COMPUTE` (verified 2026-09-30). MV refresh runs on
+    > a SQL warehouse or inside the pipeline, not on serverless general compute. The task-type
+    > split in this job is deliberate: the event-log task must be a Python notebook (task
+    > values), and the Gold task must be SQL (MV refresh).
+
 9. **Decide what happens on the false branch**
 
     Decide: should a failed gate fail the run loudly, or exit quietly? Be ready to say why.
@@ -241,6 +252,7 @@ The pipeline works when you run it. This lab makes it work when you are not ther
 | Repair reruns everything | Whole job re-executes | You triggered a new run rather than repairing the failed one. |
 | No failure notification | Job failed silently | The notification is configured on the wrong event, or the destination is unset. |
 | Gold refreshes despite violations | Gate did not hold | The Gold task has a dependency on the pipeline task rather than the Condition Task. |
+| Gold refresh task fails | `MATERIALIZED_VIEW_OPERATION_NOT_ALLOWED` | `REFRESH MATERIALIZED VIEW` cannot run from a serverless notebook task. Make it a SQL task on a warehouse. |
 
 ---
 
