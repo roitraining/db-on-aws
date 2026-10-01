@@ -27,9 +27,10 @@ LANDING = f"{BASE}/landing"
 CHECKPOINT = f"{BASE}/checkpoint"
 SCHEMA_LOC = f"{BASE}/schema"
 
-# fresh start on each demo run
+# fresh start on each demo run — checkpoint AND target table together, or a rerun double-ingests
 shutil.rmtree(BASE, ignore_errors=True)
 os.makedirs(LANDING, exist_ok=True)
+spark.sql("DROP TABLE IF EXISTS training_nic.eng_demo.branches_bronze_raw")
 
 src_files = sorted(f for f in os.listdir(SRC) if f.endswith(".csv"))
 for f in src_files[:2]:
@@ -50,6 +51,8 @@ def run_autoloader_pass():
               .format("cloudFiles")
               .option("cloudFiles.format", "csv")
               .option("cloudFiles.schemaLocation", SCHEMA_LOC)
+              .option("cloudFiles.inferColumnTypes", "true")       # typed schema: bad values become rescues, not silent strings
+              .option("cloudFiles.schemaEvolutionMode", "rescue")  # unexpected columns rescue instead of failing the stream
               .option("header", "true")
               .load(LANDING))
     q = (stream.writeStream
@@ -82,7 +85,8 @@ print(f"after second pass: {n2:,} rows  (+{n2-n1:,} — the new file only, nothi
 
 # MAGIC %md
 # MAGIC ### Step 3 — the rescued data column. *"Nobody enabled this. Look at it anyway."*
-# MAGIC On by default; anything unparseable lands here instead of being dropped.
+# MAGIC On by default. **Expect ZERO rescued rows here** — the branch files parse cleanly, and
+# MAGIC an empty net is the correct result on clean data. Say that out loud. Then break it.
 
 # COMMAND ----------
 
@@ -90,8 +94,33 @@ from pyspark.sql import functions as F
 
 df = spark.table("training_nic.eng_demo.branches_bronze_raw")
 print("columns include:", [c for c in df.columns if "rescued" in c.lower()])
-display(df.where(F.col("_rescued_data").isNotNull()).limit(5))
-print("rescued rows:", df.where(F.col("_rescued_data").isNotNull()).count())
+print("rescued rows on clean data:", df.where(F.col("_rescued_data").isNotNull()).count())  # 0 — correct
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### Step 3b — now make the net catch something. Land a file carrying a bad date and a
+# MAGIC column nobody agreed to. The row is **not dropped** — the unparseable pieces land in
+# MAGIC `_rescued_data` as JSON, with the source file path as the receipt. (Verified 2026-10-01.)
+
+# COMMAND ----------
+
+with open(f"{LANDING}/{src_files[0]}") as fh:
+    header_cols = fh.readline().strip().split(",")
+bad = ["" for _ in header_cols]
+bad[0] = "99999999"
+bad[header_cols.index("NM_LGL")] = "RESCUE DEMO BRANCH"
+bad[header_cols.index("D_DT_START")] = "NOT_A_DATE"
+with open(f"{LANDING}/branches_zz_rescue_demo.csv", "w") as fh:
+    fh.write(",".join(header_cols) + ",EXTRA_COL\n")
+    fh.write(",".join(bad) + ",SURPRISE_EXTRA_VALUE\n")
+print("malformed file landed")
+
+run_autoloader_pass()
+rescued = (spark.table("training_nic.eng_demo.branches_bronze_raw")
+           .where(F.col("_rescued_data").isNotNull()))
+print("rescued rows:", rescued.count())   # 1
+display(rescued.select("#ID_RSSD", "NM_LGL", "D_DT_START", "_rescued_data"))
 
 # COMMAND ----------
 
