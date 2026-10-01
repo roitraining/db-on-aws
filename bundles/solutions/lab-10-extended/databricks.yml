@@ -1,0 +1,21 @@
+bundle:
+  name: db_on_aws_labtest
+
+include:
+  - resources/*.yml
+
+variables:
+  target_catalog:
+    description: Catalog the pipeline writes into
+    default: eng_labtest
+
+targets:
+  dev:
+    default: true
+    workspace:
+      host: https://dbc-bba24453-9619.cloud.databricks.com
+  prod:
+    workspace:
+      host: https://dbc-bba24453-9619.cloud.databricks.com
+    variables:
+      target_catalog: eng_labtest_prod
