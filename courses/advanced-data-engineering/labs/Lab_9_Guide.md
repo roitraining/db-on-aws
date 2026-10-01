@@ -29,6 +29,7 @@ Your analysts ran a four-check comparison in Intro Lab 3. This lab builds the ma
 - Compare current state against version 0 using time travel
 - Measure the small-file problem incremental loads create
 - Run `OPTIMIZE` and quantify the file-count reduction
+- Ask `VACUUM` what it would reclaim with `DRY RUN`, and state what a real run costs time travel
 - State when Liquid Clustering replaces manual partitioning
 
 ---
@@ -201,7 +202,30 @@ Your analysts ran a four-check comparison in Intro Lab 3. This lab builds the ma
 
     > **Common Pitfall:** Do not read that size drop as data loss. Confirm it is not by rerunning your row count, and by time traveling to version 0—it still returns the original 62,080 rows.
 
-20. **State when you would use liquid clustering instead of partitioning**
+20. **Ask VACUUM what it would remove — safely**
+
+    `OPTIMIZE` rewrote your three small files into one, but the old files are still in
+    storage — they are what `VERSION AS OF 0` reads. `VACUUM` is what eventually deletes
+    them. Ask it first:
+
+    ```sql
+    VACUUM eng_<id>.work.institutions_delta DRY RUN;
+    ```
+    <!-- source: facts_extracted.md §3 -->
+
+    > **Expected Result:** **Zero rows.** Nothing is listed because every file in this table
+    > is younger than the 7-day deleted-file retention window — `VACUUM` refuses to touch
+    > anything inside it. On a mature table this returns the list of files a real `VACUUM`
+    > would delete.
+
+    > **Key Insight:** `VACUUM` is the other half of the time-travel bargain from step 13:
+    > Delta keeps old files so you can time travel, retention bounds how long, and `VACUUM`
+    > is the act of reclaiming them. With the default window, version 0 stays reachable for
+    > 7 days; shorten retention and run a real `VACUUM`, and time travel dies with the
+    > files — which is why `VACUUM` is irreversible in a way `OPTIMIZE` never is, and why
+    > `DRY RUN` exists.
+
+21. **State when you would use liquid clustering instead of partitioning**
 
     Write two sentences.
 
@@ -211,7 +235,7 @@ Your analysts ran a four-check comparison in Intro Lab 3. This lab builds the ma
 
 ## Stretch Task
 
-1. Run `VACUUM` with a dry run and describe exactly what it would remove. Why is that irreversible in a way `OPTIMIZE` is not?
+1. Using `DESCRIBE HISTORY` timestamps, work out exactly when today's pre-OPTIMIZE files become eligible for `VACUUM`, and what time travel loses at that moment.
 2. Build a reusable validation query that takes two version numbers and reports row-count delta, key delta, and aggregate delta in one result set. This is the framework your analysts execute.
 3. Enable liquid clustering on a copy of the table with a clustering key, load data, and compare file layout against the unclustered original.
 
@@ -232,6 +256,7 @@ Your analysts ran a four-check comparison in Intro Lab 3. This lab builds the ma
 - [ ] I recorded the file count before `OPTIMIZE`
 - [ ] I ran `OPTIMIZE` and recorded the file count after
 - [ ] I confirmed history survived compaction
+- [ ] I ran `VACUUM ... DRY RUN` and can explain why it listed nothing
 - [ ] I stated when liquid clustering beats manual partitioning
 
 ---
