@@ -1,0 +1,11 @@
+resources:
+  pipelines:
+    medallion_pipeline:
+      name: medallion_labtest
+      libraries:
+        - file:
+            path: ../src/medallion_labtest.py
+      catalog: ${var.target_catalog}
+      continuous: false
+      schema: work
+      serverless: true
