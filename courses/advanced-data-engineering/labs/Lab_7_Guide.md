@@ -177,6 +177,18 @@ You sat the Intro course as an analyst. Now you own the platform. This lab sets 
     > you use day to day. Grant `USE CATALOG` once, `SELECT` at the schema, and every future
     > table is covered — one line in the audit instead of hundreds.
 
+    Now take the schema grant back — inheritance cuts both ways, and Lab 10 depends on it
+    being gone:
+
+    ```sql
+    REVOKE SELECT ON SCHEMA eng_<id>.work FROM `account users`;
+    ```
+
+    > **Note:** Leave this grant in place and every table your Lab 10 pipeline creates —
+    > including raw Bronze — is readable by everyone, which defeats that lab's publish-Gold-only
+    > exercise. A schema grant covering tables that do not exist yet is exactly as powerful as
+    > it is dangerous.
+
 9. **Read ownership, then transfer it**
 
     Every Unity Catalog object has exactly one owner, and some operations are owner-only —
