@@ -5,6 +5,11 @@
 
 **Course Repository:** https://github.com/roitraining/db-on-aws
 
+> **Solution notebook (complete, runnable):**
+> [`courses/advanced-data-engineering/solutions/Lab_10_ALT_solution.py`](https://github.com/roitraining/db-on-aws/blob/main/courses/advanced-data-engineering/solutions/Lab_10_ALT_solution.py)
+> — also inside your course Git folder at the same path: open it as a notebook, set the
+> `catalog` widget to your `eng_<id>`, attach serverless, **Run all**.
+
 ---
 
 ## Overview
