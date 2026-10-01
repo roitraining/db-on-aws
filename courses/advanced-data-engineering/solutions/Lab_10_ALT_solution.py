@@ -17,8 +17,9 @@
 
 import os, shutil
 
-dbutils.widgets.text("catalog", "eng_<id>", "Your catalog from Lab 7")
-CATALOG = dbutils.widgets.get("catalog")
+# ENTER YOUR CATALOG FROM LAB 7 (ENG_<>)
+
+CATALOG = "eng_<id>"
 assert CATALOG != "eng_<id>", "Set the catalog widget (top of the notebook) to YOUR eng_<id> catalog first"
 
 spark.sql(f"CREATE SCHEMA IF NOT EXISTS {CATALOG}.alt")
