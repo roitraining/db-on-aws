@@ -62,3 +62,10 @@ real `bundles/solutions/lab-10-pipeline` and `lab-11-job` artifacts — deploy t
 - `spark_ui_showcase.py` — partition sizes, shuffle, skew, spill, and OOM, each producing one artifact in the Spark UI. Requires a **classic cluster** (the per-task Spark UI view does not exist on serverless — see `serverless_profile_vs_spark_ui.md` — and Free Edition cannot create classic compute), so in class this runs on the instructor's shared cluster. The final cell fails on purpose.
 - `delta_log_old_school.py` - **Advanced course (Day 3, pairs with Lab 9 Delta internals)** - the actual `_delta_log` JSON files, listed and read, via a hive_metastore table on the DBFS root (UC tables never expose theirs). Creates and updates its own scratch table, then ties the raw files back to DESCRIBE HISTORY. Follow-on talking point: in a customer-managed AWS deployment the same files are browsable in the S3 console, because you own the bucket - UC controls the front door, your AWS account controls the building.
 - `spark_ui_showcase_demo_script.md` — step-by-step Spark UI navigation for demoing the above.
+
+- `land_incremental_day.py` — **Advanced course (Day 4, pairs with Lab 10/the extended
+  pipeline)** — the incremental-ingest driver: BEFORE counts → land a staged day file
+  (`incremental_days/branches_day3.csv` / `day4`) → Start the pipeline → AFTER counts,
+  named-row inspection, expectations per run, and the change feed (in-graph
+  `silver_changes_feed` table + `table_changes()` form, update pre/post images, deletes).
+  Deployment + day-file generator: `bundles/solutions/lab-10-extended/`.
