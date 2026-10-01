@@ -24,6 +24,7 @@ In Intro Lab 4 you answered a business question with one notebook: read, filter,
 
 ## Objectives
 
+- Query raw CSV files in place with `read_files` and snapshot them as a table
 - Ingest with raw Structured Streaming and explain what the checkpoint guarantees
 - Express the same ingestion declaratively as a streaming table
 - Apply expectations with each of the three violation actions
@@ -37,9 +38,58 @@ In Intro Lab 4 you answered a business question with one notebook: read, filter,
 
 ## Part 1: Ingest—Raw Before Declarative
 
-### Task 1: Structured Streaming by Hand
+### Task 1: Query the Files Before Building Anything
 
-1. **Read the landing directory as a stream**
+1. **Read the CSVs directly with `read_files`**
+
+    Before any pipeline exists, SQL can query the landing files in place. In the **SQL
+    editor**, on your serverless warehouse:
+
+    ```sql
+    SELECT * FROM read_files(
+      '/Volumes/training_nic/raw/landing/branches/*.csv',
+      format => 'csv',
+      header => true)
+    LIMIT 10;
+    ```
+    <!-- source: facts_extracted.md §4 -->
+
+    > **Expected Result:** Ten branch rows with the native NIC columns — including `#ID_RSSD`,
+    > hash intact. `read_files` infers the schema from the files; nothing was created.
+
+    > **Key Insight:** This is the ad-hoc tier: no table, no stream, no checkpoint — and no
+    > guarantees. Every query re-reads every file. It is exactly right for "what is in these
+    > files?" and exactly wrong for production ingestion, which is why the rest of this lab
+    > exists.
+
+2. **Snapshot it as a queryable table**
+
+    A CTAS over `read_files` turns the same query into a real Delta table you can query,
+    grant, and join:
+
+    ```sql
+    CREATE OR REPLACE TABLE eng_<id>.work.branches_csv_raw AS
+    SELECT * FROM read_files(
+      '/Volumes/training_nic/raw/landing/branches/*.csv',
+      format => 'csv',
+      header => true);
+
+    SELECT COUNT(*) FROM eng_<id>.work.branches_csv_raw;
+    ```
+    <!-- source: facts_extracted.md §4 -->
+
+    > **Expected Result:** **173,914** rows — write it down. Bronze, built properly over the
+    > rest of this lab, must land this same number: both read the same directory. (In the
+    > shared class workspace the count runs about 2,000 higher — extra demo files live in
+    > that landing directory.)
+
+    > **Note:** This CTAS is a one-time copy. Land a new file tomorrow and this table is
+    > stale, every query against it silently missing the new data — that is the difference
+    > between a snapshot and the incremental ingestion you build next.
+
+### Task 2: Structured Streaming by Hand
+
+3. **Read the landing directory as a stream**
 
     Auto Loader is Structured Streaming. Its source is `cloudFiles`. Writing it out longhand once makes the declarative form legible later.
 
@@ -56,7 +106,7 @@ In Intro Lab 4 you answered a business question with one notebook: read, filter,
 
     > **Note:** `comment` is set explicitly so a header beginning with `#` is read as a column name rather than skipped. Native NIC names are preserved here deliberately.
 
-2. **Write the stream with a checkpoint**
+4. **Write the stream with a checkpoint**
 
     ```python
     (bronze_stream.writeStream
@@ -66,30 +116,30 @@ In Intro Lab 4 you answered a business question with one notebook: read, filter,
     ```
     <!-- source: facts_extracted.md §4 -->
 
-3. **Count the rows**
+5. **Count the rows**
 
     ```sql
     SELECT COUNT(*) FROM eng_<id>.work.branches_bronze;
     ```
     <!-- source: facts_extracted.md §4 -->
 
-4. **Run the same write a second time**
+6. **Run the same write a second time**
 
-    Re-execute step 2 without changing anything.
+    Re-execute step 4 without changing anything.
 
-5. **Recount and compare**
+7. **Recount and compare**
 
     > **What Just Happened?** The count did not change. File metadata is persisted in a key-value store in the checkpoint location, so already-ingested files are not reprocessed. That is what exactly-once means in practice, and it is why the checkpoint is not optional.
     <!-- source: facts_extracted.md §4 -->
 
-6. **Note the two detection modes**
+8. **Note the two detection modes**
 
     > **Key Insight:** Directory listing is the default and scans the path. File notification uses cloud file events instead and is recommended for most workloads because it avoids repeated listing costs at scale. On a training volume the difference is invisible; on a bucket with millions of objects it is the whole cost model.
     <!-- source: facts_extracted.md §4 -->
 
-### Task 2: The Same Ingestion, Declaratively
+### Task 3: The Same Ingestion, Declaratively
 
-7. **Create a pipeline source file with a Bronze streaming table**
+9. **Create a pipeline source file with a Bronze streaming table**
 
     ```python
     from pyspark import pipelines as dp
@@ -105,7 +155,7 @@ In Intro Lab 4 you answered a business question with one notebook: read, filter,
     ```
     <!-- source: facts_extracted.md §5 -->
 
-8. **Compare the two forms**
+10. **Compare the two forms**
 
     > **Key Insight:** The declarative version has no explicit checkpoint, no trigger, and no output table name in the writer—the pipeline manages all three. It is the same Structured Streaming underneath. What you gained is lifecycle management; what you gave up is direct control of the writer.
 
@@ -116,9 +166,9 @@ In Intro Lab 4 you answered a business question with one notebook: read, filter,
 
 ## Part 2: Silver—Conform and Gate
 
-### Task 3: Clean the Native Names
+### Task 4: Clean the Native Names
 
-9. **Add a Silver table that cleans NIC naming**
+11. **Add a Silver table that cleans NIC naming**
 
     ```python
     @dp.table(name="branches_silver")
@@ -131,13 +181,13 @@ In Intro Lab 4 you answered a business question with one notebook: read, filter,
     ```
     <!-- source: facts_extracted.md §5 -->
 
-10. **Note where cleaning happened**
+12. **Note where cleaning happened**
 
     > **Key Insight:** Bronze kept the `#`. Silver removed it. That ordering is the point of the Medallion pattern—Bronze is a faithful record of what arrived, so you can always rederive Silver if your cleaning logic turns out to be wrong. Clean on ingest and you have destroyed the evidence.
 
-### Task 4: All Three Violation Actions
+### Task 5: All Three Violation Actions
 
-11. **Add a warn expectation**
+13. **Add a warn expectation**
 
     Invalid records are written to the target.
 
@@ -146,7 +196,7 @@ In Intro Lab 4 you answered a business question with one notebook: read, filter,
     ```
     <!-- source: facts_extracted.md §5 -->
 
-12. **Add a drop expectation**
+14. **Add a drop expectation**
 
     Invalid records are dropped before data is written.
 
@@ -155,7 +205,7 @@ In Intro Lab 4 you answered a business question with one notebook: read, filter,
     ```
     <!-- source: facts_extracted.md §5 -->
 
-13. **Add a fail expectation**
+15. **Add a fail expectation**
 
     Invalid records prevent the update from succeeding.
 
@@ -164,7 +214,7 @@ In Intro Lab 4 you answered a business question with one notebook: read, filter,
     ```
     <!-- source: facts_extracted.md §5 -->
 
-14. **Write the SQL equivalents**
+16. **Write the SQL equivalents**
 
     ```sql
     CONSTRAINT valid_key EXPECT (ID_RSSD IS NOT NULL) ON VIOLATION DROP ROW
@@ -172,7 +222,7 @@ In Intro Lab 4 you answered a business question with one notebook: read, filter,
     ```
     <!-- source: facts_extracted.md §5 -->
 
-15. **Choose deliberately**
+17. **Choose deliberately**
 
     > **Key Insight:** The three actions encode three different business positions. Warn says the data is worth having even when imperfect. Drop says a bad row is worse than a missing one. Fail says publishing anything wrong is unacceptable. That is a business decision wearing engineering clothes—do not make it by default.
 
@@ -180,9 +230,9 @@ In Intro Lab 4 you answered a business question with one notebook: read, filter,
 
 ## Part 3: Gold and CDC
 
-### Task 5: Gold Materialized View
+### Task 6: Gold Materialized View
 
-16. **Aggregate to the business-ready layer**
+18. **Aggregate to the business-ready layer**
 
     ```python
     @dp.materialized_view(name="branch_summary_gold")
@@ -196,9 +246,9 @@ In Intro Lab 4 you answered a business question with one notebook: read, filter,
     > **Note:** `@materialized_view` replaced the older `@table` for materialized views, and `@temporary_view` replaced `@view`.
     <!-- source: facts_extracted.md §5 -->
 
-### Task 6: AUTO CDC — Both Names
+### Task 7: AUTO CDC — Both Names
 
-17. **Apply AUTO CDC from a snapshot**
+19. **Apply AUTO CDC from a snapshot**
 
     Your SQL Server source has no change data feed, so snapshot comparison is the correct variant. It is Python-only.
 
@@ -211,7 +261,7 @@ In Intro Lab 4 you answered a business question with one notebook: read, filter,
     ```
     <!-- source: facts_extracted.md §6 -->
 
-18. **Note the SQL form and both legacy names**
+20. **Note the SQL form and both legacy names**
 
     The streaming CDC form in SQL needs two things the Python snapshot call above does not: a
     target declared up front, and a named **flow** that writes into it.
@@ -235,7 +285,7 @@ In Intro Lab 4 you answered a business question with one notebook: read, filter,
     > not a data error, so do not go looking at your source table.
     <!-- source: facts_extracted.md §6 -->
 
-    > **Note:** `SEQUENCE BY` appears here but not in the Python snapshot call in step 17. That is
+    > **Note:** `SEQUENCE BY` appears here but not in the Python snapshot call in step 19. That is
     > not an inconsistency. Snapshot comparison derives ordering from the snapshots themselves;
     > a stream of change events has no inherent order, so you must name the column that supplies it.
     <!-- source: facts_extracted.md §6 -->
@@ -246,11 +296,11 @@ In Intro Lab 4 you answered a business question with one notebook: read, filter,
     > **Common Pitfall:** AUTO CDC is not supported on Apache Spark Declarative Pipelines. The pipeline must run on serverless Lakeflow pipelines or the Pro or Advanced edition. If your pipeline fails at this step, check the edition before debugging the syntax.
     <!-- source: facts_extracted.md §6 -->
 
-### Task 7: Assemble, Create, and Run the Pipeline
+### Task 8: Assemble, Create, and Run the Pipeline
 
-19. **Assemble the source file**
+21. **Assemble the source file**
 
-    The pieces you wrote in Tasks 2–6 become one pipeline source file. In your user folder, click **Create → File**, name it `medallion.py`, and paste the complete source:
+    The pieces you wrote in Tasks 3–7 become one pipeline source file. In your user folder, click **Create → File**, name it `medallion.py`, and paste the complete source:
 
     ```python
     from pyspark import pipelines as dp
@@ -292,7 +342,7 @@ In Intro Lab 4 you answered a business question with one notebook: read, filter,
     > **Note:** Two deliberate differences from the fragments above. First, the `key_is_numeric` fail expectation is left out of the assembled file—the training data would trip it into failing every update; the stretch task adds it back on purpose. Second, `dp.create_streaming_table(name="institutions_scd")` appears before the CDC flow: **the flow needs its target declared**, and without that line the update fails on an unknown table.
     <!-- source: facts_extracted.md §6 -->
 
-20. **Create the pipeline**
+22. **Create the pipeline**
 
     In the left sidebar, click **Jobs & Pipelines**, then **Create → ETL pipeline** (labels drift—older workspaces say **Pipelines** or **Delta Live Tables**). Set exactly:
 
@@ -306,28 +356,28 @@ In Intro Lab 4 you answered a business question with one notebook: read, filter,
 
     <!-- source: facts_extracted.md §5 -->
 
-21. **Start it and read the graph**
+23. **Start it and read the graph**
 
     Click **Start**. The pipeline resolves the source into a graph—`branches_bronze → branches_silver → branch_summary_gold`, with `institutions_scd` fed by the snapshot flow—and executes it. The first run ingests the landing files; a few minutes on serverless is normal.
 
     > **Expected Result:** Every dataset completes: `branches_bronze` **173,914** rows, `branches_silver` **173,907**, `institutions_scd` **62,080**. This is the same DAG idea as the Spark UI's, one level up: datasets and flows instead of stages and tasks.
 
-22. **Read the quality metrics where they live**
+24. **Read the quality metrics where they live**
 
     Select `branches_silver` in the graph and open its **Data quality** panel. The expectations report their counts: `valid_key` dropped **7** rows and `plausible_city` warned on **5**—a crafted bad batch the setup stages into the landing exactly so these numbers are non-zero. Real branch data alone is too clean to teach a quality gate.
 
     > **Key Insight:** Write these numbers down. Lab 11 reads the **7** out of the pipeline event log by query and gates Gold promotion on it. The UI panel and the event log are two views of the same metrics.
     <!-- source: facts_extracted.md §5 -->
 
-23. **Start it again and watch nothing happen**
+25. **Start it again and watch nothing happen**
 
     Click **Start** a second time without landing any new files.
 
-    > **What Just Happened?** Bronze processes zero new files—the checkpoint you managed by hand in Task 1 is managed for you here, and this is it working. An incremental pipeline that reprocesses everything on every run is neither.
+    > **What Just Happened?** Bronze processes zero new files—the checkpoint you managed by hand in Task 2 is managed for you here, and this is it working. An incremental pipeline that reprocesses everything on every run is neither.
 
-### Task 8: Publish Gold Only
+### Task 9: Publish Gold Only
 
-24. **Grant read access to Gold and nothing else**
+26. **Grant read access to Gold and nothing else**
 
     ```sql
     GRANT USE CATALOG ON CATALOG eng_<id> TO `account users`;
@@ -336,7 +386,7 @@ In Intro Lab 4 you answered a business question with one notebook: read, filter,
     ```
     <!-- source: facts_extracted.md §1 -->
 
-25. **Audit both the access and its limit**
+27. **Audit both the access and its limit**
 
     ```sql
     SHOW GRANTS ON TABLE eng_<id>.work.branch_summary_gold;
@@ -346,7 +396,7 @@ In Intro Lab 4 you answered a business question with one notebook: read, filter,
 
     > **Expected Result:** `account users` holds `SELECT` on Gold and appears nowhere on Bronze. Consumers see conformed, quality-gated data and never the raw landing. In a shared workspace a real peer would prove it by querying both—your instructor may demonstrate there.
 
-26. **Put your Gold table next to Intro Lab 4's summary**
+28. **Put your Gold table next to Intro Lab 4's summary**
 
     Query `branch_summary_gold` alongside the institutions-by-state numbers from the Intro course. They will not match—branches and institutions are different populations, and comparing them is the point: the same question shape (counts by state) at a different grain of the business.
 
@@ -364,6 +414,8 @@ In Intro Lab 4 you answered a business question with one notebook: read, filter,
 
 ## Checkpoint: Verify Your Progress
 
+- [ ] I queried the landing CSVs in place with `read_files`
+- [ ] I snapshotted them with CTAS and recorded the count
 - [ ] I ingested with raw `readStream` and an explicit checkpoint
 - [ ] I reran the write and confirmed no rows were duplicated
 - [ ] I can explain what the checkpoint stores and why
