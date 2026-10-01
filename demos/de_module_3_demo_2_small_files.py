@@ -68,6 +68,20 @@ print(f"AFTER:   {after['numFiles']} file(s) — same data, far fewer files, fas
 # COMMAND ----------
 
 # MAGIC %md
+# MAGIC ### Step 2b — who cleans up the old files? VACUUM — and ask before you act.
+# MAGIC OPTIMIZE rewrote 20 files into 1, but the 20 are still in storage (time travel reads
+# MAGIC them). `DRY RUN` lists what a real VACUUM would delete — here, **nothing**: every file
+# MAGIC is younger than the 7-day retention, and VACUUM refuses to touch the window.
+# MAGIC *"VACUUM is irreversible; OPTIMIZE never is."* (Verified 2026-09-30.)
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC VACUUM training_nic.eng_demo.fragmented_loads DRY RUN;
+
+# COMMAND ----------
+
+# MAGIC %md
 # MAGIC ### Step 3 — the modern default: Liquid Clustering, not manual partitions
 # MAGIC
 # MAGIC Contrast for the room: naming cluster keys and letting **Liquid Clustering** re-cluster
